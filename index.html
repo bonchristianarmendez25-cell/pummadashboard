@@ -2354,8 +2354,25 @@
                 window.cadets = [];
                 if (!snap.empty) snap.forEach(docSnap => window.cadets.push(docSnap.data()));
                 window.recalculateMetrics();
-            });
-        });
+           // --- NEW RECOVERY SYSTEM ADDED HERE ---
+        window.recoverAdminPin = async () => {
+            const rescueKey = prompt("Enter the Master Emergency Key to reset the Admin PIN:");
+            
+            // The secret key is "PUMMA-RESCUE". You can change this to whatever you want!
+            if (rescueKey === "PUMMA-RESCUE") {
+                window.appSettings.adminPin = "1234";
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminPin: "1234" });
+                    alert("✅ SUCCESS! Your Admin PIN has been reset to the default: 1234\n\nPlease log in and change it immediately.");
+                } catch (e) { 
+                    alert("❌ Database Error: Could not reset PIN. Please check your internet connection."); 
+                }
+            } else if (rescueKey !== null && rescueKey.trim() !== "") {
+                alert("❌ INVALID EMERGENCY KEY. Access Denied.");
+            }
+        };
+        // ---------------------------------------
+
     </script>
 </body>
 </html>
