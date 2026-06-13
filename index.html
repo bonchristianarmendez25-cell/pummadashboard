@@ -1210,16 +1210,36 @@
 
         window.openSubmitAppealModal = () => { const m = document.getElementById('submit-appeal-modal'); if(m) { m.classList.remove('hidden'); m.classList.add('flex'); } }
         
+        window.toggleAppealFields = () => {
+            const val = document.getElementById('appeal-type').value;
+            
+            // 1. Hide/Show Date Container (Only for Excuses/Leaves)
+            const needsDate = (val === 'Medical Excuse' || val === 'Leave of Absence' || val === 'Duty Exemption');
+            document.getElementById('appeal-date-container').classList.toggle('hidden', !needsDate);
+            
+            // 2. Hide/Show GWA Container
+            document.getElementById('appeal-gwa-container').classList.toggle('hidden', val !== 'GWA Update');
+            
+            // 3. Update Attachment Label (Removes *Optional for GWA)
+            const attachLabel = document.getElementById('appeal-attach-label');
+            if (val === 'GWA Update') {
+                attachLabel.innerHTML = '<span class="block text-[11px] font-bold text-red-500 uppercase tracking-wider">Evidence Screenshot (Required)</span>';
+            } else {
+                attachLabel.innerHTML = '<span class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Supporting Document (Image)</span><span class="text-[9px] text-slate-400">*Optional</span>';
+            }
+        }
+
         window.closeSubmitAppealModal = () => { 
             const m = document.getElementById('submit-appeal-modal'); 
             if(m) { m.classList.add('hidden'); m.classList.remove('flex'); } 
             setVal('appeal-message', ''); 
             setVal('appeal-target-date', '');
             setVal('appeal-type', 'General Request');
+            setVal('appeal-gwa-grade', '');
             setVal('appeal-attachment-input', ''); 
             setVal('appeal-attachment-b64', '');
             document.getElementById('appeal-preview-img').classList.add('hidden');
-            document.getElementById('appeal-date-container').classList.add('hidden');
+            window.toggleAppealFields(); // Reset UI
         }
 
         window.handleAppealAttachment = (event) => {
@@ -1234,7 +1254,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800; // Optimal size for reading med cert text without bloating DB
+                    const MAX_SIZE = 800; 
                     let width = img.width;
                     let height = img.height;
                     
@@ -1245,7 +1265,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const b64 = canvas.toDataURL('image/jpeg', 0.6); // Compress specifically to maintain high performance
+                    const b64 = canvas.toDataURL('image/jpeg', 0.6); 
                     setVal('appeal-attachment-b64', b64);
                     
                     const preview = document.getElementById('appeal-preview-img');
@@ -1264,15 +1284,30 @@
             const targetDate = getVal('appeal-target-date').trim();
             const msg = getVal('appeal-message').trim();
             const attachment = getVal('appeal-attachment-b64');
+            const gwaSem = getVal('appeal-gwa-sem');
+            const gwaGrade = getNum('appeal-gwa-grade', 0);
             
-            if(!msg) return alert("Message required.");
-            if(type !== 'General Request' && !targetDate) return alert("Please specify the target date(s) for the excuse/leave.");
+            // STRICT CHECK: Ensure Date is only required for Excuses
+            if (type === 'Medical Excuse' || type === 'Leave of Absence' || type === 'Duty Exemption') {
+                if (!targetDate) return alert("Please specify the target date(s) for the excuse/leave.");
+            }
             
+            // STRICT CHECK: General requests need a message
+            if (!msg && type !== 'GWA Update') return alert("Message required.");
+            
+            // STRICT CHECK: GWA Updates MANDATE a picture and a valid grade
+            if (type === 'GWA Update') {
+                if (!attachment) return alert("Upload failed: You MUST attach a screenshot of your grades as evidence.");
+                if (gwaGrade <= 0 || gwaGrade > 100) return alert("Please enter a valid GWA percentage.");
+            }
+
             const newApp = { 
                 id: Date.now().toString(), 
                 date: new Date().toLocaleDateString(), 
                 type: type,
-                targetDate: type === 'General Request' ? '' : targetDate,
+                targetDate: (type === 'General Request' || type === 'GWA Update') ? '' : targetDate,
+                gwaSem: type === 'GWA Update' ? gwaSem : null,
+                gwaGrade: type === 'GWA Update' ? gwaGrade : null,
                 message: msg, 
                 attachment: attachment,
                 status: 'Pending', 
@@ -1281,10 +1316,10 @@
             const updated = JSON.parse(JSON.stringify([...(c.appeals || []), newApp]));
             
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { appeals: updated });
-            alert("Request submitted to Instructor Inbox.");
+            alert("Submission routed to Instructor Inbox successfully.");
             window.closeSubmitAppealModal();
         }
-
+        
         window.openAdminInboxModal = () => { const m = document.getElementById('admin-inbox-modal'); if(m) { m.classList.remove('hidden'); m.classList.add('flex'); } window.renderInbox(); }
         window.closeAdminInboxModal = () => { const m = document.getElementById('admin-inbox-modal'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); } }
 
