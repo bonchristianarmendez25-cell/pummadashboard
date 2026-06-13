@@ -814,4 +814,1094 @@
             try {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminPin: newPin });
                 alert("Admin PIN successfully changed!");
-            } catch (e) { alert("Failed to
+            } catch (e) { alert("Failed to update PIN. Ensure you are connected."); }
+        };
+
+        window.loginAsCadet = async () => {
+            const cid = prompt("Enter your exact Cadet ID Name or System ID (e.g. PUMMA-03-001):")?.trim();
+            if (!cid) return;
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            
+            const c = window.cadets.find(x => 
+                ((x.academicYear || '') === targetAcadYear || !x.academicYear) &&
+                ((x.studentId || '') === cid || `PUMMA-0${x.classNum || 3}-${(x.id||'').substring((x.id||'').length - 4)}` === cid || (x.name || '').toUpperCase().includes(cid.toUpperCase()))
+            );
+
+            if (c) {
+                const expectedPwd = c.password || c.studentId || `PUMMA-0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`;
+                const promptMsg = !c.password ? `Enter your Password\n(Your default password is your ID: ${expectedPwd}):` : `Enter your private Password:`;
+                const pwd = prompt(promptMsg)?.trim();
+                
+                if (pwd !== expectedPwd) { alert("Incorrect Password. If you forgot your password, ask your Instructor to reset it."); return; }
+
+                window.currentUserRole = 'cadet';
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                document.querySelectorAll('.admin-controls').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.cadet-controls').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('left-panel-admin').classList.add('hidden');
+                document.getElementById('eval-right-panel').className = "col-span-1 lg:col-span-12 flex flex-col gap-6 max-w-4xl mx-auto w-full";
+                
+                const disableAll = () => document.querySelectorAll('.cadet-disable').forEach(el => { el.disabled = true; el.classList.add('opacity-70', 'cursor-not-allowed'); });
+                
+                window.selectCadet(c.id);
+                setTimeout(disableAll, 100); 
+
+                const now = new Date().toLocaleString();
+                const device = window.getDeviceName();
+                const logs = JSON.parse(JSON.stringify(c.accessLogs || []));
+                logs.unshift({ action: 'Login', date: now, device: device });
+                if (logs.length > 20) logs.pop();
+                c.accessLogs = logs;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { accessLogs: logs });
+
+            } else {
+                alert("Cadet not found. Please verify your ID or Name.");
+            }
+        };
+
+        window.changeCadetPassword = async () => {
+            if (!window.selectedCadetId) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const expectedPwd = c.password || c.studentId || `PUMMA-0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`;
+            const oldP = prompt("Enter your CURRENT Password:")?.trim();
+            if (oldP !== expectedPwd) { alert("Incorrect current password."); return; }
+            const newP = prompt("Enter NEW Password:")?.trim();
+            if (!newP) return;
+            const confP = prompt("Confirm NEW Password:")?.trim();
+            if (newP !== confP) { alert("Passwords do not match."); return; }
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { password: newP });
+            alert("Password updated securely.");
+            c.password = newP;
+        };
+
+        window.resetCadetPassword = async () => {
+            if (!window.selectedCadetId || window.currentUserRole !== 'admin') return;
+            if(!confirm("Reset this cadet's password to their default ID?")) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const defP = c.studentId || `PUMMA-0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { password: defP });
+            alert(`Password reset to: ${defP}`);
+            c.password = defP;
+        };
+
+        window.openAdminLogsModal = () => {
+            const m = document.getElementById('admin-logs-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            const logs = window.appSettings.adminLogs || [];
+            const html = logs.map(l => `
+                <li class="flex flex-col p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-slate-500 dark:text-slate-400 font-bold">${l.date}</span>
+                        <strong class="${l.action === 'Login' ? 'text-brand-green dark:text-green-400' : l.action === 'Logout' ? 'text-orange-500' : 'text-brand-blue dark:text-blue-400'} bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded shadow-sm">${l.action}</strong>
+                    </div>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><i data-lucide="laptop" class="w-3 h-3"></i> ${l.device || 'Admin PC'}</span>
+                    ${l.details ? `<span class="text-[9px] text-slate-500 mt-1 italic border-t border-slate-100 dark:border-slate-700 pt-1">${l.details}</span>` : ''}
+                </li>
+            `).join('');
+            safeSetInnerHTML('admin-logs-list', html || '<li class="text-center text-slate-500 py-4">No recent activity</li>');
+            lucide.createIcons();
+        };
+        window.closeAdminLogsModal = () => { const m = document.getElementById('admin-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.openCadetLogsModal = () => {
+            if (!window.selectedCadetId) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const m = document.getElementById('cadet-logs-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            const logs = c.accessLogs || [];
+            const html = logs.map(l => `
+                <li class="flex flex-col p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-slate-500 dark:text-slate-400 font-bold">${l.date}</span>
+                        <strong class="${l.action === 'Login' ? 'text-brand-blue dark:text-blue-400' : 'text-slate-500'} bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded shadow-sm">${l.action}</strong>
+                    </div>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><i data-lucide="smartphone" class="w-3 h-3"></i> ${l.device || 'Unknown Device'}</span>
+                </li>
+            `).join('');
+            safeSetInnerHTML('cadet-logs-list', html || '<li class="text-center text-slate-500 py-4">No recent activity</li>');
+            lucide.createIcons();
+        };
+        window.closeCadetLogsModal = () => { const m = document.getElementById('cadet-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.getAvatarSrc = (c) => {
+            if (c.avatar) return c.avatar;
+            return c.gender === 'F' ? SVG_FEMALE : SVG_MALE;
+        };
+
+        window.backupDB = () => {
+            const data = { settings: window.appSettings, cadets: window.cadets };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PUMMA_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        
+        window.restoreDB = (event) => {
+            const file = event.target.files[0];
+            if(!file) return;
+            if(!confirm("WARNING: This will overwrite current database with the backup file. Proceed?")) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const batch = writeBatch(db);
+                    if(data.settings) batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), data.settings);
+                    if(data.cadets) {
+                        data.cadets.forEach(c => batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), c));
+                    }
+                    await batch.commit();
+                    alert('Database Successfully Restored!');
+                    event.target.value = ''; 
+                } catch(err) {
+                    alert('Invalid JSON backup file.');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        window.printMasterlist = () => {
+            const tbody = document.getElementById('print-masterlist-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+            setTxt('print-masterlist-title', `${targetClass === 3 ? '3rd' : '4th'} Class - Section: ${targetSec}`);
+
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === targetClass && (targetSec === "ALL" || (c.section || '').toUpperCase() === targetSec));
+
+            filtered.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-black text-[10px]";
+                tr.innerHTML = `
+                    <td class="p-1 border-r border-black"><b>${c.name || 'Unknown'}</b></td>
+                    <td class="p-1 border-r border-black font-mono">${c.studentId || `0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`}</td>
+                    <td class="p-1 border-r border-black text-center">${c.officer ? 'YES' : 'NO'}</td>
+                    <td class="p-1 border-r border-black text-center font-bold">${c.totalMeritsSum || 0}</td>
+                    <td class="p-1 border-r border-black text-center">${(c.gwa || 0).toFixed(1)}</td>
+                    <td class="p-1 border-r border-black text-center">${(c.finalRating || 0).toFixed(2)}</td>
+                    <td class="p-1 text-center font-bold">${c.specificGradePercent || 0}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('print-masterlist-container').classList.add('print-active');
+            window.print();
+            document.getElementById('print-masterlist-container').classList.remove('print-active');
+        };
+
+        window.printAppraisalCard = () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const incLogHtml = (c.incidents || []).map(inc => `<li>[${inc.date}] Sem ${inc.sem} : ${inc.name} (${inc.points > 0 ? '+'+inc.points : inc.points})</li>`).join('');
+            safeSetInnerHTML('print-incident-log', incLogHtml || '<li>No recorded violations.</li>');
+            
+            safeSetInnerHTML('print-remarks', c.remarks ? c.remarks.replace(/\n/g, '<br>') : '--');
+
+            document.getElementById('print-cadet-report').classList.add('print-active');
+            window.print();
+            document.getElementById('print-cadet-report').classList.remove('print-active');
+        };
+
+        window.convertRatingToPercentGrade = (vr) => {
+            const ranges = [
+                { lr: 4.51, hr: 5.00, lg: 96.0, hg: 98.0 }, { lr: 4.01, hr: 4.50, lg: 93.0, hg: 95.0 },
+                { lr: 3.51, hr: 4.00, lg: 90.0, hg: 92.0 }, { lr: 3.01, hr: 3.50, lg: 85.0, hg: 89.0 },
+                { lr: 2.51, hr: 3.00, lg: 80.0, hg: 84.0 }, { lr: 2.01, hr: 2.50, lg: 75.0, hg: 79.0 },
+                { lr: 1.51, hr: 2.00, lg: 70.0, hg: 73.0 }, { lr: 1.00, hr: 1.50, lg: 60.0, hg: 69.0 }
+            ];
+            let v = Math.max(1.0, Math.min(5.0, vr || 0));
+            let r = ranges.find(range => v >= range.lr && v <= range.hr) || ranges[ranges.length - 1];
+            const fraction = (v - r.lr) / (r.hr - r.lr);
+            return (r.lg + (fraction * (r.hg - r.lg))).toFixed(2);
+        };
+
+        window.recalculateMetrics = () => {
+            try {
+                const targetAcadYear = getVal('input-acad-year', '2025-2026');
+                const targetClass = parseInt(getVal('filter-class', 3));
+                const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+                const peerMode = window.appSettings.peerMode || getVal('select-peer-mode', 'dynamic');
+                const papers = window.appSettings.papers || parseInt(getVal('input-papers', 30));
+                const maxMeritCap = 150 + (papers * 10);
+                
+                setTxt('cap-formula-display', `Result: ${maxMeritCap} max`);
+                setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
+
+                const vList = window.appSettings.violationsList || defaultViolationsList;
+                const validVList = vList.filter(Boolean);
+                safeSetInnerHTML('eval-incident-select', validVList.map((v, i) => `<option value="${i}">${v.name} (${v.points > 0 ? '+'+v.points : v.points})</option>`).join(''));
+
+                const gradedMonths = window.appSettings.gradedMonths || {};
+                let expectedLogDays = 0;
+                Object.keys(gradedMonths).forEach(k => {
+                    if (gradedMonths[k]) {
+                        const [y, m] = k.split('-');
+                        expectedLogDays += new Date(y, parseInt(m) + 1, 0).getDate();
+                    }
+                });
+
+                const yearFilteredCadets = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear));
+                const cohort = yearFilteredCadets.filter(c => parseInt(c.classNum || 3) === targetClass);
+                
+                yearFilteredCadets.forEach(c => {
+                    c.totalMeritsSum = (parseInt(c.meritsSem1) || 0) + (parseInt(c.meritsSem2) || 0) + (parseInt(c.meritsSem3) || 0);
+                });
+
+                let maxPeerMerit = maxMeritCap;
+                if (peerMode === 'dynamic' && cohort.length > 0) maxPeerMerit = Math.max(...cohort.map(c => c.totalMeritsSum), 1);
+
+                let competentCount = 0; let totalTasks = 0; let totalPass = 0; let sectionCadetsCount = 0;
+                let pendingAppealsCount = 0;
+
+                yearFilteredCadets.forEach(cadet => {
+                    if(cadet.appeals) {
+                        pendingAppealsCount += cadet.appeals.filter(a => a.status === 'Pending').length;
+                    }
+
+                    if (cadet.starCadet) cadet.academicCS = 5.0;
+                    else cadet.academicCS = (cadet.gwa || 0) >= 90 ? 5 : (cadet.gwa || 0) >= 85 ? 4 : 3;
+                    cadet.leadershipCS = cadet.officer ? 5 : 3;
+
+                    let meritRatio = cadet.totalMeritsSum / maxPeerMerit;
+                    cadet.patriotismCS = meritRatio >= 0.75 ? 5 : meritRatio >= 0.50 ? 4 : meritRatio >= 0.25 ? 3 : meritRatio >= 0.01 ? 2 : 1;
+
+                    let assigned = cadet.assignedDuties || [];
+                    if (assigned.length === 0) {
+                        if (window.appSettings.sectionDuties && window.appSettings.sectionDuties[cadet.section || 'Alpha']) assigned = [window.appSettings.sectionDuties[cadet.section || 'Alpha']];
+                        else if(window.appSettings.checklistProfiles && Object.keys(window.appSettings.checklistProfiles).length > 0) assigned = [Object.keys(window.appSettings.checklistProfiles)[0]];
+                    }
+
+                    let tTotalSum = 0, sTotalSum = 0, pTechSum = 0, pSoftSum = 0;
+
+                    assigned.forEach(pKey => {
+                        const prof = (window.appSettings.checklistProfiles || defaultChecklistProfiles)[pKey];
+                        if (!prof) return; 
+                        const cProf = cadet.checklists && cadet.checklists[pKey] ? cadet.checklists[pKey] : { tech: [], soft: [] };
+                        tTotalSum += prof.tech ? prof.tech.length : 0;
+                        sTotalSum += prof.soft ? prof.soft.length : 0;
+                        pTechSum += (cProf.tech || []).filter(Boolean).length;
+                        pSoftSum += (cProf.soft || []).filter(Boolean).length;
+                    });
+
+                    const tPassRate = tTotalSum ? (pTechSum / tTotalSum) * 100 : 0;
+                    const sPassRate = sTotalSum ? (pSoftSum / sTotalSum) * 100 : 0;
+
+                    cadet.technicalCS = tPassRate >= 90 ? 5 : tPassRate >= 80 ? 4 : tPassRate >= 70 ? 3 : tPassRate >= 60 ? 2 : 1;
+                    let softCS = sPassRate >= 90 ? 5 : sPassRate >= 80 ? 4 : sPassRate >= 70 ? 3 : sPassRate >= 60 ? 2 : 1;
+
+                    let logScore = 5; 
+                    if (expectedLogDays > 0) {
+                        let validLogDays = 0;
+                        const logData = cadet.logbook || cadet.logbook2026 || {};
+                        Object.keys(logData).forEach(k => {
+                            if (logData[k]) {
+                                let y="2026", m, d;
+                                const parts = k.split('-');
+                                if(parts.length===2) { m=parts[0]; d=parts[1]; } else { y=parts[0]; m=parts[1]; d=parts[2]; }
+                                if (gradedMonths[`${y}-${m}`]) validLogDays++;
+                            }
+                        });
+                        const logPct = validLogDays / expectedLogDays;
+                        cadet.logbookCompletion = logPct; 
+                        logScore = logPct >= 0.8 ? 5 : logPct >= 0.6 ? 4 : logPct >= 0.4 ? 3 : logPct >= 0.2 ? 2 : 1;
+                    } else {
+                        cadet.logbookCompletion = 1.0;
+                    }
+                    
+                    cadet.softCS = Math.round((softCS + logScore) / 2);
+                    cadet.finalRating = (cadet.academicCS * 0.10) + (cadet.leadershipCS * 0.25) + (cadet.patriotismCS * 0.25) + (cadet.softCS * 0.25) + (cadet.technicalCS * 0.15);
+                    let basePercent = parseFloat(window.convertRatingToPercentGrade(cadet.finalRating)) || 0;
+
+                    cadet.bonusPercent = parseFloat(cadet.individualBonus) || 0; 
+                    let specificGrade = basePercent + cadet.bonusPercent + (cadet.starCadet ? 2.0 : 0);
+                    if (specificGrade > 100) specificGrade = 100; 
+                    cadet.specificGradePercent = specificGrade.toFixed(2);
+
+                    if (parseInt(cadet.classNum || 3) === targetClass && (targetSec === "ALL" || (cadet.section || '').toUpperCase() === targetSec)) {
+                        sectionCadetsCount++;
+                        totalTasks += (tTotalSum + sTotalSum);
+                        totalPass += (pTechSum + pSoftSum);
+                        if (cadet.finalRating >= 3.51) competentCount++;
+                    }
+                });
+
+                setTxt('stat-total-cadets', sectionCadetsCount);
+                setTxt('cadet-badge-count', `${sectionCadetsCount} cadets`);
+                setTxt('stat-pass-rate', sectionCadetsCount ? ((competentCount / sectionCadetsCount) * 100).toFixed(1) + "%" : "0%");
+                setTxt('stat-peer-benchmark', maxPeerMerit);
+                setTxt('stat-avg-checklist', totalTasks ? ((totalPass / totalTasks) * 100).toFixed(1) + "%" : "0%");
+
+                const inboxBadge = document.getElementById('inbox-badge');
+                if(inboxBadge) {
+                    if(pendingAppealsCount > 0) { inboxBadge.innerText = pendingAppealsCount; inboxBadge.classList.remove('hidden'); }
+                    else { inboxBadge.classList.add('hidden'); }
+                }
+
+                if(window.currentUserRole === 'cadet') {
+                    const sorted = [...cohort].sort((a,b) => parseFloat(b.specificGradePercent || 0) - parseFloat(a.specificGradePercent || 0)).slice(0, 10);
+                    const listHTML = sorted.map((c, i) => `
+                        <div class="flex items-center gap-3 p-2 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg shadow-sm">
+                            <div class="w-6 h-6 flex-shrink-0 flex items-center justify-center font-bold text-xs rounded-full ${i===0 ? 'bg-yellow-400 text-yellow-900' : i===1 ? 'bg-slate-300 text-slate-800' : i===2 ? 'bg-amber-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${i+1}</div>
+                            <img src="${window.getAvatarSrc(c)}" class="w-8 h-8 rounded border border-slate-300 dark:border-slate-600 object-cover flex-shrink-0">
+                            <div class="flex flex-col min-w-0">
+                                <span class="font-bold text-xs text-brand-blue dark:text-white truncate flex items-center gap-1">${c.name || 'Unknown'} ${c.starCadet ? '<i data-lucide="star" class="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0"></i>' : ''}</span>
+                                <span class="text-[9px] text-slate-500 dark:text-slate-400 truncate">${parseInt(c.classNum || 3) === 3 ? '3rd' : '4th'} Class - Sec ${c.section || 'Unknown'}</span>
+                            </div>
+                            <div class="ml-auto font-bold text-brand-green dark:text-green-400 text-xs bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded flex-shrink-0">${c.specificGradePercent || 0}%</div>
+                        </div>
+                    `).join('');
+                    safeSetInnerHTML('leaderboard-list', listHTML || '<p class="text-xs text-slate-500">No ranked cadets yet.</p>');
+                }
+
+                window.renderTable();
+                if (window.selectedCadetId) window.loadCadetAppraisal();
+            } catch (err) { console.warn("Recalculate error caught:", err); }
+        };
+
+        window.renderTable = () => {
+            const tbody = document.getElementById('cadets-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+            const search = (getVal('table-search') || '').toLowerCase();
+
+            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === targetClass && (targetSec === "ALL" || (c.section || '').toUpperCase() === targetSec) && (c.name || '').toLowerCase().includes(search));
+
+            filtered.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = `${window.selectedCadetId === c.id ? 'bg-brand-blue-glow dark:bg-blue-900/30 border-l-4 border-brand-blue font-semibold' : 'hover:bg-brand-creamAccent dark:hover:bg-slate-700'} transition-colors border-b border-brand-creamBorder dark:border-slate-700 text-xs`;
+                const rColor = (c.finalRating || 0) >= 4.51 ? 'text-brand-green dark:text-green-400 font-bold' : (c.finalRating || 0) < 2.5 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-brand-blue dark:text-blue-300';
+                const mColor = (c.totalMeritsSum || 0) < 0 ? 'text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/50' : 'text-brand-green dark:text-green-300 bg-brand-green-glow dark:bg-green-900/50';
+                const cIdDisplay = c.studentId || `PUMMA-0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`;
+                
+                let flags = "";
+                if ((c.totalMeritsSum || 0) < 0) flags += `<span title="Negative Merits! Review Required." class="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300 px-1 rounded inline-flex items-center"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Merits</span> `;
+                if ((c.logbookCompletion || 0) < 0.5) flags += `<span title="Logbook submission below 50%" class="bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-300 px-1 rounded inline-flex items-center"><i data-lucide="alert-circle" class="w-3 h-3"></i> Logs</span>`;
+                if (c.starCadet) flags += `<span title="Star Cadet Honor" class="text-amber-500 inline-flex items-center"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i></span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3"><div class="flex items-center gap-2"><img src="${window.getAvatarSrc(c)}" class="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col min-w-0"><span class="font-bold text-brand-black dark:text-white uppercase flex items-center gap-1 truncate">${c.name || 'Unknown'} ${flags}</span><span class="text-[9px] text-slate-500 dark:text-slate-400 font-mono truncate">ID: ${cIdDisplay} [SEC: ${(c.section||'').toUpperCase()}]</span></div></div></td>
+                    <td class="p-3 text-center font-mono"><span class="px-2.5 py-1 rounded font-bold border border-brand-creamBorder dark:border-slate-600 ${mColor}">${c.totalMeritsSum || 0}</span></td>
+                    <td class="p-3 text-center font-mono font-semibold">${(c.gwa || 0).toFixed(1)}</td>
+                    <td class="p-3 text-center">${c.officer ? '<span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span>' : '<span class="text-slate-400 text-[10px]">Cadet</span>'}</td>
+                    <td class="p-3 text-center font-mono font-bold">CS: ${c.patriotismCS || 0}</td>
+                    <td class="p-3 text-center font-mono ${rColor} text-sm">${(c.finalRating || 0).toFixed(2)}</td>
+                    <td class="p-3 text-right"><strong class="text-brand-green dark:text-green-400 font-bold text-sm bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded border border-brand-green/35 dark:border-green-800">${c.specificGradePercent || 0}%</strong></td>
+                    <td class="p-3 text-center"><button onclick="selectCadet('${c.id}')" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm transition">Assess</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if(window.currentUserRole === 'admin') lucide.createIcons();
+        };
+
+        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); };
+        
+        window.saveEvaluation = async () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            
+            const nGwa = getNum('eval-input-gwa', 0);
+            const nBonus = getNum('eval-input-bonus', 0);
+            const nSem1 = getNum('eval-merit-sem1', 0);
+            const nSem2 = getNum('eval-merit-sem2', 0);
+            const nSem3 = getNum('eval-merit-sem3', 0);
+            const nOff = getChk('eval-input-officer');
+            const nStar = getChk('eval-input-star');
+            const nRemarks = getVal('eval-remarks', '');
+
+            let changes = [];
+            if(c.gwa !== nGwa) changes.push(`GWA ${c.gwa || 0}->${nGwa}`);
+            if((c.individualBonus||0) !== nBonus) changes.push(`Bonus ${c.individualBonus||0}->${nBonus}`);
+            if((c.meritsSem1||0) !== nSem1) changes.push(`S1 Merits ${c.meritsSem1||0}->${nSem1}`);
+            if((c.meritsSem2||0) !== nSem2) changes.push(`S2 Merits ${c.meritsSem2||0}->${nSem2}`);
+            if((c.meritsSem3||0) !== nSem3) changes.push(`S3 Merits ${c.meritsSem3||0}->${nSem3}`);
+            if(c.officer !== nOff) changes.push(`Officer ${c.officer}->${nOff}`);
+            if(c.starCadet !== nStar) changes.push(`Star ${c.starCadet}->${nStar}`);
+
+            const updates = JSON.parse(JSON.stringify({
+                studentId: getVal('eval-input-id', ''),
+                gwa: nGwa, individualBonus: nBonus,
+                meritsSem1: nSem1, meritsSem2: nSem2, meritsSem3: nSem3,
+                officer: nOff, starCadet: nStar, remarks: nRemarks
+            }));
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), updates);
+            
+            // Security Audit Trail
+            if (changes.length > 0 && window.currentUserRole === 'admin') {
+                const now = new Date().toLocaleString();
+                const device = window.getDeviceName();
+                const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
+                logs.unshift({ action: 'Edit Record', details: `Edited ${c.name}: ${changes.join(', ')}`, date: now, device: device });
+                if (logs.length > 100) logs.pop();
+                window.appSettings.adminLogs = logs;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-50';
+            toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> Appraisal Saved!`;
+            document.body.appendChild(toast); lucide.createIcons();
+            setTimeout(() => toast.remove(), 3000);
+            window.cancelEvaluation();
+        };
+
+        window.logIncident = async () => {
+            const vIdx = getVal('eval-incident-select');
+            const sem = getVal('adjuster-sem', '3');
+            const vList = window.appSettings.violationsList || defaultViolationsList;
+            const validVList = vList.filter(Boolean);
+            const v = validVList[vIdx];
+            if(!v) return;
+
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const newInc = { id: Date.now(), date: new Date().toLocaleDateString(), name: v.name, points: v.points, sem: sem };
+            
+            const updatedInc = JSON.parse(JSON.stringify(c.incidents ? [...c.incidents, newInc] : [newInc]));
+            const inputId = `eval-merit-sem${sem}`;
+            const curVal = getNum(inputId, 0);
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), {
+                incidents: updatedInc,
+                [`meritsSem${sem}`]: curVal + v.points
+            });
+            c.incidents = updatedInc;
+            c[`meritsSem${sem}`] = curVal + v.points;
+            window.loadCadetAppraisal();
+        };
+
+        window.deleteIncident = async (incId, sem, pts) => {
+            if(window.currentUserRole !== 'admin') return;
+            if(!confirm("Remove this log and revert points?")) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const updatedInc = JSON.parse(JSON.stringify(c.incidents.filter(i => i.id !== incId)));
+            const curVal = parseInt(c[`meritsSem${sem}`]) || 0;
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), {
+                incidents: updatedInc,
+                [`meritsSem${sem}`]: curVal - pts 
+            });
+            c.incidents = updatedInc;
+            c[`meritsSem${sem}`] = curVal - pts;
+            window.loadCadetAppraisal();
+        };
+
+        window.updateViolation = async (idx, field, val) => {
+            const vList = JSON.parse(JSON.stringify([...(window.appSettings.violationsList || defaultViolationsList)]));
+            vList[idx][field] = field === 'points' ? (parseInt(val) || 0) : val;
+            window.appSettings.violationsList = vList;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { violationsList: vList });
+            window.recalculateMetrics(); 
+        };
+
+        window.deleteViolation = async (idx) => {
+            const vList = JSON.parse(JSON.stringify([...(window.appSettings.violationsList || defaultViolationsList)]));
+            vList.splice(idx, 1);
+            window.appSettings.violationsList = vList;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { violationsList: vList });
+            window.renderViolationsEditor();
+            window.recalculateMetrics();
+        };
+
+        window.addViolation = async () => {
+            const vList = JSON.parse(JSON.stringify([...(window.appSettings.violationsList || defaultViolationsList)]));
+            vList.push({ id: `v_${Date.now()}`, name: "New Entry", points: -10 });
+            window.appSettings.violationsList = vList;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { violationsList: vList });
+            window.renderViolationsEditor();
+            window.recalculateMetrics();
+        };
+
+        window.openGradedMonthsModal = () => {
+            const m = document.getElementById('graded-months-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window.renderGradedMonths();
+        };
+        window.closeGradedMonthsModal = () => { const m = document.getElementById('graded-months-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+        
+        window.renderGradedMonths = () => {
+            const container = document.getElementById('graded-months-container');
+            const year = getVal('graded-months-year', '2026');
+            const gm = window.appSettings.gradedMonths || {};
+            
+            container.innerHTML = MONTHS.map((m, i) => {
+                const k = `${year}-${i}`;
+                return `<label class="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition text-xs font-semibold text-brand-blue dark:text-blue-300">
+                            <input type="checkbox" ${gm[k] ? 'checked' : ''} onchange="updateGradedMonth('${year}', ${i}, this.checked)" class="w-4 h-4 text-brand-green focus:ring-brand-green rounded border-slate-300"> ${m}
+                        </label>`;
+            }).join('');
+        };
+        window.updateGradedMonth = async (y, mIdx, isChecked) => {
+            const gm = JSON.parse(JSON.stringify({ ...(window.appSettings.gradedMonths || {}) }));
+            gm[`${y}-${mIdx}`] = isChecked;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { gradedMonths: gm });
+            window.recalculateMetrics();
+        };
+
+        window.openSectionDutiesModal = () => {
+            const m = document.getElementById('section-duties-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            const container = document.getElementById('section-duties-container');
+            const maps = window.appSettings.sectionDuties || {};
+            
+            container.innerHTML = `<div class="grid grid-cols-2 gap-4">` + SECTIONS.map(s => `
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm border border-brand-creamBorder dark:border-slate-700">
+                    <label class="block text-xs font-bold text-brand-blue dark:text-blue-300 uppercase mb-2">Section ${s}</label>
+                    <select onchange="updateSectionDuty('${s}', this.value)" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded p-2 text-xs dark:text-white">
+                        <option value="">-- Manual Selection --</option>
+                        ${Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).map(k => `<option value="${k}" ${maps[s]===k ? 'selected' : ''}>${(window.appSettings.checklistProfiles || defaultChecklistProfiles)[k].label}</option>`).join('')}
+                    </select>
+                </div>
+            `).join('') + `</div>`;
+        };
+        window.closeSectionDutiesModal = () => { const m = document.getElementById('section-duties-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+        window.updateSectionDuty = async (sec, val) => {
+            const maps = JSON.parse(JSON.stringify({ ...(window.appSettings.sectionDuties || {}) }));
+            maps[sec] = val;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { sectionDuties: maps });
+        };
+
+        window.openManageDutiesModal = () => {
+            const m = document.getElementById('manage-duties-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window.renderDutiesEditor();
+        };
+        window.closeManageDutiesModal = () => { const m = document.getElementById('manage-duties-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+        
+        window.renderDutiesEditor = () => {
+            const container = document.getElementById('duties-editor-container');
+            container.innerHTML = '';
+            Object.entries(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(([profileId, value]) => {
+                const card = document.createElement('div');
+                card.className = "mb-6 bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg overflow-hidden shadow-sm p-4 space-y-4";
+                card.innerHTML = `
+                    <div class="border-b dark:border-slate-700 pb-2 flex justify-between items-center bg-brand-creamAccent dark:bg-slate-900 p-2 rounded">
+                        <input type="text" class="font-bold text-brand-blue dark:text-brand-green bg-transparent border-b border-slate-300 dark:border-slate-600 focus:border-brand-green focus:outline-none text-sm w-3/4" value="${value.label}" onchange="updateDutyLabel('${profileId}', this.value)">
+                        <button class="text-red-500 hover:text-red-700 font-semibold text-xs flex items-center gap-1" onclick="deleteDutyProfile(this, '${profileId}')">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Day
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <h5 class="font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase">Tech Tasks</h5>
+                            <div class="space-y-2">${(value.tech||[]).map((t, i) => `
+                                <div class="flex gap-2 items-center">
+                                    <input type="text" class="flex-1 bg-transparent border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-xs dark:text-slate-300" value="${t.replace(/"/g, '&quot;')}" onchange="updateDutyTask('${profileId}', 'tech', ${i}, this.value)">
+                                    <button class="text-slate-400 hover:text-red-500" onclick="deleteDutyTask('${profileId}', 'tech', ${i})"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                            `).join('')}</div>
+                            <button class="mt-2 text-brand-green dark:text-green-400 font-bold text-[11px] flex items-center gap-1" onclick="addDutyTask('${profileId}', 'tech')"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add task item</button>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase">Soft Skills</h5>
+                            <div class="space-y-2">${(value.soft||[]).map((t, i) => `
+                                <div class="flex gap-2 items-center">
+                                    <input type="text" class="flex-1 bg-transparent border border-slate-200 dark:border-slate-600 rounded px-2 py-1 text-xs dark:text-slate-300" value="${t.replace(/"/g, '&quot;')}" onchange="updateDutyTask('${profileId}', 'soft', ${i}, this.value)">
+                                    <button class="text-slate-400 hover:text-red-500" onclick="deleteDutyTask('${profileId}', 'soft', ${i})"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                            `).join('')}</div>
+                            <button class="mt-2 text-brand-green dark:text-green-400 font-bold text-[11px] flex items-center gap-1" onclick="addDutyTask('${profileId}', 'soft')"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add task item</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        };
+
+        window.updateDutyLabel = async (pId, val) => {
+            const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+            profs[pId].label = val;
+            window.appSettings.checklistProfiles = profs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+        };
+        window.updateDutyTask = async (pId, type, idx, val) => {
+            const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+            profs[pId][type][idx] = val;
+            window.appSettings.checklistProfiles = profs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+        };
+        window.deleteDutyTask = async (pId, type, idx) => {
+            const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+            profs[pId][type].splice(idx, 1);
+            window.appSettings.checklistProfiles = profs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.renderDutiesEditor(); 
+        };
+        window.addDutyTask = async (pId, type) => {
+            const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+            if(!profs[pId][type]) profs[pId][type] = [];
+            profs[pId][type].push("New task");
+            window.appSettings.checklistProfiles = profs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.renderDutiesEditor();
+        };
+        window.addDutyDay = async () => {
+            const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+            const nextIdNum = Object.keys(profs).length + 1;
+            const keyId = `profile-day${nextIdNum}-${Date.now()}`;
+            profs[keyId] = { label: `Day ${nextIdNum}: New Duty`, tech: ["Task 1"], soft: ["Task 1"] };
+            window.appSettings.checklistProfiles = profs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.renderDutiesEditor();
+        };
+        window.deleteDutyProfile = async (btn, pId) => {
+            if(btn.innerText.includes("Confirm")) {
+                const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
+                delete profs[pId];
+                window.appSettings.checklistProfiles = profs;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+                window.renderDutiesEditor();
+            } else {
+                btn.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> Confirm Delete`;
+                btn.classList.add('bg-red-100', 'p-1', 'rounded');
+                lucide.createIcons();
+                setTimeout(() => window.renderDutiesEditor(), 3000);
+            }
+        };
+
+        window.openCalendarModal = () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            window.renderCalendarModal();
+            const cm = document.getElementById('calendar-modal');
+            if (cm) { cm.classList.remove('hidden'); cm.classList.add('flex'); }
+        };
+        
+        window.renderCalendarModal = () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const year = parseInt(getVal('cal-year-select', 2026));
+            const logbook = c.logbook || c.logbook2026 || {};
+            const grid = document.getElementById('calendar-container');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            let totalCount = 0;
+            const dis = window.currentUserRole === 'cadet' ? 'disabled' : '';
+
+            MONTHS.forEach((m, mIdx) => {
+                const md = document.createElement('div');
+                md.className = "bg-white dark:bg-slate-800 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 shadow-sm";
+                
+                const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
+                let monthCheckedCount = 0;
+
+                const btns = [...Array(daysInMonth)].map((_, dIdx) => {
+                    const key = `${year}-${mIdx}-${dIdx}`;
+                    const isSet = logbook[key] || logbook[`${mIdx}-${dIdx}`];
+                    if (isSet) { totalCount++; monthCheckedCount++; }
+                    return `<button ${dis} data-key="${key}" class="cal-btn cadet-disable h-6 w-6 border border-slate-200 dark:border-slate-600 rounded text-[9px] font-medium transition-colors ${isSet ? 'bg-brand-green text-white border-brand-green' : 'bg-brand-creamBg dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}">${dIdx+1}</button>`;
+                }).join('');
+                
+                const allChecked = monthCheckedCount === daysInMonth;
+
+                md.innerHTML = `
+                    <div class="flex justify-between items-center border-b dark:border-slate-700 pb-1 mb-2">
+                        <h4 class="text-xs font-bold uppercase text-brand-blue dark:text-brand-green">${m}</h4>
+                        <button ${dis} onclick="toggleMonthLogbook('${year}', ${mIdx}, ${daysInMonth}, ${!allChecked})" class="cadet-disable text-[9px] bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-semibold transition">${allChecked ? 'Clear' : 'Check All'}</button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 place-items-center">${btns}</div>
+                `;
+                grid.appendChild(md);
+            });
+            
+            setTxt('cal-total-days', totalCount);
+
+            if (window.currentUserRole === 'admin') {
+                grid.querySelectorAll('.cal-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const k = e.target.getAttribute('data-key');
+                        const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+                        if (updatedLog[k]) { delete updatedLog[k]; } else { updatedLog[k] = true; }
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook2026: updatedLog, logbook: updatedLog });
+                        window.renderCalendarModal();
+                    });
+                });
+            }
+        };
+
+        window.toggleMonthLogbook = async (year, monthIdx, daysInMonth, forceState) => {
+            if (window.currentUserRole !== 'admin') return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+            for(let d=0; d<daysInMonth; d++){
+                const k = `${year}-${monthIdx}-${d}`;
+                if (forceState) updatedLog[k] = true;
+                else delete updatedLog[k];
+            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook2026: updatedLog, logbook: updatedLog });
+            window.renderCalendarModal();
+        };
+
+        window.closeCalendarModal = () => { 
+            const cm = document.getElementById('calendar-modal');
+            if (cm) { cm.classList.add('hidden'); cm.classList.remove('flex'); }
+            window.recalculateMetrics(); 
+        };
+
+        window.openFormulasModal = () => { const m = document.getElementById('formulas-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } };
+        window.closeFormulasModal = () => { const m = document.getElementById('formulas-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.exportCSV = () => {
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+            
+            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === targetClass && (targetSec === "ALL" || (c.section || '').toUpperCase() === targetSec));
+            
+            let csv = "Name,ID,Class,Section,Officer,StarCadet,Total Merits,Bonus %,GWA,Academic CS,Leadership CS,Patriotism CS,Technical CS,Soft Skills CS,Final Rating,Grade %\n";
+            
+            filtered.forEach(c => {
+                csv += `"${c.name || 'Unknown'}","${c.studentId || `PUMMA-0${c.classNum || 3}-${(c.id||'').substring((c.id||'').length - 4)}`}","${c.classNum || 3}","${c.section || ''}","${c.officer ? 'YES':'NO'}","${c.starCadet ? 'YES':'NO'}","${c.totalMeritsSum || 0}","${(c.bonusPercent || 0).toFixed(1)}%","${c.gwa || 0}","${c.academicCS || 0}","${c.leadershipCS || 0}","${c.patriotismCS || 0}","${c.technicalCS || 0}","${c.softCS || 0}","${(c.finalRating || 0).toFixed(2)}","${c.specificGradePercent || 0}%"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `PUMMA_Masterlist_${targetSec}_${targetClass}Cls_${targetAcadYear}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+        window.openBulkModal = () => { 
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === targetClass && (targetSec === "ALL" || (c.section || '').toUpperCase() === targetSec));
+            setTxt('bulk-count-display', filtered.length);
+            const m = document.getElementById('bulk-merits-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } 
+        };
+        window.closeBulkModal = () => { const m = document.getElementById('bulk-merits-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+        
+        window.toggleBulkActionUI = () => {
+            const typ = getVal('bulk-action-type');
+            if (typ === 'delete') {
+                document.getElementById('bulk-merits-ui').classList.add('hidden');
+                document.getElementById('bulk-delete-ui').classList.remove('hidden');
+                document.getElementById('btn-execute-bulk').className = "px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1";
+                document.getElementById('btn-execute-bulk').innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete All';
+            } else {
+                document.getElementById('bulk-delete-ui').classList.add('hidden');
+                document.getElementById('bulk-merits-ui').classList.remove('hidden');
+                document.getElementById('btn-execute-bulk').className = "px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1";
+                document.getElementById('btn-execute-bulk').innerHTML = '<i data-lucide="zap" class="w-3.5 h-3.5"></i> Apply to All';
+            }
+            lucide.createIcons();
+        };
+
+        window.applyBulkAction = async () => {
+            const typ = getVal('bulk-action-type');
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = (getVal('filter-section', 'ALL') || '').toUpperCase();
+            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === targetClass && (targetSec === "ALL" || (c.section || '').toUpperCase() === targetSec));
+
+            if (filtered.length === 0) return;
+
+            if (typ === 'delete') {
+                if(!confirm(`EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} cadets. This cannot be undone. Type "DELETE" to confirm.`)) return;
+                const verify = prompt('Type "DELETE" to confirm:');
+                if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
+                
+                for(let i=0; i<filtered.length; i+=400){
+                    const batch = writeBatch(db);
+                    filtered.slice(i, i+400).forEach(c => batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id)));
+                    await batch.commit();
+                }
+                alert(`Successfully deleted ${filtered.length} cadets.`);
+            } else {
+                const pts = parseInt(getVal('bulk-points-input', 0));
+                if (pts === 0 || isNaN(pts)) { alert("Enter valid points"); return; }
+                const sem = getVal('bulk-sem-select', '3');
+                
+                for(let i=0; i<filtered.length; i+=400){
+                    const batch = writeBatch(db);
+                    filtered.slice(i, i+400).forEach(c => {
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id);
+                        const fieldName = `meritsSem${sem}`;
+                        const currentVal = parseInt(c[fieldName]) || 0;
+                        batch.update(ref, { [fieldName]: currentVal + pts });
+                    });
+                    await batch.commit();
+                }
+                alert(`Applied ${pts > 0 ? '+'+pts : pts} merits to ${filtered.length} cadets.`);
+            }
+            window.closeBulkModal();
+        };
+
+        // GEMINI AI INTEGRATION
+        const apiKey = ""; 
+
+        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        if (response.status === 429) throw new Error("Rate limit exceeded");
+                        throw new Error(`API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        window.generateRemarksWithGemini = async () => {
+            if (!apiKey) {
+                alert("Gemini API Key is missing. Connect to environment to enable AI generation.");
+                return;
+            }
+            
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+
+            const btn = document.getElementById('btn-generate-remarks');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Drafting...`;
+            btn.disabled = true;
+
+            const incNames = (c.incidents || []).map(i => i.name).join(", ") || "None";
+            
+            const prompt = `You are an evaluating officer at a Merchant Marine Academy. 
+            Write a short (2-3 sentences), highly professional performance review remark for Cadet ${c.name || 'Unknown'}.
+            Data: 
+            - Academic GWA: ${c.gwa || 0}
+            - Disciplinary Merits Balance: ${c.totalMeritsSum || 0}
+            - Star Cadet/Officer: ${c.starCadet ? 'Yes' : 'No'} / ${c.officer ? 'Yes' : 'No'}
+            - Recent Incidents/Violations: ${incNames}
+            - Final Computed Rating: ${(c.finalRating || 0).toFixed(2)} out of 5.0 (Higher is better)
+            Be constructive, mentioning strengths and specific areas needing discipline or academic improvement. Keep it professional.`;
+
+            try {
+                const result = await fetchWithBackoff(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: "You are a maritime academy officer providing formal cadet evaluations." }] }
+                        })
+                    }
+                );
+
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    document.getElementById('eval-remarks').value = text.trim();
+                } else {
+                    alert("Could not generate remarks.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error generating remarks: " + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        };
+
+        window.openAnalyticsModal = () => {
+            const m = document.getElementById('analytics-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const isDark = document.documentElement.classList.contains('dark');
+            Chart.defaults.color = isDark ? '#cbd5e1' : '#64748b';
+            
+            const filtered3rd = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === 3);
+            const filtered4th = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === 4);
+            
+            let p3=0, f3=0, p4=0, f4=0;
+            filtered3rd.forEach(c => { if((c.finalRating || 0) >= 3.51) p3++; else f3++; });
+            filtered4th.forEach(c => { if((c.finalRating || 0) >= 3.51) p4++; else f4++; });
+            
+            if(window.passChart) window.passChart.destroy();
+            const ctx1 = document.getElementById('passFailChart').getContext('2d');
+            window.passChart = new Chart(ctx1, {
+                type: 'bar', data: { labels: ['3rd Class', '4th Class'], datasets: [{ label: 'Competent', data: [p3, p4], backgroundColor: '#406f27' }, { label: 'Needs Dev', data: [f3, f4], backgroundColor: isDark ? '#475569' : '#e2e8f0' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+
+            let out=0, vcomp=0, comp=0, dev=0, poor=0;
+            [...filtered3rd, ...filtered4th].forEach(c => {
+                const r = c.finalRating || 0;
+                if(r >= 4.51) out++; else if(r >= 4.01) vcomp++; else if(r >= 3.51) comp++; else if(r >= 2.51) dev++; else poor++;
+            });
+
+            if(window.distChart) window.distChart.destroy();
+            const ctx3 = document.getElementById('distributionChart').getContext('2d');
+            window.distChart = new Chart(ctx3, {
+                type: 'pie', data: { labels: ['Outstanding', 'Very Comp.', 'Competent', 'Developing', 'Poor'], datasets: [{ data: [out, vcomp, comp, dev, poor], backgroundColor: ['#406f27', '#059669', '#263f77', '#d97706', '#dc2626'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            });
+
+            const secData = {};
+            [...filtered3rd, ...filtered4th].forEach(c => {
+                const label = `${c.classNum || 3}Cls - ${c.section || 'Unknown'}`;
+                if(!secData[label]) secData[label] = { sum:0, count:0 };
+                secData[label].sum += (c.gwa || 0); secData[label].count += 1;
+            });
+            const labels = Object.keys(secData).sort();
+            const data = labels.map(l => secData[l].sum / secData[l].count);
+
+            if(window.gwaChart) window.gwaChart.destroy();
+            const ctx2 = document.getElementById('sectionGwaChart').getContext('2d');
+            window.gwaChart = new Chart(ctx2, {
+                type: 'bar', data: { labels: labels, datasets: [{ label: 'Average Academic GWA', data: data, backgroundColor: '#263f77', }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 70, max: 100 } } }
+            });
+        };
+        window.closeAnalyticsModal = () => { const m = document.getElementById('analytics-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.openAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } };
+        window.closeAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+        
+        window.saveNewCadet = async () => {
+            const name = getVal('modal-cadet-name').trim();
+            if (!name) return;
+            const nextId = `cadet_${Date.now()}`;
+            let checklists = {};
+            Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(pk => {
+                checklists[pk] = { tech: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].tech.length).fill(false), soft: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].soft.length).fill(false) };
+            });
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
+                id: nextId, classNum: parseInt(getVal('modal-cadet-class', 3)), academicYear: getVal('input-acad-year', "2025-2026"), section: getVal('modal-cadet-section', 'Alpha'),
+                studentId: getVal('modal-cadet-id', ''), gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), gwa: getNum('modal-cadet-gwa', 75.0),
+                meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
+                officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, remarks: ''
+            })));
+            window.closeAddCadetModal(); setVal('modal-cadet-name', ''); setVal('modal-cadet-id', '');
+        };
+
+        function bindEvents() {
+            const addEvent = (id, event, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(event, fn); };
+            addEvent('input-papers', 'change', async (e) => {
+                window.appSettings.papers = parseInt(e.target.value);
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { papers: window.appSettings.papers });
+            });
+            addEvent('select-peer-mode', 'change', async (e) => {
+                window.appSettings.peerMode = e.target.value;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { peerMode: window.appSettings.peerMode });
+            });
+            addEvent('input-acad-year', 'change', async (e) => {
+                window.appSettings.academicYear = e.target.value;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { academicYear: window.appSettings.academicYear });
+                window.recalculateMetrics();
+            });
+            addEvent('filter-class', 'change', window.recalculateMetrics);
+            addEvent('filter-section', 'change', window.recalculateMetrics);
+            addEvent('table-search', 'input', window.renderTable);
+        }
+
+        window.seedDatabase = async () => {
+            if (!confirm("This will load the default 3rd Class rosters into the database. Proceed?")) return;
+            
+            const batch = writeBatch(db);
+            let runningIdx = 1;
+            const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
+            
+            Object.keys(ROSTERS).forEach(sec => {
+                const namesData = ROSTERS[sec];
+                namesData.forEach(cStr => {
+                    const cParts = cStr.split(',');
+                    const cName = cParts[0];
+                    const cS1 = parseInt(cParts[1]);
+                    const cS2 = parseInt(cParts[2]);
+
+                    const docId = `cadet_3_${sec.toLowerCase()}_${runningIdx}`;
+                    let checklists = {};
+                    Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(pk => {
+                        checklists[pk] = { tech: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].tech.length).fill(false), soft: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].soft.length).fill(false) };
+                    });
+
+                    const sId = "PUMMA-03-" + String(runningIdx).padStart(3, '0');
+                    const isFemale = cName.match(/(MAE|BEATRIX|NICOLE|LIRA|AMANDA|JUNABELLE|JONALYN|ALICIA)/);
+
+                    batch.set(doc(cadetsRef, docId), JSON.parse(JSON.stringify({
+                        id: docId, classNum: 3, section: sec,
+                        academicYear: getVal('input-acad-year', "2025-2026"),
+                        studentId: sId, gender: isFemale ? "F" : "M",
+                        name: cName, meritsSem1: cS1 || 0, meritsSem2: cS2 || 0, meritsSem3: 0,
+                        individualBonus: 0, incidents: [], starCadet: false,
+                        officer: OFFICER_NAMES.includes(cName), gwa: 85.5 + (Math.random()*10),
+                        logbook2026: {}, logbook: {}, checklists: checklists, remarks: ''
+                    })));
+                    runningIdx++;
+                });
+            });
+
+            try { await batch.commit(); alert("Rosters loaded!"); } catch (e) { console.error(e); alert("Error loading."); }
+        };
+
+        async function startApp() {
+            lucide.createIcons();
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) { console.error("Auth init error:", err); }
+        }
+
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', startApp); } else { startApp(); }
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) return;
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+            const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
+
+            onSnapshot(settingsRef, async (snap) => {
+                if (snap.exists()) {
+                    window.appSettings = snap.data();
+                    window.appSettings.checklistProfiles = window.appSettings.checklistProfiles || defaultChecklistProfiles;
+                    setVal('input-papers', window.appSettings.papers || 30);
+                    setVal('select-peer-mode', window.appSettings.peerMode || 'dynamic');
+                    setVal('input-acad-year', window.appSettings.academicYear || "2025-2026");
+                    setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
+                    
+                    if (window.appSettings.adminPin && window.appSettings.adminPin !== '1234') {
+                        const hint = document.getElementById('login-pin-hint');
+                        if (hint) hint.innerText = "Admin PIN is active.";
+                    }
+                    window.refreshProfileDropdown();
+                    bindEvents(); 
+                    window.recalculateMetrics();
+                } else {
+                    const initData = JSON.parse(JSON.stringify({
+                        academicYear: "2025-2026",
+                        papers: 30, maxMeritCap: 450, peerMode: 'dynamic', bonusPerTen: 0.5, gradedMonths: {}, sectionDuties: {},
+                        adminPin: "1234", announcement: "Orders of the Day: Welcome to the PUMMA Dashboard.", announcements: [],
+                        violationsList: defaultViolationsList,
+                        checklistProfiles: defaultChecklistProfiles
+                    }));
+                    await setDoc(settingsRef, initData);
+                }
+            });
+
+            onSnapshot(query(cadetsRef), async (snap) => {
+                window.cadets = [];
+                if (!snap.empty) snap.forEach(docSnap => window.cadets.push(docSnap.data()));
+                window.recalculateMetrics();
+            });
+        });
+    </script>
+</body>
+</html>
