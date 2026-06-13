@@ -322,6 +322,9 @@
                         <div class="bg-brand-creamAccent dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700">
                             <div class="flex justify-between items-center mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-1">
                                 <h5 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Semester Records (GWA & Merits)</h5>
+                                <button onclick="openSubmitGradesModal()" class="cadet-controls hidden text-[9px] bg-brand-green hover:bg-green-700 text-white px-2 py-1 rounded shadow-sm transition flex items-center gap-1">
+                                    <i data-lucide="upload" class="w-3 h-3"></i> Submit Evidence
+                                </button>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
@@ -438,45 +441,49 @@
 </main>
 
     <!-- Modals -->
-    <div id="submit-appeal-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+    <div id="submit-grades-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-sm w-full overflow-hidden shadow-2xl">
-            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="mail-plus" class="text-brand-green w-5 h-5"></i> Submit Request / Excuse</h3><button onclick="closeSubmitAppealModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-brand-green text-sm flex items-center gap-2 uppercase tracking-wide">
+                    <i data-lucide="upload-cloud" class="w-5 h-5"></i> Submit GWA Evidence
+                </h3>
+                <button onclick="closeSubmitGradesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
             <div class="p-5 space-y-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">Type of Request</label>
-                    <select id="appeal-type" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-blue" onchange="document.getElementById('appeal-date-container').classList.toggle('hidden', this.value === 'General Request')">
-                        <option value="General Request">General Inquiry / Appeal</option>
-                        <option value="Medical Excuse">Medical Excuse (Sick Leave)</option>
-                        <option value="Leave of Absence">Official Leave of Absence</option>
-                        <option value="Duty Exemption">Duty Exemption</option>
-                    </select>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center">1st Sem</label>
                 </div>
                 <div id="appeal-date-container" class="hidden">
                     <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">Target Date(s) of Absence</label>
-                    <input type="text" id="appeal-target-date" placeholder="e.g., Nov 12-14" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-blue">
+                    <input type="number" step="0.1" id="grade-sem1" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-xs text-center text-brand-black dark:text-white focus:outline-none focus:border-brand-blue">
                 </div>
                 <div>
-                    <label class="flex justify-between items-end mb-1"><span class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Supporting Document (Image)</span><span class="text-[9px] text-slate-400">*Optional</span></label>
-                    <input type="file" id="appeal-attachment-input" accept="image/*" onchange="handleAppealAttachment(event)" class="w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-300 transition cursor-pointer border border-brand-creamBorder dark:border-slate-700 rounded p-1">
-                    <input type="hidden" id="appeal-attachment-b64" value="">
-                    <img id="appeal-preview-img" src="" class="hidden mt-2 w-full h-24 object-cover rounded border border-brand-creamBorder dark:border-slate-700 shadow-sm">
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center">2nd Sem</label>
+                    <input type="number" step="0.1" id="grade-sem2" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-xs text-center text-brand-black dark:text-white focus:outline-none focus:border-brand-blue">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">Reason / Message to Admin</label>
-                    <textarea id="appeal-message" rows="4" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-blue"></textarea>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 text-center">3rd Sem</label>
+                    <input type="number" step="0.1" id="grade-sem3" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-xs text-center text-brand-black dark:text-white focus:outline-none focus:border-brand-blue">
                 </div>
-                <p class="text-[9px] text-slate-500 mt-1 text-center">Your request will be sent to the Intelligence & Security Officer's inbox.</p>
             </div>
-            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeSubmitAppealModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="submitAppeal()" class="px-4 py-2 rounded-lg bg-brand-blue hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Submit</button></div>
+            <div>
+                <label class="flex justify-between items-end mb-1">
+                    <span class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Proof / Screenshot</span>
+                    <span class="text-[9px] text-red-500 font-bold">*Required</span>
+                </label>
+                <input type="file" id="grade-attachment-input" accept="image/*" onchange="handleGradeAttachment(event)" class="w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-200 dark:file:bg-slate-700 hover:file:bg-slate-300 border border-brand-creamBorder dark:border-slate-700 rounded p-1 cursor-pointer">
+                <input type="hidden" id="grade-attachment-b64" value="">
+                <img id="grade-preview-img" src="" class="hidden mt-2 w-full h-24 object-cover rounded border border-brand-creamBorder dark:border-slate-700 shadow-sm">
+            </div>
+            <p class="text-[9px] text-slate-500 mt-1 text-center">Your grades and proof will be sent to the Admin Inbox for verification.</p>
+        </div>
+        <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2">
+            <button onclick="closeSubmitGradesModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border transition-all">Cancel</button>
+            <button onclick="closeSubmitGradesModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border transition-all">Cancel</button>
         </div>
     </div>
-
-    <div id="admin-inbox-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl">
-            <div class="p-4 bg-sky-50 dark:bg-sky-900/30 border-b border-sky-200 dark:border-sky-800 flex items-center justify-between shrink-0"><h3 class="font-bold text-sky-900 dark:text-sky-300 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="inbox" class="w-5 h-5"></i> Appeals & Requests Inbox</h3><button onclick="closeAdminInboxModal()" class="text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 space-y-3" id="admin-inbox-list"></div>
-        </div>
-    </div>
+</div>
 
     <div id="add-cadet-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full overflow-hidden shadow-2xl">
