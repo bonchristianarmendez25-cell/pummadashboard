@@ -1341,8 +1341,9 @@
                         </div>
                     </div>
                     ${a.targetDate ? `<div class="text-xs font-bold text-brand-green dark:text-green-400 mb-2 flex items-center gap-1.5 bg-brand-green-glow dark:bg-green-900/20 w-fit px-2 py-1 rounded border border-brand-green/30"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Target Date(s): ${a.targetDate}</div>` : ''}
-                    <p class="text-xs text-slate-600 dark:text-slate-300 bg-brand-creamBg dark:bg-slate-900 p-2.5 rounded mb-3 whitespace-pre-wrap border border-brand-creamBorder dark:border-slate-700">${a.message}</p>
-                    ${a.attachment ? `<div class="mb-3"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1"><i data-lucide="paperclip" class="w-3 h-3"></i> Attached Document</span><img src="${a.attachment}" class="w-full max-h-32 object-cover rounded cursor-pointer border border-brand-creamBorder dark:border-slate-700 hover:opacity-90 transition shadow-sm" onclick="this.classList.toggle('max-h-32'); this.classList.toggle('max-h-[800px]'); this.classList.toggle('object-cover'); this.classList.toggle('object-contain');" title="Click to Expand/Collapse"></div>` : ''}
+                    ${a.type === 'GWA Update' ? `<div class="text-xs font-bold text-brand-blue dark:text-blue-400 mb-2 flex items-center gap-1.5 bg-brand-blue-glow dark:bg-blue-900/20 w-fit px-2 py-1 rounded border border-brand-blue/30"><i data-lucide="award" class="w-3.5 h-3.5"></i> Requesting GWA Update: Semester ${a.gwaSem || 'N/A'} = ${a.gwaGrade || 'N/A'}</div>` : ''}
+                    <p class="text-xs text-slate-600 dark:text-slate-300 bg-brand-creamBg dark:bg-slate-900 p-2.5 rounded mb-3 whitespace-pre-wrap border border-brand-creamBorder dark:border-slate-700">${a.message || 'No additional message provided.'}</p>
+                    ${a.attachment ? `<div class="mb-3"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1"><i data-lucide="paperclip" class="w-3 h-3"></i> Attached Evidence</span><img src="${a.attachment}" class="w-full max-h-32 object-cover rounded cursor-pointer border border-brand-creamBorder dark:border-slate-700 hover:opacity-90 transition shadow-sm" onclick="this.classList.toggle('max-h-32'); this.classList.toggle('max-h-[800px]'); this.classList.toggle('object-cover'); this.classList.toggle('object-contain');" title="Click to Expand/Collapse"></div>` : ''}
                     <div class="flex gap-2">
                         <button onclick="resolveAppeal('${a.cadetId}', '${a.id}', 'Approved')" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-3 py-1.5 rounded font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Approve</button>
                         <button onclick="resolveAppeal('${a.cadetId}', '${a.id}', 'Denied')" class="bg-red-600 hover:bg-red-700 text-white text-[10px] px-3 py-1.5 rounded font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="x" class="w-3.5 h-3.5"></i> Deny</button>
@@ -1350,7 +1351,7 @@
                 </div>
             `).join('');
             
-            safeSetInnerHTML('admin-inbox-list', html || '<div class="text-center text-slate-500 py-8 italic flex flex-col items-center justify-center gap-2"><i data-lucide="check-circle" class="w-8 h-8 text-brand-green/50"></i>No pending requests or excuses! Your inbox is clean.</div>');
+            safeSetInnerHTML('admin-inbox-list', html || '<div class="text-center text-slate-500 py-8 italic flex flex-col items-center justify-center gap-2"><i data-lucide="check-circle" class="w-8 h-8 text-brand-green/50"></i>No pending requests or grades! Your inbox is clean.</div>');
             if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
