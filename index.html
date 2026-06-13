@@ -1,302 +1,1090 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PUMMA Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUMMA Cadet Merit & Appraisal Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={darkMode:'class',theme:{extend:{colors:{brand:{green:'#406f27','green-hover':'#2d501b','green-glow':'rgba(64, 111, 39, 0.15)',blue:'#263f77','blue-hover':'#1c305c','blue-glow':'rgba(38, 63, 119, 0.15)',black:'#2A2A2A',creamBg:'#FAF8F5',creamBorder:'#E9E4DB',creamAccent:'#F3EFE7'}},fontFamily:{sans:['Inter','sans-serif'],serif:['Constantia','Georgia','serif']}}}}</script>
-    <script src="https://unpkg.com/lucide@latest"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#D5CFC4;border-radius:4px} ::-webkit-scrollbar-thumb:hover{background:#263f77} .dark ::-webkit-scrollbar-thumb{background:#475569}
-        @media print{body > *:not(#print-masterlist-container):not(#print-cadet-report){display:none !important} #print-masterlist-container:not(.hidden), #print-cadet-report:not(.hidden){display:block !important} body{background:white !important;color:black !important;-webkit-print-color-adjust:exact;print-color-adjust:exact} @page{margin:0.5cm}}
-    </style>
     <script>
-        // ERROR DETECTOR: If the screen goes blank, this will pop up an alert telling us why!
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert("SYSTEM ERROR DETECTED!\n\nLine: " + lineNo + "\nError: " + msg + "\n\nPlease take a screenshot of this and send it to me so I can fix it instantly.");
-            return false;
-        };
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            green: '#406f27', 'green-hover': '#2d501b', 'green-glow': 'rgba(64, 111, 39, 0.15)',
+                            blue: '#263f77', 'blue-hover': '#1c305c', 'blue-glow': 'rgba(38, 63, 119, 0.15)',
+                            black: '#2A2A2A', creamBg: '#FAF8F5', creamCard: '#FFFFFF', creamBorder: '#E9E4DB', creamAccent: '#F3EFE7'
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Constantia', 'Georgia', 'serif'] }
+                }
+            }
+        }
     </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D5CFC4; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #263f77; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Flawless Instant Print CSS */
+        @media screen {
+            #print-masterlist-container, #print-cadet-report { display: none !important; }
+        }
+        @media print {
+            body > *:not(.print-active) { display: none !important; }
+            .print-active { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { margin: 0.5cm; }
+        }
+        
+        .bg-login-decor { background-image: url('okay.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+    </style>
 </head>
-<body class="bg-brand-creamBg dark:bg-slate-900 text-brand-black dark:text-slate-200 min-h-screen font-sans flex flex-col overflow-hidden transition-colors duration-200">
+<body class="bg-brand-creamBg dark:bg-slate-900 text-brand-black dark:text-slate-200 min-h-screen font-sans antialiased flex flex-col overflow-hidden transition-colors duration-200">
 
-    <div id="auth-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-slate-900">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-t-4 border-brand-green">
-            <h1 class="font-serif text-2xl font-bold text-brand-blue dark:text-brand-green mb-2">PUMMA Dashboard</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">System Authentication</p>
-            <div class="space-y-4">
-                <button onclick="loginAsAdmin()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2" id="btn-admin-login"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Connecting to Secure Server...</button>
-                <button onclick="loginAsCadet()" class="w-full bg-slate-100 dark:bg-slate-700 text-brand-black dark:text-white border py-3 rounded-lg font-bold hover:bg-slate-200 transition flex justify-center items-center gap-2" id="btn-cadet-login" disabled><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+    <div id="auth-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 transition-colors bg-login-decor">
+        <div class="absolute inset-0 bg-brand-blue/30 dark:bg-slate-950/50 backdrop-blur-[1px]"></div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-t-4 border-brand-green relative overflow-hidden z-10">
+            <div class="w-20 h-20 bg-brand-creamAccent dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-creamBorder dark:border-slate-600 shadow-inner overflow-hidden">
+                <img src="MOCKBOAT%20LOGO.png" alt="PUMMA" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield\' class=\'w-10 h-10 text-brand-green\'></i>';">
             </div>
-            <button onclick="recoverAdminPin()" class="text-[10px] text-red-500 hover:text-red-700 mt-6 underline font-bold transition">Forgot Admin PIN?</button>
+            <h1 class="font-serif text-2xl font-bold text-brand-blue dark:text-brand-green mb-2">PUMMA Dashboard</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Please select your access level</p>
+            <div class="space-y-4">
+                <button onclick="loginAsAdmin()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-md"><i data-lucide="user-cog" class="w-4 h-4"></i> Instructor / Admin Login</button>
+                <button onclick="loginAsCadet()" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-6">Default Admin PIN: 1234</p>
         </div>
     </div>
 
-    <header class="bg-white dark:bg-slate-800 border-b border-brand-creamBorder sticky top-0 z-40 shadow-sm no-print p-3 flex justify-between items-center">
-        <div><h1 class="font-serif font-bold text-lg text-brand-blue dark:text-white uppercase leading-none">Panpacific University</h1><p class="text-[9px] text-slate-500 font-sans tracking-widest uppercase mt-1">Merchant Marine Academy Logbook & Appraisal Hub</p></div>
-        <div class="flex gap-2 items-center">
-            <button onclick="toggleDarkMode()" class="p-2 rounded bg-slate-100 dark:bg-slate-700"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
-            <button onclick="handleSignOut()" class="bg-red-50 text-red-700 px-3 py-1.5 rounded border border-red-200 text-xs font-bold hidden" id="nav-logout">Sign Out</button>
+    <div onclick="openAnnouncementsModal()" class="bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 px-4 py-2.5 text-xs font-bold flex justify-between items-center no-print border-b border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/50 transition">
+        <div class="flex items-center gap-2 max-w-7xl mx-auto w-full px-4">
+            <i data-lucide="megaphone" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i> 
+            <span id="announcement-display" class="truncate">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
+            <span class="ml-auto text-[10px] opacity-70 underline hidden sm:block">View Board</span>
+        </div>
+    </div>
+
+    <div class="h-1.5 bg-brand-green w-full sticky top-0 z-50 no-print"></div>
+
+    <header class="bg-white dark:bg-slate-800 border-b border-brand-creamBorder dark:border-slate-700 sticky top-1.5 z-40 shadow-sm no-print transition-colors duration-200" id="main-header">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center shadow-inner overflow-hidden border border-slate-200 dark:border-slate-600">
+                    <img src="MOCKBOAT%20LOGO.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield-check\' class=\'w-6 h-6 text-brand-blue dark:text-brand-green\'></i>';">
+                </div>
+                <div>
+                    <h1 class="font-serif font-bold text-lg md:text-xl tracking-wider text-brand-blue dark:text-white uppercase leading-none">Panpacific University</h1>
+                    <p class="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 font-sans tracking-widest uppercase mt-1">Merchant Marine Academy Logbook & Appraisal Hub</p>
+                </div>
+            </div>
+            <div class="flex gap-3 items-center admin-controls hidden">
+                <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
+                <button onclick="exportCSV()" class="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs items-center gap-2 font-semibold transition hidden sm:flex"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export</button>
+                <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-2 font-semibold transition"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Masterlist</button>
+                <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-2 font-semibold transition hidden sm:flex"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out</button>
+            </div>
+            <div class="flex gap-4 items-center cadet-controls hidden">
+                <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
+                <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-2 font-semibold transition"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out</button>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full no-print overflow-y-auto h-full">
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full no-print" id="main-content">
+        
+        <!-- Dashboard Stats Overview (Admin Only) -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 admin-controls hidden">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded border shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Total Cadets</span><strong class="text-2xl text-brand-blue" id="stat-total-cadets">0</strong></div>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded border shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Pass rate</span><strong class="text-2xl text-brand-green" id="stat-pass-rate">0%</strong></div>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded border shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Merit Benchmark</span><strong class="text-2xl text-amber-600" id="stat-peer-benchmark">0</strong></div>
-            <div class="bg-white dark:bg-slate-800 p-4 rounded border shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Duty Tasks</span><strong class="text-2xl text-cyan-600" id="stat-avg-checklist">0%</strong></div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shadow-sm">
+                <div><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Total Class Cadets</span><strong class="text-2xl text-brand-blue dark:text-blue-400 font-bold" id="stat-total-cadets">0</strong></div>
+                <div class="bg-brand-blue-glow dark:bg-blue-900/30 p-2.5 rounded-lg text-brand-blue dark:text-blue-400"><i data-lucide="users" class="w-5 h-5"></i></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shadow-sm">
+                <div><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Pass rate (Competent)</span><strong class="text-2xl text-brand-green dark:text-green-400 font-bold" id="stat-pass-rate">0%</strong></div>
+                <div class="bg-brand-green-glow dark:bg-green-900/30 p-2.5 rounded-lg text-brand-green dark:text-green-400"><i data-lucide="award" class="w-5 h-5"></i></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shadow-sm">
+                <div><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Merit Benchmark</span><strong class="text-2xl text-amber-600 dark:text-amber-400 font-bold" id="stat-peer-benchmark">450</strong></div>
+                <div class="bg-amber-500/10 dark:bg-amber-900/30 p-2.5 rounded-lg text-amber-600 dark:text-amber-400"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shadow-sm">
+                <div><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Duty Checklist Pass</span><strong class="text-2xl text-cyan-600 dark:text-cyan-400 font-bold" id="stat-avg-checklist">0%</strong></div>
+                <div class="bg-cyan-500/10 dark:bg-cyan-900/30 p-2.5 rounded-lg text-cyan-600 dark:text-cyan-400"><i data-lucide="check-square" class="w-5 h-5"></i></div>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
-            <div id="left-panel-admin" class="lg:col-span-8 flex flex-col gap-4">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border shadow-sm admin-controls hidden">
-                    <h3 class="font-bold text-brand-blue dark:text-white text-sm uppercase mb-3 border-b pb-2">General Config & Admin Tools</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button onclick="seedDatabase()" class="text-xs bg-brand-blue text-white px-3 py-1.5 rounded font-bold">1. Seed/Reset Database</button>
-                        <button onclick="openBulkModal()" class="text-xs bg-orange-100 text-orange-800 px-3 py-1.5 rounded font-bold">Bulk Actions</button>
-                        <button onclick="printMasterlist()" class="text-xs bg-slate-100 text-slate-800 px-3 py-1.5 rounded font-bold">Print Masterlist</button>
-                        <button onclick="alert('Grading Matrix: \nAcademic (10%)\nLeadership (25%)\nPatriotism (25%)\nSoft Skills (25%)\nTech Tasks (15%)')" class="text-xs bg-indigo-50 text-indigo-800 px-3 py-1.5 rounded font-bold">View Formula</button>
+        <div id="cadet-leaderboard" class="hidden cadet-controls bg-white dark:bg-slate-800 p-5 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm mb-6">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-creamBorder dark:border-slate-700 pb-2">
+                <h3 class="font-bold text-brand-blue dark:text-brand-green flex items-center gap-2 text-sm uppercase tracking-wide"><i data-lucide="medal" class="w-5 h-5 text-amber-500"></i> Top 10 Midshipmen Honors</h3>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400">Class Rank Leaderboard</span>
+            </div>
+            <div id="leaderboard-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div id="left-panel-admin" class="lg:col-span-8 flex flex-col gap-6 admin-controls hidden">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between mb-4 border-b border-brand-creamBorder dark:border-slate-700 pb-2 gap-2">
+                        <h3 class="font-bold text-brand-blue dark:text-white flex items-center gap-2 text-sm uppercase tracking-wide"><i data-lucide="sliders" class="w-5 h-5 text-brand-green"></i> General Config & Rules Setup</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="openAdminInboxModal()" class="text-[11px] bg-sky-50 dark:bg-sky-900/30 hover:bg-sky-100 dark:hover:bg-sky-800 text-sky-800 dark:text-sky-300 px-2.5 py-1.5 rounded border border-sky-200 dark:border-sky-800 font-semibold flex items-center gap-1 transition relative"><i data-lucide="inbox" class="w-3.5 h-3.5"></i> Inbox <span id="inbox-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1.5 rounded-full">0</span></button>
+                            <button onclick="openAnalyticsModal()" class="text-[11px] bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-300 px-2.5 py-1.5 rounded border border-purple-200 dark:border-purple-800 font-semibold flex items-center gap-1 transition"><i data-lucide="pie-chart" class="w-3.5 h-3.5"></i> Analytics</button>
+                            <button onclick="openFormulasModal()" class="text-[11px] bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-brand-blue dark:text-indigo-300 px-2.5 py-1.5 rounded border border-indigo-200 dark:border-indigo-800 font-semibold flex items-center gap-1 transition"><i data-lucide="calculator" class="w-3.5 h-3.5"></i> Matrix</button>
+                            <button onclick="openGradedMonthsModal()" class="text-[11px] bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 font-semibold flex items-center gap-1 transition"><i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Active Months</button>
+                            <button onclick="openManageViolationsModal()" class="text-[11px] bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800 text-rose-800 dark:text-rose-300 px-2.5 py-1.5 rounded border border-rose-200 dark:border-rose-800 font-semibold flex items-center gap-1 transition"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Violations List</button>
+                            <button onclick="openSectionDutiesModal()" class="text-[11px] bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800 text-emerald-800 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 font-semibold flex items-center gap-1 transition"><i data-lucide="users" class="w-3.5 h-3.5"></i> Map Duties</button>
+                            <button onclick="openManageDutiesModal()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-brand-blue dark:text-slate-200 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition"><i data-lucide="settings-2" class="w-3.5 h-3.5"></i> Edit Tasks</button>
+                            <button onclick="backupDB()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition" title="Download Database Backup"><i data-lucide="download-cloud" class="w-3.5 h-3.5"></i> Backup</button>
+                            <button onclick="document.getElementById('restore-upload').click()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition" title="Restore Database File"><i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i> Restore</button>
+                            <input type="file" id="restore-upload" class="hidden" accept=".json" onchange="restoreDB(event)">
+                            <button onclick="changeAdminPin()" class="text-[11px] bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800 text-red-800 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 font-semibold flex items-center gap-1 transition"><i data-lucide="key" class="w-3.5 h-3.5"></i> PIN</button>
+                            <button onclick="openAdminLogsModal()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Admin Logs</button>
+                            <button onclick="seedDatabase()" class="text-[11px] bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800 text-brand-blue dark:text-blue-300 px-2.5 py-1.5 rounded border border-blue-200 dark:border-blue-800 font-semibold flex items-center gap-1 transition"><i data-lucide="database" class="w-3.5 h-3.5"></i> Seed Rosters</button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="input-acad-year" value="2025-2026" class="border rounded p-1.5 text-xs text-center font-bold">
-                        <select id="select-peer-mode" class="border rounded p-1.5 text-xs font-bold"><option value="dynamic">Dynamic Benchmark</option><option value="static">Static Benchmark</option></select>
-                        <input type="number" id="input-papers" value="30" placeholder="Papers" class="border rounded p-1.5 text-xs text-center font-bold">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Academic Year</label>
+                            <input type="text" id="input-acad-year" onchange="window.updateGlobalSettings()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">No. of Papers</label>
+                            <input type="number" id="input-papers" min="1" onchange="window.updateGlobalSettings()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
+                            <span class="text-[9px] text-slate-500 dark:text-slate-400 mt-1 block leading-tight">Formula: 150 + (Papers x 10)</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Max Merit Score Cap</label>
+                            <input type="number" id="input-max-merit" value="450" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs opacity-60" readonly disabled>
+                            <span class="text-[10px] text-brand-green dark:text-green-400 mt-1 block font-semibold" id="cap-formula-display">Result: 450 max</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Peer Benchmark</label>
+                            <select id="select-peer-mode" onchange="window.updateGlobalSettings()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-green">
+                                <option value="dynamic" selected>Dynamic (Highest Cadet)</option>
+                                <option value="static">Static (Cap at Max)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-xl border shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-3 border-b bg-brand-creamAccent dark:bg-slate-900 flex justify-between gap-2">
-                        <div class="flex gap-2">
-                            <select id="filter-class" class="border rounded text-xs p-1 font-bold"><option value="3">3rd Class</option><option value="4">4th Class</option></select>
-                            <select id="filter-section" class="border rounded text-xs p-1 font-bold"><option value="ALL">All Sections</option><option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option><option value="Delta">Delta</option><option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option></select>
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm overflow-hidden flex-1 flex flex-col">
+                    <div class="p-4 border-b border-brand-creamBorder dark:border-slate-700 flex flex-wrap items-center justify-between gap-4 bg-brand-creamAccent dark:bg-slate-900">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <h2 class="font-bold text-brand-blue dark:text-white text-base uppercase tracking-wider flex items-center gap-2"><i data-lucide="clipboard-list" class="w-5 h-5 text-brand-green"></i> Class Records</h2>
+                            <select id="filter-class" onchange="window.recalculateMetrics()" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-brand-blue dark:text-blue-300 font-bold focus:outline-none focus:border-brand-green"><option value="3" selected>3RD CLASS</option><option value="4">4TH CLASS</option></select>
+                            <select id="filter-section" onchange="window.recalculateMetrics()" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none focus:border-brand-green"></select>
+                            <span class="bg-brand-blue dark:bg-green-700 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" id="cadet-badge-count">0 cadets</span>
                         </div>
-                        <input type="text" id="table-search" placeholder="Search..." class="border rounded px-2 text-xs w-32">
+                        <div class="flex items-center gap-2">
+                            <button onclick="openBulkModal()" class="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"><i data-lucide="layers" class="w-4 h-4"></i> Bulk Actions</button>
+                            <div class="relative"><i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i><input type="text" id="table-search" oninput="window.renderTable()" placeholder="Search cadet name..." class="bg-white dark:bg-slate-800 pl-9 pr-4 py-2 w-44 border border-brand-creamBorder dark:border-slate-700 text-xs rounded-lg text-brand-black dark:text-white focus:outline-none focus:border-brand-green"></div>
+                            <button onclick="openAddCadetModal()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow"><i data-lucide="user-plus" class="w-4 h-4"></i> Add Cadet</button>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto max-h-[500px]">
-                        <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
-                            <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 border-b"><tr><th class="p-2">Name</th><th class="p-2 text-center">Merits</th><th class="p-2 text-center">Mean GWA</th><th class="p-2 text-center">Rating</th><th class="p-2 text-right">Grade %</th><th class="p-2 text-center">Action</th></tr></thead>
-                            <tbody id="cadets-tbody" class="divide-y text-slate-700 dark:text-slate-300"></tbody>
+                    <div class="overflow-x-auto flex-1 max-h-[600px]">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead class="bg-brand-creamAccent dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-brand-creamBorder dark:border-slate-700">
+                                <tr>
+                                    <th class="p-3">Cadet Name</th><th class="p-3 text-center">Cum. Merits</th><th class="p-3 text-center">GWA</th><th class="p-3 text-center">Officer</th><th class="p-3 text-center">Patriotism</th><th class="p-3 text-center">Final Rating</th><th class="p-3 text-right">Specific Grade %</th><th class="p-3 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cadets-tbody" class="divide-y divide-brand-creamBorder dark:divide-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <div id="eval-right-panel" class="lg:col-span-4 flex flex-col gap-4">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border shadow-sm relative">
-                    <h3 class="font-bold text-brand-blue dark:text-brand-green text-sm uppercase mb-4 border-b pb-2">Cadet Appraisal</h3>
-                    <div id="evaluation-empty" class="text-center py-8 text-slate-400"><p class="text-xs">Select a cadet from the table.</p></div>
-                    <div id="evaluation-inputs" class="hidden space-y-3">
-                        <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded border flex gap-3 items-center">
-                            <div class="w-12 h-12 bg-slate-300 rounded overflow-hidden"><img id="eval-avatar-img" src="" class="w-full h-full object-cover"></div>
-                            <div><h4 id="eval-cadet-name" class="font-bold text-sm text-brand-green uppercase">Name</h4><p class="text-[10px] text-slate-500" id="eval-id-display">--</p></div>
+            <!-- Right Side: Side Panel -->
+            <div id="eval-right-panel" class="lg:col-span-4 flex flex-col gap-6">
+                
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm admin-controls hidden">
+                    <h3 class="font-bold text-brand-blue dark:text-brand-green flex items-center gap-2 mb-3 border-b border-brand-creamBorder dark:border-slate-700 pb-2 text-sm uppercase tracking-wide"><i data-lucide="info" class="w-5 h-5 text-brand-green"></i> Conversion Reference Table</h3>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between border-b border-brand-creamBorder dark:border-slate-700 pb-1 text-slate-500 dark:text-slate-400"><span>Rating Range</span><span>Descriptor</span><span>Percent Grade</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-brand-green dark:text-green-400 font-semibold">4.51 - 5.00</span><span class="text-slate-500 dark:text-slate-400">Outstanding</span><span class="text-brand-green dark:text-green-400 font-bold">96 - 98%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-emerald-600 dark:text-emerald-400 font-semibold">4.01 - 4.50</span><span class="text-slate-500 dark:text-slate-400">Very Comp.</span><span class="text-emerald-600 dark:text-emerald-400 font-semibold">93 - 95%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-brand-blue dark:text-blue-400 font-semibold">3.51 - 4.00</span><span class="text-slate-500 dark:text-slate-400">Competent</span><span class="text-brand-blue dark:text-blue-400 font-bold">90 - 92%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-teal-600 dark:text-teal-400 font-semibold">3.01 - 3.50</span><span class="text-slate-500 dark:text-slate-400">Developing</span><span class="text-teal-600 dark:text-teal-400 font-semibold">85 - 89%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-amber-600 dark:text-amber-500">2.51 - 3.00</span><span class="text-slate-500 dark:text-slate-400">Needs Dev.</span><span class="text-amber-600 dark:text-amber-500">80 - 84%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-orange-600 dark:text-orange-500">2.01 - 2.50</span><span class="text-slate-500 dark:text-slate-400">Poor Comp.</span><span class="text-orange-600 dark:text-orange-500">75 - 79%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-red-500 dark:text-red-400">1.51 - 2.00</span><span class="text-slate-500 dark:text-slate-400">Very Poor</span><span class="text-red-500 dark:text-red-400">70 - 73%</span></div>
+                        <div class="flex justify-between py-0.5"><span class="text-red-700 dark:text-red-500">1.00 - 1.50</span><span class="text-slate-500 dark:text-slate-400">Unsatisfactory</span><span class="text-red-700 dark:text-red-500 font-semibold">60 - 69%</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm relative" id="evaluation-card">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-creamBorder dark:border-slate-700">
+                        <h3 class="font-bold text-brand-blue dark:text-white flex items-center gap-2 text-sm uppercase tracking-wide"><i data-lucide="user-cog" class="w-5 h-5 text-brand-green"></i> Cadet Appraisal Board</h3>
+                        <div class="flex gap-2">
+                             <button onclick="openCadetLogsModal()" class="text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold flex items-center gap-1 transition"><i data-lucide="clock" class="w-3 h-3"></i> Access Logs</button>
+                             <button onclick="changeCadetPassword()" class="cadet-controls hidden text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold flex items-center gap-1 transition"><i data-lucide="key" class="w-3 h-3"></i> Change Pwd</button>
+                             <button id="btn-print-card" onclick="printAppraisalCard()" class="hidden text-[10px] bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded border border-indigo-200 dark:border-indigo-800 font-semibold flex items-center gap-1"><i data-lucide="printer" class="w-3 h-3"></i> PDF Card</button>
+                        </div>
+                    </div>
+
+                    <div id="evaluation-empty" class="text-center py-12 text-slate-400 dark:text-slate-500 admin-controls hidden">
+                        <i data-lucide="mouse-pointer" class="w-12 h-12 mx-auto mb-3 opacity-30 text-brand-green animate-bounce"></i>
+                        <p class="text-xs">Click the <strong class="text-brand-green dark:text-green-500">Assess</strong> button next to a cadet to view/edit records.</p>
+                    </div>
+
+                    <div id="evaluation-inputs" class="hidden space-y-4">
+                        <div class="bg-brand-creamAccent dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 flex justify-between items-start gap-3">
+                            <div class="relative w-16 h-16 shrink-0 rounded-lg border border-brand-creamBorder dark:border-slate-600 overflow-hidden bg-slate-100 dark:bg-slate-800 cursor-pointer group shadow-sm" onclick="document.getElementById('avatar-upload').click()">
+                                <img id="eval-avatar-img" src="" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="camera" class="text-white w-4 h-4 mb-0.5"></i><span class="text-[8px] text-white font-bold leading-tight">EDIT</span></div>
+                            </div>
+                            <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="uploadCadetAvatar(event)">
+
+                            <div class="flex-1 min-w-0">
+                                <h4 id="eval-cadet-name" class="font-bold text-sm md:text-base text-brand-green dark:text-green-400 font-serif tracking-wide truncate">Name</h4>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5"><strong class="text-brand-blue dark:text-blue-300" id="eval-class-display">--</strong> | ID: <strong class="text-brand-blue dark:text-blue-300" id="eval-id-display">--</strong></p>
+                            </div>
+                            <div class="flex flex-col gap-1 shrink-0 admin-controls hidden">
+                                <button onclick="resetCadetPassword()" class="text-[9px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold transition-all">Reset Pwd</button>
+                                <button onclick="handleDeleteCadet(this)" class="text-[9px] bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800 text-red-600 dark:text-red-400 px-2 py-1 rounded border border-red-200 dark:border-red-800 font-semibold transition-all">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Cadet ID</label>
+                                <input type="text" id="eval-input-id" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2.5 py-1.5 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Academic GWA</label>
+                                <input type="number" id="eval-input-gwa" step="0.1" min="50" max="100" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2.5 py-1.5 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Bonus % (Manual)</label>
+                                <input type="number" id="eval-input-bonus" step="0.1" min="0" max="10" placeholder="+%" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2.5 py-1.5 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue">
+                            </div>
+                        </div>
+
+                        <div class="bg-brand-creamAccent dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-1">
+                                <h5 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Semester Merit Records</h5>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><label class="block text-[9px] font-semibold text-slate-500 dark:text-slate-400 mb-1 text-center">1st Sem</label><input type="number" id="eval-merit-sem1" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1 text-brand-black dark:text-white font-semibold text-xs text-center focus:outline-none focus:border-brand-blue"></div>
+                                <div><label class="block text-[9px] font-semibold text-slate-500 dark:text-slate-400 mb-1 text-center">2nd Sem</label><input type="number" id="eval-merit-sem2" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1 text-brand-black dark:text-white font-semibold text-xs text-center focus:outline-none focus:border-brand-blue"></div>
+                                <div><label class="block text-[9px] font-semibold text-slate-500 dark:text-slate-400 mb-1 text-center">3rd Sem</label><input type="number" id="eval-merit-sem3" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1 text-brand-black dark:text-white font-semibold text-xs text-center focus:outline-none focus:border-brand-blue"></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-brand-creamBorder dark:border-slate-700 text-xs">
+                                <span class="font-semibold text-slate-600 dark:text-slate-400">Cumulative Merits:</span><strong class="text-brand-blue dark:text-blue-400 font-mono text-sm" id="eval-cumulative-merits">0</strong>
+                            </div>
+                            
+                            <div class="mt-3 pt-3 border-t border-brand-creamBorder dark:border-slate-700">
+                                <div class="flex justify-between items-center mb-1"><h6 class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3"></i> My Appeals & Requests</h6><button onclick="openSubmitAppealModal()" class="cadet-controls hidden text-[9px] bg-brand-blue hover:bg-blue-800 text-white px-2 py-0.5 rounded shadow-sm transition">Submit New</button></div>
+                                <div id="cadet-appeals-log" class="max-h-24 overflow-y-auto space-y-1.5 pr-1 text-[10px]"></div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-brand-creamBorder dark:border-slate-700">
+                                <h6 class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1"><i data-lucide="book-open" class="w-3 h-3"></i> Incident & Demerit Log</h6>
+                                <div id="cadet-incidents-log" class="max-h-24 overflow-y-auto space-y-1 pr-1 text-[9px]"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex items-center justify-between bg-brand-creamAccent dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 text-xs">
+                                <span class="text-slate-700 dark:text-slate-300 font-semibold text-[10px]">Officer?</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="eval-input-officer" class="sr-only peer cadet-disable">
+                                    <div class="w-8 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-green"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded border border-amber-200 dark:border-amber-800 text-xs" title="Requires 90+ GWA. Gives 5.0 Acad CS & +2% Final Grade">
+                                <span class="text-amber-800 dark:text-amber-400 font-bold text-[10px] flex items-center gap-1"><i data-lucide="star" class="w-3 h-3"></i> Star Cadet</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="eval-input-star" class="sr-only peer cadet-disable">
+                                    <div class="w-8 h-4 bg-amber-200 dark:bg-amber-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-amber-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-500"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="admin-controls hidden border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 bg-white dark:bg-slate-800 shadow-sm">
+                            <div class="flex justify-between items-center mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-1">
+                                <span class="text-[10px] text-red-600 dark:text-red-400 uppercase font-bold flex items-center gap-1"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Log Incident / Violation</span>
+                                <select id="adjuster-sem" class="text-[9px] border border-brand-creamBorder dark:border-slate-600 rounded bg-brand-creamBg dark:bg-slate-700 dark:text-white px-1 py-0.5 focus:outline-none"><option value="3">Applies to 3rd Sem</option><option value="2">Applies to 2nd Sem</option><option value="1">Applies to 1st Sem</option></select>
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="eval-incident-select" class="flex-1 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1.5 text-brand-black dark:text-white text-xs focus:outline-none"></select>
+                                <button onclick="logIncident()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Add</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-brand-creamAccent dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 flex justify-between items-center">
+                            <div>
+                                <h5 class="text-[11px] font-bold text-brand-blue dark:text-blue-300 uppercase tracking-wide">Daily Logbook Tracker</h5>
+                                <p class="text-[9px] text-slate-500 dark:text-slate-400">Track daily submissions</p>
+                            </div>
+                            <button onclick="openCalendarModal()" class="bg-brand-blue dark:bg-blue-600 hover:bg-brand-blue-hover dark:hover:bg-blue-700 text-white px-3 py-1.5 rounded text-[10px] font-semibold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> <span class="cadet-hide-text">Manage</span> Logs</button>
+                        </div>
+
+                        <div>
+                            <div class="mb-3">
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 border-b border-brand-creamBorder dark:border-slate-700 pb-1 uppercase tracking-wide">Assigned Duties (Check all performed)</label>
+                                <div id="assigned-duties-container" class="flex flex-wrap gap-1.5 mt-2"></div>
+                            </div>
+                            <div class="space-y-3 max-h-[350px] overflow-y-auto pr-2" id="multi-checklist-container"></div>
                         </div>
                         
-                        <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                            <h5 class="text-[10px] font-bold uppercase mb-2 text-center">Academic GWA</h5>
-                            <div class="grid grid-cols-3 gap-1"><input type="number" id="eval-gwa-sem1" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem1"><input type="number" id="eval-gwa-sem2" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem2"><input type="number" id="eval-gwa-sem3" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem3"></div>
+                        <!-- AI Appraisal Summary -->
+                        <div class="mt-4 border-t border-brand-creamBorder dark:border-slate-700 pt-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Instructor Remarks</label>
+                                <button id="btn-generate-remarks" onclick="window.generateRemarksWithGemini()" class="admin-controls hidden text-[9px] bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded shadow-sm transition border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">✨ Auto-Draft Remarks</button>
+                            </div>
+                            <textarea id="eval-remarks" rows="3" class="cadet-disable w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-2.5 py-1.5 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-blue" placeholder="Enter qualitative feedback..."></textarea>
                         </div>
 
-                        <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                            <h5 class="text-[10px] font-bold uppercase mb-2 text-center">Merit Points</h5>
-                            <div class="grid grid-cols-3 gap-1"><input type="number" id="eval-merit-sem1" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem1"><input type="number" id="eval-merit-sem2" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem2"><input type="number" id="eval-merit-sem3" class="cadet-disable border rounded p-1 text-xs text-center" placeholder="Sem3"></div>
+                        <!-- Computed CS Matrix -->
+                        <div class="bg-brand-creamAccent dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 mt-4">
+                            <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider border-b border-brand-creamBorder dark:border-slate-700 pb-1 flex justify-between"><span>Computed Score Matrix</span><span class="text-slate-400 dark:text-slate-500 font-normal">Weights applied (1-5)</span></h4>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs font-medium relative">
+                                <div class="flex justify-between"><span class="text-slate-600 dark:text-slate-400">Academic (10%)</span><strong class="text-brand-black dark:text-white font-mono flex items-center gap-1" id="m-academic-cs">-</strong></div>
+                                <div class="flex justify-between"><span class="text-slate-600 dark:text-slate-400">Leadership (25%)</span><strong class="text-brand-black dark:text-white font-mono" id="m-leadership-cs">-</strong></div>
+                                <div class="flex justify-between"><span class="text-slate-600 dark:text-slate-400">Patriotism (25%)</span><strong class="text-brand-black dark:text-white font-mono" id="m-patriotism-cs">-</strong></div>
+                                <div class="flex justify-between"><span class="text-slate-600 dark:text-slate-400">Soft Skills (25%)</span><strong class="text-brand-black dark:text-white font-mono" id="m-soft-cs">-</strong></div>
+                                <div class="flex justify-between col-span-2 border-t border-brand-creamBorder dark:border-slate-700 pt-1.5 mt-1"><span class="text-slate-600 dark:text-slate-400 font-semibold">Technical Core (15%)</span><strong class="text-brand-green dark:text-green-400 font-mono font-bold" id="m-tech-cs">-</strong></div>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <label class="bg-slate-50 p-2 border rounded flex justify-between font-bold text-slate-600">Officer? <input type="checkbox" id="eval-input-officer" class="cadet-disable"></label>
-                            <label class="bg-amber-50 p-2 border rounded flex justify-between font-bold text-amber-600">Star Cadet <input type="checkbox" id="eval-input-star" class="cadet-disable"></label>
+                        <!-- Grades -->
+                        <div class="mt-4 pt-4 border-t-2 border-dashed border-brand-creamBorder dark:border-slate-700 text-center relative">
+                            <h2 class="text-sm text-slate-500 dark:text-slate-400 uppercase font-bold tracking-widest mb-1">Final Performance Grade</h2>
+                            <div class="text-4xl font-black text-brand-blue dark:text-brand-green font-serif flex items-center justify-center gap-2">
+                                <span id="eval-final-percent">0%</span>
+                                <span id="eval-bonus-badge" class="hidden text-[10px] bg-brand-green text-white px-2 py-1 rounded-full font-bold align-middle shadow-sm transform -translate-y-2">+0% Bonus</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Based on Rating Score: <span id="eval-final-rating" class="font-bold">0.00</span></p>
                         </div>
 
-                        <div class="text-center mt-2 pt-3 border-t-2 border-dashed">
-                            <h2 class="text-xs text-slate-500 uppercase font-bold">Final Grade</h2>
-                            <div class="text-4xl font-black text-brand-blue" id="eval-final-percent">0%</div>
-                            <p class="text-[10px] text-slate-500 mt-1 font-bold">Rating: <span id="eval-final-rating">0.00</span></p>
+                        <div class="grid grid-cols-2 gap-2 pt-2 admin-controls hidden">
+                            <button onclick="cancelEvaluation()" class="bg-brand-creamBg dark:bg-slate-700 hover:bg-brand-creamAccent dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 font-semibold py-2 rounded-lg text-xs transition-all border border-brand-creamBorder dark:border-slate-600">Close</button>
+                            <button onclick="saveEvaluation()" class="bg-brand-green hover:bg-brand-green-hover text-white font-semibold py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow"><i data-lucide="save" class="w-4 h-4"></i> Save All Edits</button>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-2 mt-2 admin-controls hidden">
-                            <button onclick="cancelEvaluation()" class="bg-slate-200 text-slate-700 font-bold py-2 rounded text-xs">Close</button>
-                            <button onclick="saveEvaluation()" class="bg-brand-green text-white font-bold py-2 rounded text-xs">Save Edits</button>
-                        </div>
-                        <button onclick="printAppraisalCard()" class="w-full bg-indigo-50 text-indigo-700 font-bold py-2 rounded text-xs mt-2 border border-indigo-200 admin-controls hidden">Print PDF Card</button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="bulk-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4"><div class="bg-white rounded-lg p-5 w-full max-w-sm"><h3 class="font-bold mb-4 text-center">Bulk Add Merits</h3><select id="bulk-class" class="w-full border p-2 mb-2 text-xs rounded"><option value="3">3rd Class</option><option value="4">4th Class</option></select><select id="bulk-sec" class="w-full border p-2 mb-2 text-xs rounded"><option value="ALL">All Sections</option><option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option><option value="Delta">Delta</option></select><input type="number" id="bulk-pts" placeholder="Points (+ or -)" class="w-full border p-2 mb-2 text-xs rounded"><select id="bulk-sem" class="w-full border p-2 mb-4 text-xs rounded"><option value="3">Sem 3</option><option value="2">Sem 2</option><option value="1">Sem 1</option></select><div class="flex gap-2"><button onclick="document.getElementById('bulk-modal').classList.add('hidden')" class="w-full bg-slate-200 p-2 rounded text-xs font-bold">Cancel</button><button onclick="applyBulkAction()" class="w-full bg-brand-green text-white p-2 rounded text-xs font-bold">Apply</button></div></div></div>
+    <!-- Modals -->
+    <div id="submit-appeal-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-sm w-full overflow-hidden shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="mail-plus" class="text-brand-green w-5 h-5"></i> Submit Request</h3><button onclick="closeSubmitAppealModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-5"><label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">Your Message to Admin</label><textarea id="appeal-message" rows="5" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white text-xs focus:outline-none focus:border-brand-blue"></textarea><p class="text-[9px] text-slate-500 mt-2 text-center">Your request will be sent to the Intelligence & Security Officer's inbox.</p></div>
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeSubmitAppealModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="submitAppeal()" class="px-4 py-2 rounded-lg bg-brand-blue hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Submit</button></div>
+        </div>
+    </div>
 
-    <div id="print-masterlist-container" class="hidden bg-white p-4 font-sans text-black"><h1 class="text-center font-bold text-xl uppercase mb-4">PANPACIFIC UNIVERSITY - MASTERLIST</h1><table class="w-full text-left text-xs border border-black"><thead><tr class="bg-gray-100 border-b border-black"><th class="p-2 border-r border-black">Name</th><th class="p-2 border-r border-black">Merits</th><th class="p-2 border-r border-black">GWA</th><th class="p-2 text-right">Grade %</th></tr></thead><tbody id="print-masterlist-tbody"></tbody></table></div>
-    <div id="print-cadet-report" class="hidden p-8 max-w-lg mx-auto bg-white font-sans text-black border"><h1 class="text-center font-bold text-xl uppercase border-b pb-4 mb-4">CADET APPRAISAL CARD</h1><h2 class="text-lg font-bold text-brand-green uppercase mb-1" id="print-name">--</h2><p class="text-xs mb-4" id="print-details">--</p><div class="text-center border-2 border-dashed p-6 bg-slate-50 rounded"><span class="text-xs uppercase font-bold">Final Grade</span><div class="text-5xl font-black text-brand-blue" id="print-final-percentage">--%</div></div></div>
+    <div id="admin-inbox-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-sky-50 dark:bg-sky-900/30 border-b border-sky-200 dark:border-sky-800 flex items-center justify-between shrink-0"><h3 class="font-bold text-sky-900 dark:text-sky-300 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="inbox" class="w-5 h-5"></i> Appeals & Requests Inbox</h3><button onclick="closeAdminInboxModal()" class="text-sky-700 hover:text-sky-900 dark:text-sky-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 space-y-3" id="admin-inbox-list"></div>
+        </div>
+    </div>
 
+    <div id="add-cadet-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full overflow-hidden shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="user-plus" class="text-brand-green w-5 h-5"></i> Register New Cadet</h3><button onclick="closeAddCadetModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-5 space-y-4">
+                <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cadet Full Name</label><input type="text" id="modal-cadet-name" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs uppercase focus:outline-none focus:border-brand-blue"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cadet ID</label><input type="text" id="modal-cadet-id" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Gender</label><select id="modal-cadet-gender" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="M">Male</option><option value="F">Female</option></select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Class</label><select id="modal-cadet-class" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="4">4th Class</option><option value="3">3rd Class</option></select></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Section</label><select id="modal-cadet-section" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs uppercase focus:outline-none focus:border-brand-blue"></select></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mt-2">
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Initial GWA</label><input type="number" id="modal-cadet-gwa" step="0.1" value="88.5" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">1st Sem Merits</label><input type="number" id="modal-cadet-merits" value="0" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bonus %</label><input type="number" id="modal-cadet-bonus" value="0" step="0.1" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeAddCadetModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="saveNewCadet()" class="px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all border border-brand-creamBorder dark:border-slate-700">Save Cadet</button></div>
+        </div>
+    </div>
+
+    <!-- Hidden Modals (Admin Logs, Calendars, Analytics etc.) -->
+    <div id="admin-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Admin Access History</h3><button onclick="closeAdminLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950"><ul id="admin-logs-list" class="space-y-2 text-xs font-mono"></ul></div></div></div>
+    <div id="cadet-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Cadet Access History</h3><button onclick="closeCadetLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950"><ul id="cadet-logs-list" class="space-y-2 text-xs font-mono"></ul></div></div></div>
+    
+    <div id="announcements-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between shrink-0">
+                <div><h3 class="font-bold text-amber-900 dark:text-amber-200 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="megaphone" class="w-5 h-5"></i> Communications & Orders Board</h3></div>
+                <button onclick="closeAnnouncementsModal()" class="text-amber-700 hover:text-amber-900 dark:text-amber-300 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="admin-controls hidden col-span-1 bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm h-fit sticky top-0">
+                    <h4 class="text-xs font-bold text-brand-blue dark:text-brand-green uppercase mb-3 border-b dark:border-slate-700 pb-2">Post New Announcement</h4>
+                    <label class="text-[10px] font-bold text-slate-500 mb-1 block">Title</label>
+                    <input type="text" id="announce-title" class="w-full mb-3 bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white">
+                    <label class="text-[10px] font-bold text-slate-500 mb-1 block">Type of Order</label>
+                    <div class="flex gap-2 mb-3">
+                        <select id="announce-type" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white"><option value="Daily Announcement">Daily Announcement</option><option value="Weekly Order">Weekly Order</option><option value="Monthly Memo">Monthly Memo</option><option value="Alert">Urgent Alert</option></select>
+                    </div>
+                    <label class="text-[10px] font-bold text-slate-500 mb-1 block">Detailed Message</label>
+                    <textarea id="announce-content" rows="4" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white mb-2"></textarea>
+                    <button onclick="postAnnouncement()" class="w-full bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Publish to Board</button>
+                </div>
+                <div class="col-span-1 lg:col-span-2 flex flex-col gap-4">
+                    <h4 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Recent Transmissions</h4>
+                    <div id="announcements-list-container" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="manage-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="settings-2" class="text-brand-green w-5 h-5"></i> Manage Duty Checklists</h3></div><button onclick="closeManageDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950" id="duties-editor-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><button onclick="addDutyDay()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-sm"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Day</button><button onclick="closeManageDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done</button></div></div></div>
+    <div id="manage-violations-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-red-700 dark:text-red-400 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="alert-triangle" class="text-red-600 w-5 h-5"></i> Master Violations List</h3></div><button onclick="closeManageViolationsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950"><div class="grid grid-cols-12 gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 px-2"><div class="col-span-8">Violation / Incident Name</div><div class="col-span-3 text-center">Points (+ / -)</div><div class="col-span-1 text-center">Action</div></div><div id="violations-editor-container" class="space-y-2"></div><button onclick="addViolation()" class="mt-4 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-sm mx-auto"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Violation Entry</button></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end shrink-0"><button onclick="closeManageViolationsModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
+    <div id="graded-months-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full overflow-hidden shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calendar-check" class="text-brand-green w-5 h-5"></i> Active Logbook Months</h3></div><button onclick="closeGradedMonthsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-5"><div class="flex items-center justify-between mb-4 border-b border-brand-creamBorder dark:border-slate-700 pb-2"><span class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Select Year:</span><select id="graded-months-year" onchange="renderGradedMonths()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1 text-xs font-bold focus:outline-none dark:text-white"></select></div><div id="graded-months-container" class="grid grid-cols-3 gap-3"></div></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end"><button onclick="closeGradedMonthsModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Save Selection</button></div></div></div>
+    <div id="section-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="users" class="text-brand-green w-5 h-5"></i> Assign Base Section Duties</h3></div><button onclick="closeSectionDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="section-duties-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end shrink-0"><button onclick="closeSectionDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
+    <div id="calendar-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calendar" class="text-brand-green w-5 h-5"></i> Daily Logbook Tracker</h3></div><div class="flex items-center gap-3"><select id="cal-year-select" onchange="renderCalendarModal()" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 rounded px-3 py-1.5 text-xs font-bold text-brand-blue dark:text-blue-300 focus:outline-none"></select><button onclick="closeCalendarModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="calendar-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><span class="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Submitted (Selected Year): <strong id="cal-total-days" class="text-brand-blue dark:text-blue-400 text-sm">0</strong> days</span><button onclick="closeCalendarModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
+    
+    <div id="bulk-merits-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-sm w-full overflow-hidden shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between">
+                <div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="layers" class="text-brand-green w-5 h-5"></i> Bulk Actions</h3></div>
+                <button onclick="closeBulkModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Select Action</label>
+                    <select id="bulk-action-type" onchange="toggleBulkActionUI()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="merits">Add/Deduct Merits</option><option value="delete">Bulk Delete Cadets (Current Filter)</option></select>
+                </div>
+                <div id="bulk-merits-ui" class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Points (+ or -)</label><input type="number" id="bulk-points-input" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Target Semester</label><select id="bulk-sem-select" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="3">3rd Sem</option><option value="2">2nd Sem</option><option value="1">1st Sem</option></select></div>
+                </div>
+                <div id="bulk-delete-ui" class="hidden bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-3 rounded text-red-800 dark:text-red-300 text-xs font-bold text-center">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 mx-auto mb-2 text-red-600"></i> WARNING: This will permanently delete ALL cadets currently shown in your filtered table. This action cannot be undone!
+                </div>
+            </div>
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2">
+                <button onclick="closeBulkModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button>
+                <button id="btn-execute-bulk" onclick="window.applyBulkAction()" class="px-4 py-2 rounded-lg bg-brand-blue hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5"></i> Apply to All</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="analytics-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-5xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="pie-chart" class="text-brand-green w-5 h-5"></i> Class Analytics & Trends</h3><button onclick="closeAnalyticsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Competency Ratio (3rd vs 4th Class)</h4><div class="relative h-64 w-full"><canvas id="passFailChart"></canvas></div></div><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Final Grade Distribution (All Classes)</h4><div class="relative h-64 w-full"><canvas id="distributionChart"></canvas></div></div><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm lg:col-span-2"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Average Academic GWA by Section</h4><div class="relative h-64 w-full"><canvas id="sectionGwaChart"></canvas></div></div></div></div></div>
+    <div id="formulas-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calculator" class="text-brand-green w-5 h-5"></i> Grading Computation Matrix</h3></div><button onclick="closeFormulasModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 space-y-6"><div><h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">1. Overall Rating Equation</h4><p class="mb-2">The final rating is derived using a weighted sum model scaled to a maximum of 5.0:</p><div class="bg-brand-creamBg dark:bg-slate-900 p-4 rounded-lg border border-brand-creamBorder dark:border-slate-700 text-center font-mono font-bold text-[13px] md:text-sm overflow-x-auto whitespace-nowrap text-brand-blue dark:text-blue-300">R<sub>final</sub> = (CS<sub>acad</sub> &times; 0.10) + (CS<sub>lead</sub> &times; 0.25) + (CS<sub>pat</sub> &times; 0.25) + (CS<sub>soft</sub> &times; 0.25) + (CS<sub>tech</sub> &times; 0.15)</div></div><div><h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">2. Component Score (CS) Matrices</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900"><h5 class="font-bold text-brand-blue dark:text-white mb-2">Academic (CS<sub>acad</sub>)</h5><p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-2 border dark:border-slate-600 rounded">Cadets must provide their GWA by summing up the other major and minor courses, but they must NOT include the competency appraisal yet. Note: 1st semester is different from 2nd semester, then 3rd semester, etc. Evaluated independently per semester.</p><ul class="list-disc pl-5 space-y-1.5 text-xs font-mono"><li>GWA &ge; 90.0 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li><li>85.0 &le; GWA &lt; 90.0 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li><li>GWA &lt; 85.0 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">3.0</span></li></ul></div><div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900"><h5 class="font-bold text-brand-blue dark:text-white mb-2">Leadership (CS<sub>lead</sub>)</h5><ul class="list-disc pl-5 space-y-1.5 text-xs font-mono"><li>Corps of Midshipmen Officer &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li><li>Standard Cadet &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">3.0</span></li></ul></div><div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900"><h5 class="font-bold text-brand-blue dark:text-white mb-2">Patriotism (CS<sub>pat</sub>)</h5><p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-1 border dark:border-slate-600 rounded">Ratio (P) = Cum. Merits &divide; Benchmark Merits</p><ul class="list-disc pl-5 space-y-1.5 text-xs font-mono"><li>P &ge; 0.75 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li><li>0.50 &le; P &lt; 0.75 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li><li>0.25 &le; P &lt; 0.50 &rarr; <span class="font-bold text-teal-600 dark:text-teal-400">3.0</span></li><li>0.01 &le; P &lt; 0.25 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">2.0</span></li><li>P &lt; 0.01 &rarr; <span class="font-bold text-red-600 dark:text-red-500">1.0</span></li></ul></div><div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900"><h5 class="font-bold text-brand-blue dark:text-white mb-2">Technical Core (CS<sub>tech</sub>)</h5><p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-1 border dark:border-slate-600 rounded">Ratio (T) = Passed Tech Tasks &divide; Total Tech Tasks</p><ul class="list-disc pl-5 space-y-1.5 text-xs font-mono"><li>T &ge; 0.90 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li><li>0.80 &le; T &lt; 0.90 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li><li>0.70 &le; T &lt; 0.80 &rarr; <span class="font-bold text-teal-600 dark:text-teal-400">3.0</span></li><li>0.60 &le; T &lt; 0.70 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">2.0</span></li><li>T &lt; 0.60 &rarr; <span class="font-bold text-red-600 dark:text-red-500">1.0</span></li></ul></div></div></div><div><h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">3. Soft Skills & Watchkeeping Integration</h4><p class="text-xs mb-2 leading-relaxed">The Soft Skills score (CS<sub>soft</sub>) is a hybrid metric averaging the completion rate of the Soft Tasks Checklist and the Daily Logbook Submission Rate for active graded months.</p><div class="bg-brand-creamBg dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 text-center font-mono font-bold text-brand-blue dark:text-blue-300">CS<sub>soft</sub> = &lceil; (Soft Task Rating + Logbook Rating) &divide; 2 &rceil;</div></div><div><h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">4. Bonus Merits & Star Cadets</h4><p class="text-xs mb-2 leading-relaxed"><strong>Star Cadet System:</strong> The qualification for a Star Cadet is they must gain a 90+ GWA on their current semester. Earning this status grants an automatic perfect <strong class="text-brand-green">5.0 Academic CS</strong> and a <strong class="text-brand-green">+2% bonus</strong> to their final specific grade.</p><p class="text-xs mb-2 leading-relaxed"><strong>Individual Extra Merits:</strong> Instructors can manually assign an Individual Extra Bonus Percentage for extraordinary performance. This percentage is directly added to the final specific grade.</p><div class="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800 text-center font-mono font-bold">Final Specific Grade = Base % Grade + Star Bonus (if applicable) + Individual Bonus %</div></div></div></div></div>
+
+    <!-- Printable Templates -->
+    <div id="print-masterlist-container" class="font-sans text-black bg-white p-4">
+        <div class="text-center border-b-2 border-brand-blue pb-4 mb-6">
+            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT%20LOGO.png" style="width: 40px; height: 40px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
+            <p class="text-xs text-slate-600 tracking-wider font-semibold uppercase">Cadet Masterlist & Appraisal Report</p>
+            <p class="text-sm font-bold mt-2" id="print-masterlist-title">--</p>
+        </div>
+        <table class="w-full text-left border-collapse text-xs border border-black">
+            <thead><tr class="bg-gray-100 border-b border-black"><th class="p-2 border-r border-black">Cadet Name</th><th class="p-2 border-r border-black">ID</th><th class="p-2 border-r border-black text-center">Officer</th><th class="p-2 border-r border-black text-center">Merits</th><th class="p-2 border-r border-black text-center">GWA</th><th class="p-2 border-r border-black text-center">Rating</th><th class="p-2 text-center">Grade %</th></tr></thead>
+            <tbody id="print-masterlist-tbody"></tbody>
+        </table>
+    </div>
+
+    <div id="print-cadet-report" class="p-8 max-w-2xl mx-auto bg-white font-sans text-black">
+        <div class="text-center border-b-2 border-brand-blue pb-4 mb-6">
+            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT%20LOGO.png" style="width: 50px; height: 50px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
+            <p class="text-xs text-slate-600 tracking-wider font-semibold uppercase">Merchant Marine Academy Logbook & Competency Appraisal Hub</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded mb-6 border border-slate-200 flex items-center gap-4">
+            <div class="w-20 h-20 shrink-0 border-2 border-brand-blue rounded bg-white overflow-hidden flex items-center justify-center shadow-sm"><img id="print-avatar" src="" class="w-full h-full object-cover"></div>
+            <div class="flex-1"><h2 class="text-xl font-bold text-brand-green font-serif mb-2 uppercase" id="print-name">--</h2><div class="grid grid-cols-3 gap-2 text-xs"><div>Class Rank: <strong id="print-class">--</strong></div><div>Section: <strong id="print-section">--</strong></div><div>Cadet ID No: <strong id="print-id">--</strong></div></div></div>
+        </div>
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="border border-slate-200 p-4 rounded"><h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Academic & Merits Summary</h3><ul class="text-xs space-y-2"><li class="flex justify-between"><span>Academic GWA:</span><strong id="print-gwa">--</strong></li><li class="flex justify-between"><span>Cumulative Merit Balance:</span><strong id="print-merits">--</strong></li><li class="flex justify-between"><span>Extra Individual Bonus:</span><strong id="print-bonus" class="text-brand-green">--</strong></li><li class="flex justify-between"><span>Star Cadet / Officer:</span><strong id="print-officer">--</strong></li></ul></div>
+            <div class="border border-slate-200 p-4 rounded"><h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Duty Appraisal Matrix</h3><ul class="text-xs space-y-2"><li class="flex justify-between"><span>Technical Competence (15%):</span><strong id="print-matrix-tech">--</strong></li><li class="flex justify-between"><span>Soft Skills & Watchkeeping (25%):</span><strong id="print-matrix-soft">--</strong></li><li class="flex justify-between"><span>Patriotism Merit Index (25%):</span><strong id="print-matrix-patriotism">--</strong></li><li class="flex justify-between"><span>Leadership/Officer CS (25%):</span><strong id="print-matrix-leadership">--</strong></li><li class="flex justify-between"><span>Academic CS (10%):</span><strong id="print-matrix-academic">--</strong></li></ul></div>
+        </div>
+        <div class="text-center bg-brand-creamAccent border-2 border-dashed border-brand-creamBorder p-6 rounded mb-4">
+            <span class="text-xs text-slate-500 uppercase tracking-widest block mb-1">Final Performance Grade Percentage</span>
+            <div class="text-5xl font-black text-brand-blue" id="print-final-percentage">--%</div>
+            <span class="text-xs text-slate-500 font-semibold block mt-1">Cumulative Evaluation score: <span id="print-final-rating">--</span></span>
+        </div>
+        <div class="mb-6 bg-slate-50 border border-slate-200 p-4 rounded">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Instructor Remarks</h3>
+            <p id="print-remarks" class="text-xs italic text-slate-700 whitespace-pre-wrap">--</p>
+        </div>
+        <div class="mb-8">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Incident & Violation Log</h3>
+            <ul class="text-xs space-y-1 font-mono" id="print-incident-log"></ul>
+        </div>
+        <div class="grid grid-cols-3 gap-4 items-end pt-16 text-center text-xs">
+            <div><div class="w-32 border-b border-black mx-auto mb-1"></div><p class="text-slate-500">Instructor / Appraiser</p></div>
+            <div><div class="w-40 border-b border-black mx-auto mb-1"></div><p class="font-bold text-brand-blue">Bon Christian Andrew B. Armendez</p><p class="text-slate-500 text-[10px] uppercase tracking-wider">Intelligence and Security Officer</p></div>
+            <div><div class="w-48 border-b border-black mx-auto mb-1"></div><p class="font-bold text-brand-blue">Capt. Jomer D. Pascua, MM, MSc</p><p class="text-slate-500 text-[10px] uppercase tracking-wider">Dean, Panpacific University Merchant Marine Academy</p></div>
+        </div>
+    </div>
+
+    <!-- Official Credits Footer -->
+    <footer class="text-center text-xs text-slate-500 dark:text-slate-400 py-6 font-semibold no-print border-t border-brand-creamBorder dark:border-slate-700 mt-8 bg-white dark:bg-slate-800 w-full relative z-10 transition-colors">
+        System Developed by <span class="text-brand-blue dark:text-brand-green">Bon Christian Andrew B. Armendez</span><br>
+        <span class="font-normal opacity-80">Intelligence and Security Officer</span>
+    </footer>
+
+    <!-- Main Calculation and Data Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Extremely Compressed Rosters Data
-        const R={"3":{"Alpha":[["U2401084","ABAD, ARJAY CASISON",60,-220],["U2401265","AGPOON, ARNEL TINGCANG",-1000,-1100],["U2400028","ALVARO, CRIS-PAUL AGUILAR",-880,-1035],["U2401391","BAGAYAN, RENDY MENDOZA",-820,5],["U2401378","BALIGNASAY, RENZ JOFEL SIMBRE",-540,60],["U2401025","BALITON, REMARK VENDIOLA",-370,-775],["U2401065","BARTOLOME, MARWIN NAVALTA",140,10],["U2400469","BASCOS, PRINCE BENEDICT SARMIENTO",-90,65],["U2401016","BAUTISTA, JOHN CARLO HAMILTON",-730,-1035],["U2400376","BANAGA, MHICO SALAZAR",-690,-400],["U2400498","BELLO, ADRIAN MARK DE GUZMAN",200,145],["U2401321","BIO, GEDRICK BATEC",-860,-1010],["U2400467","BONAGUA, JHON BENJIE APINADO",-70,-10],["U2401269","CALICA, MARK SHANE REY",170,200],["U2400386","CANTILLO, EMMANUEL TRAYA",190,360],["U2400741","CASISON, MARC ARO",360,405],["U2401212","COLLADO, JERICHO VILORIA",160,265],["U2401290","DE GUZMAN, ASHLEY ROME AGARAN",-60,-25],["U2401282","DECENA, MARC DANEO MACANAS",-880,-750],["U2400483","DOCUSIN, JOMARIE MINGLANA",40,30],["U2400055","ELLORIN, RUSSEL JOSHUA JOAQUIN",130,350],["U2401322","FERNANDEZ, JOMHEL REY NANG IS",-1000,-1100],["U2400351","FERRER, ROMAN NATHANIEL SAGAYNO",-120,-245],["U2400422","GABUA, EMMANUEL JHON LOUIS RODRIGUEZ",200,65],["U2401260","GASCON, JOSHUA ANDRES",-170,-280],["U2400796","GUIANG, JOHN EURIE JOSE AQUINO",-880,-850],["U2400800","ISMAEL, ANTHONY PHILIP SOLOMON",-810,-370]],"Bravo":[["U2400309","ARMENDEZ, BON CHRISTIAN ANDREW BAUTISTA",540,530],["U2400761","BACLIG, MICHAEL DJUANE LOGROΝΙΟ",160,400],["U2400019","BERGONIA, DAVID GABRIEL ALEXANDER SACAMADERO",540,370],["U2400393","BLANCO, MARK COMBIS",270,245],["U2401458","CABRALDA, JOHN ANGELO DAVID",-810,-1100],["U2400425","CAOAYAN, DARWIN DIMAYA, JR.",245,245],["U2401438","CARIAGA, PRINCES CYRIL ANDAYA",540,510],["U2401254","CHING, TRISTAN DACALAÑO",100,100],["U2400748","DARANG, ANGELO JOUSEF ALMUETE",-21,-610],["U2400272","DEL ROSARIO, KYLO CAIN CARDENAS",245,245],["U2401253","DULAY, ALEX JR ISRAEL",245,245],["U2400122","EDRADA, JOHN FRANCIS SAMPAYAN",540,520],["U2400662","FABELA, AMANDA BEATRIX CANLAS",260,500],["U2401520","FLORES, POCHOLO JAY PALAJE",129,0],["U2400117","FLORES, YDRIAN JOSH CALVERO",-530,-605],["U2400269","FORTUNA, JOHN EDWARD ALVARO",350,445],["U2400447","HADAP, SHAWN MICHAEL MILLANES",245,245],["U2400472","JOVERO, MANUEL CESAR MACAZO",480,305],["U2400448","LAGASCA, MARK VINCENT",245,245],["U2400831","MACASIEB, MC TRISTAN PASCUAL",100,100],["U2401521","MAGALLANES, JERICK ROMBAOA",-370,-585],["U2400322","MANUEL, MATHEW PEREZ",245,245],["U2400134","MARQUEZ, FRITZ DANIEL MARIANO",270,245],["U2401448","MOLINA, MICHAEL ANGELO LAGASCA",-940,-1100],["U2400225","MORALES, WINNIE GONZALES, JR",400,365],["U2400716","ORTIZ, XIAN COSTALES",-150,-415],["U2401415","PALAGANAS, JOHN MARC ALMEROL",-380,-460],["U2400607","PASCUAL, MICHAEL J DELA CRUZ",290,300],["U2400370","RABANZO, RUBEN NONE",245,245],["U2400331","ROSARIO, PRINCE SANDER CAYETANO",245,245],["U2401345","SANTIAGO, PRINCE CEDRIC JAMES FERNANDEZ",-50,-45],["U2400108","SERRA, MARK JEFFERSON CARIAGA",245,245],["U2401174","SIBAYAN, JORIEL LAPITAN",-290,-710],["U2400398","SIBAYAN, LESTER JOHN CARLOS",245,245],["U2401000","SISON, MARK CHRISTIAN JOVERO",560,530],["U2401370","SOLIVEN, JONATHAN TADEO",130,130],["U2400251","STA ANA, KURT CALVIN ESTAYO",245,245],["U2400419","TUBIG, JAN LLOYD ANTONIO",-190,-840],["U2400308","TULAGAN, KIRBY ABELLA",245,245],["U1230892","WACLIN, KLYDE DOTE",210,265]],"Charlie":[["U2400696","AGLANAO, ALYSSON MADRIAGA",-640,-700],["U2400988","ALACAR, GABRIEL NAP PATUNGAN",290,15],["U2400928","ALVENDIA, JUSTINE ANUSENCION",70,-625],["U2400429","AMEN, JESON BANDOLOS",140,-40],["U2401122","ANGELEO, LANCE KIERWYNNE LUCERO",460,530],["U2400617","ATIENZA, ALICIA MAE ASPRER",50,15],["U2401105","AZNAR, MARK JOSEPH LUMBRIA",310,180],["U2400291","BACUYAG, JHAZLEY TROY PACIS",400,210],["U2400685","BUGAYONG, NIÑO ZANDRO MARQUEZ",-750,-1075],["U2400799","CALANTOC, JEMARIE IBAO",260,-230],["U2401179","COMA, JULLIENCE ANDREI LICAYCAY",380,235],["U2400559","COSTALES, MARK DAVID SARMIENTO",-110,-435],["U2400670","DELA CRUZ, LAURO KOBY CALLANTA",0,-1100],["U2400855","DIONIO, MARC IVAN BALMORE",-810,-990],["U2401540","GARCIA, NICOLE ANNE CATOLICO",130,20],["U2400857","GONZALO, MAE VILLAFLOR QUIANΙΟ",240,-175],["U2400593","GUTIERREZ, JAN BENEDICT NAPEEK",30,-620],["U2401526","JAVIEN, JUSTINE SANTOS",-940,-1100],["U2400270","KABIGTING, LIRA KATRINA VILLAMIL",210,-35],["U2401722","LATONIO, JAN PAUL VALEROSO",-1000,-1045],["U2400484","LAUSAN, DENMARC ESTRADA",210,-25],["U2400158","LOMBOY, GLEENBERT GREGORIO",200,-165],["U2400145","MANZANILLO, DAVE FRANCIS BATIN",-470,-600],["U2400634","MANZANO, AMIR JOENEIL PADAWANG",-120,-850],["U2400774","MARTIN, GINO SIDRO",-190,-70],["U2401371","MERIALES, JOHAN LUIS COLLADO",370,365],["U2401527","NATIVIDAD, JOSHWEL VELASCO",-680,-1100],["U2400252","ORDANZA, JAMES LOUIS MADRIAGA",-640,-535],["U2400980","PADILLA, CARL ADRIANE BALANON",290,295],["U2300114","PADILLA, RENZ KENNEVIC DONATO",100,-980],["U2400672","PAET, JOHN PAUL GANIGAN",180,330],["U2401528","PAJARITO, FLORENCE EVANGELISTA",-940,-1035],["U2401355","PASCUAL, EISEN GABRIEL",160,-915],["U2401579","PASION, MARK CHRISTIAN ECRAELA",-940,70],["U2400839","RIVERA, SETH EMMANUEL DUPALE",-900,-1100],["U2400760","SAGUN, CHARLS BRADLY PAASA",240,-775],["U2400762","SANTOS, CHRISTOPHER ABELLERA",-380,-990],["U2400695","SISON, ANDRIO MARK PEREZ",-900,-1065],["U2401190","SUMAOANG, STEVEN BRIX DACLAN",150,265],["U2400248","TRICINA, RAVEN SANTOS",-1000,-1100]],"Delta":[["U2401693","ABUAC, MIKE JUNER LAMSIS",-90,-5],["U2401690","ABYADANG, ELV LIGATEN",-120,60],["U2400273","ANAGARAN, JOHN BENEDICT CO",0,-1100],["U2400681","BATALLA, VIVIAN MAE CALDERON",410,330],["U2400369","BERROYA, CHRISTIAN PAUL BACLOHAN",-150,-525],["U2401501","CACHOLA, BENJIE VICTORIO",-630,-730],["U2400727","CARDENAS, STEVEN MOTILLA",50,-710],["U2400395","COCOTAN, CHRISTOPHER JAMES CODIAMAT",-320,-405],["U2400611","DALIWAN, JOHN PAUL GONZALES",-1000,-1100],["U2401505","DOTON, ADRIANNE IVAN PASCUA",-850,-1100],["U2400387","FABILLON, CHRISTIAN LUZANO",-440,-655],["U2400072","FIRME, MARK JOSEPH DAYAG",-680,-575],["U2400603","GABAYAN, ALEXANDER JOHN CALANNO",-780,-1065],["U2400671","GALINATO, JHEDRICK AERON FLORES",-900,-1100],["U2401962","GAMBOA, RHYNNE VILLANUEVA",-1000,-1100],["U2400071","GANCEÑA, GHELVIN RAIN TABARA",0,-1100],["U2400596","GARCIA, IAN JAY BASA",-1000,-1100],["U2401334","GARCIA, JOHN NATHANIEL",-900,-1100],["U1230223","GUERRERO, JIMPOY RAPISORA",-540,-995],["U2400110","HIDALGO, RALPH JOLO DURAN",-540,-610],["U2401252","LABRO, EANDREW JAKE",0,-1100],["U2401820","LIANGCOCO, IRRON JEAN BENEDICT SANTIAGO",0,-710],["U2400288","LIBRADO, MARK JEDRICK NUNEZ",-60,200],["U1230196","LUCQUIAO, JOHN PHILIP AQUINO",0,0],["U2400987","MANZANO, VINCE ALDRICH CAOILE",0,-785],["U2400728","MARRON, JONALYN AVILA",-230,-870],["U2401170","MARTIZANO, RONITO GULENG",0,-1035],["U2401468","MELECIO, SEANJAMES OSIO",40,-5],["U2401790","PAMA, CHRISTOPHER MATT ROXAS",0,-1035],["U2400595","PARAYAOAN, ETHAN PRINCE SISON",-1000,-1100],["U2400147","PASION, JUNABELLE BLANZA",190,70],["U2400733","RENTIQUIANO, HOMER BAUZON",-760,-1100],["U2401279","ROBILLOS, JONNEL ORZAME",0,-1035],["U2401140","ROMANO, JOSHUA RHODGELLE BERDIN",-1000,-1100],["U2401633","ROSARIO, JOHNJUNARD CO",0,-710],["U2401515","SALDIVAR, CHRISTIAN BALLOCANAG",0,-1100],["U2400926","SAURA, CHRISTIAN JAY",0,-1100],["U2400674","SERAFICA, XYRELLE ANGEL VELASCO",-30,-20],["U2401484","TAYNAN, KYLE JHUN PAULINO",-900,-1100],["U2401041","YAPIT, JERALD PANDAY",-1000,-1100]]},"4":{"Alpha":[["U2500680","AGANON, CYRIL ANDRE GRAGASIN",410,-1075],["U2500566","AGULAY, JOHN JOSEPH ANDRES",100,-745],["U2500352","ALAMBRA, TYRON IAN MARZAN",420,335],["U2501963","ASUNCION, MATTHEW JOSUE FARRO",-150,-835],["U2500438","ATIENZA, ASHLEY MANUEL",420,590],["U2500149","AUNGON, VANN CYRUZ GAMIS",250,-35],["U2501159","BALTAZAR, ANDRE BENEDICT ARCIAGA",150,-920],["U2501254","BAUTISTA, DENVER COSTALES",290,-1630],["U2500073","BELISARIO, JULIUS CESAR GARCIA",145,-410],["U2501739","BERGADO, JOHN LOWRENCE JACALNE",290,-940],["U2500072","CABRAL, MIKE DENVER BINALAY",185,-460],["U2501380","CABREROS, THIRD MOLATE",-355,-1035],["U2500764","CALONGE, EARL JOHN PAUL DOMINGUEZ",220,60],["U2500245","CENTINO, RYAN COLLADO",385,35],["U2500379","DARACAN, BRAD KRISTOFF SICAT",355,60],["U2501293","DOMINE, JEFFRY SALVADOR",195,-915],["U2501393","FACUN, JOHN KEIZER GRAGASIN",-505,-1220],["U2501103","FERNANDEZ, REY VELASCO",520,290],["U2500844","FRUELDA, SZHEN ANGELO JEDE RUAR",360,-320],["U2501371","GANDEZA, JOHN ANDREI CORPUZ",-195,-1155],["U2500152","GUERRERO, CHARLES ADRIAN HERNAEZ",30,0],["U2501210","LAPEÑA, KYLE EUAN PAJATIN",80,-485],["U2500521","MAMARIL, ADRIEL ERNIE DARILAG",130,-825],["U2501296","ΜΑNANTAN, RENIER FAMOR",270,-1230],["U2501294","MARI, JOHN MARK ANTOLIN",254,-435],["U2501740","MAYOMIS, PAUL LAOYAN BIO",300,-350],["U2500220","MOLINA, ALBERT JEWEL SEBASTIAN",-145,-455],["U2500124","MORENTE, FRANZ SID BARAOID",240,-285],["U2501157","PAGBILAO, DAN JAYLORD VALENCIA",40,-540],["U2500251","PARAGAS, JULIAN ALVENDIA",110,-665],["U2501382","REYES, DAVE JUSTINE MANALASTAS",205,-165],["U2501288","REYES, IVAN SUETOS",65,-1175],["U2500150","SARIO, EFREN BALINGIT",405,320],["U2500808","SARMIENTO, JEROME SILAROY",120,-900],["U2501295","SIBAYAN, JHUN ANDREW UALAT",260,-1260],["U2500597","SINLAO, AXLE JHUNE CABLAS",350,-840],["U2500620","ΤΕNGAY, JANWAYNE MAGAWAY",370,-360],["U2500715","USON, JOSHUA TOLENTINO",400,-615],["U2500574","VELASCO, NOVA JANE MARIANE",800,420],["U2501960","VISUYAN, RODWIL AMBROSIO",-370,-570]],"Bravo":[["U2500700","ALBERTO, JOHN MIGUEL MALIGSA",455,305],["U2501251","AMAYA, GILMORE JANN ANDRADA",-200,-1620],["U2500076","AMBROCIO, PRINCE PHILIP TAYDE",270,90],["U2500067","ANGELO, ANDREI DISCIPULO",760,570],["U2500633","AOANAN, JERHAMEEL CATUTUYA",825,635],["U2500727","ARQUERO, KEITH ANDREW AGUSTIN",410,-315],["U2500177","AVENIDO, BEN GABRIEL BELTRAN",270,-970],["U2500241","BASA, JOHN CASSLEIGN XHYRILLE TAGANAS",560,-445],["U2500024","BASANES, VINCENT GERARD",625,715],["U2500635","BIVE, STEPHEN RAMIREZ",850,715],["U2500288","CABATO, JEROME ORTIZ",980,675],["U2500025","CANCINO, GELBERT ROMERO",335,505],["U2501404","CAOILE, BRENALYN ESPAÑULA",390,-130],["U2501054","CAYETANO, CEDRICK PARICA",735,450],["U2500238","DELA REYNA, VAL ELLIS DON",135,-825],["U2500277","DELFIN, JOSHUA BRYAN",205,-185],["U2500952","DELOS SANTOS, JEREMIE GAZMEN",845,525],["U2501265","DUMALAON, JUSTIN CARL GUILLERMO",470,-730],["U2500011","ESCOBAR, ROBERTO QUILAMAN",305,185],["U2501035","GABAYERON, JOLO HENRIK BERMUDEZ",900,700],["U2500558","ILDEFONSO, LAWRENCE JOHN PATACSIL",270,-180],["U2501205","LAMARCA, ULYSSA PLACHETA",900,690],["U2500123","LICUDINE, AUSTIN JARED SACATROPES",210,15],["U2500904","LIZADA, SANTINA ABELLANO",970,685],["U2500184","MACARAEG, MAC LESTER LACAR",260,115],["U2501282","MEJIA, JANVILLE MANLONGAT",260,-300],["U2501068","ΜΟNES, CHRISTIAN GLENN ABUAN",-70,-1365],["U2500517","MORTERA, KENNETH CARL ORDONEZ",420,-660],["U2500158","NEGRILLO, SHERNAND QUIBEN",-285,-1590],["U2500600","OBRA, APRISH KAYNE SERAFICA",370,-490],["U2500221","OLIVEROS, ADRIEL DE LEON",420,-530],["U2500026","PALAD, DHENZ MYTH CAVINTA",590,620],["U2500957","PARIÑAS, NICKO ESPIRITU",475,505],["U2500936","PEDERICHE, JARED BERISO",795,670],["U2500239","PIRA, MOHD YASSER DELAREYNA",330,-40],["U2500809","RAMIREZ, PRINCESS LYN",575,450],["U2402152","RENDORIO, NATHANIEL SUBIDO",450,-265],["U2500630","TORRES, JAMIN ANGELO JANDOC",545,145],["U2500402","VALDEZ, SYDNEY BASADA",410,15],["U2500028","VERGARA, JOHN CHRISTIAN BATOON",545,585]],"Charlie":[["U2500203","BARDINAS, JUSTINE COVIE ARELLANO",275,40],["U2501171","BAUTISTA, HARRY DE VERA",-90,-1285],["U2500744","CAFIRMA, EDWIN DOMONDON",170,-485],["U2500755","CAFIRMA, JURIEL MAR VILLANDA",150,-705],["U2500085","CALIMQUIM, ROJON ICO",15,-375],["U2501072","CAOILE, MARK WILLIAM IGNACIO",180,-425],["U2500762","CORDOVA, ALUCARD DEVIN LIGOT",75,-545],["U2500036","DADIVAS, JOHN MICHAEL ABELLA",150,170],["U2501325","DATU, CARLO JOHN FAILMA",370,65],["U2501222","DE GUZMAN, CARL JUSTIN NELMIDA",255,-80],["U2500996","DE SILVA, RALPH BACONGOL",285,145],["U2500068","EGIPTO, NEIL FRANCIS SELIRIO",160,-320],["U2501815","ESTAYO, JESSA MAE GARCIA",560,-430],["U2501304","FONTANILLA, XZYVER JUNO OLIVAR",215,-445],["U2500110","GAJOTAN, MARK LESTER TAVISORA",95,-1015],["U2500968","GALDONES, JHON RICK CATABONA",190,-855],["U2501903","GONZALES, MAE JENICA SABANGAN",110,-20],["U2500606","JIMENEZ, JAMES CLARK SANTIAGO",370,355],["U2500891","LACHICA, ALIZZA RUTH JULIA SEMINIANO",650,-125],["U2501427","LEAL, JHANCEL JAY PAGARIGAN",-10,10],["U2500748","LOMBOY, MARVIN EDCEL VALIN",220,-730],["U2500788","MANZANO, GINO LAZAGA",370,115],["U2501345","MENDOZA, JOHN MIGUEL",275,-1070],["U2500377","MILLADO, LAWRENCE EUGENΙΟ",710,175],["U2501083","ΜΙNA, MARK JHASPER ERIA",-35,-990],["U2500204","MOLINA, MARK WARREN ESLABRA",330,-455],["U2500575","MUYON, JOHN PHILIP BARBIETO",-125,-885],["U2501306","NATIVIDAD, ANGELITO GARDUCE",130,-1220],["U2500106","PALARUAN, RAPHAEL JOSEPH GARCIA",-20,-810],["U2500415","PALBACAL, PRINCE HARRY CUARESMA",70,-1265],["U2500198","RIVERA, MARK WENDEL ANDAYA",300,-1275],["U2500109","SALINDONG, CHRISMOND LUMANOG",105,-970],["U2500414","SORIANO, GAVERIEL LOUIS",110,-400],["U2500069","SUBA, JOHN KYLO QUINTERO",345,-445],["U2500293","SUMAJIT, PRINCE KARL PASCUAL",190,-560],["U2500418","SY, SEAN SISON",-130,-505],["U2501090","TEMBREZA, ROLANDO BALCORTA",-5,-955],["U2501055","VILLANUEVA, JOHN MIKKO MALIGAYA",345,545],["U2500051","VILLANUEVA, LUCKY MARJUN MANICAOA",315,410],["U2501197","VILLOTA, RJ PAGDANGANAN",375,355]],"Delta":[["U2500248","ABEDOZA, ELJAN DERPO",700,210],["U2501639","ABRAHAM, KYLE CEDRIC HABER",515,-195],["U2500740","AGUNDAY, JEFFERSON ADAY",220,-385],["U2500427","ALVERNE, EUGIEN LAPIRA",-260,-1965],["U2501527","BADAR, RHAINE MARLLE VALIX",-190,-1145],["U2501275","BALAGOT, HANZ CLEVER CORTEL",-20,-1360],["U2500163","BALANAY, KYZIER DE GUZMAN",670,225],["U2500269","BALDERAS, JOHANNES MARLON ABOGADO",180,-785],["U2500836","BAUTISTA, RANDYLYN TACSON",540,-265],["U2501733","BAÑARES, RENZ ANDREI CARIÑO",170,-225],["U2500131","BRIONES, JASTIN SHANN DE LA PENA",360,-405],["U2500329","BRIONES, MARK DOUGLAS LIMON",410,-505],["U2500933","CABICO, JOHN KERVIN DELOS SANTOS",-5,170],["U2500730","CANTOR, GESSELE PILAR",370,-345],["U2501014","DOLOR, RHYZHEN",460,430],["U2500835","ESTOREL, AUDREY ZARICH NIÑO",770,145],["U2501697","FLORES, JOHN ROJIE HINAY",800,174],["U2500959","GALVEZ, MARCO AARON OSTIL",690,-335],["U2500399","GOMEZ, JERWIN ALVEY RIVERA",310,95],["U2501099","LIBATIQUE, NASH MIRAL",190,-940],["U2500140","LIMOS, RENE MIAS",220,-125],["U2501946","LOCQUIAO, SAMANTHA YSSABELLE ATENCIO",200,-205],["U2500178","ΜΑNIPON, JOHN LEONARD PABELICO",270,115],["U2500217","MARIÑAS, EHDRIAN SALVADOR",275,40],["U2500473","NITUMA, JHONA MAE CONDE",640,-95],["U2500052","PERALTA, JERALD ROBINA",325,-40],["U2500908","RAMOS, BRYAN JAMES VALLEJOS",570,-20],["U2500303","RAMOS, RAYMOND VEDANA",255,-625],["U2501078","RIVERA, ANDRE JILLIAN MACASU",95,45],["U2500056","SALTING, LAWRENCE DEJHAY CASTILLANES",810,-145],["U2500893","SEVILLEJA, FERDINAND CABATIC",520,-400],["U2500153","TABORA, AMIEL CARLOS",390,-485],["U2501653","TAGLE, JOB GRAGASIN",0,-545],["U2500129","ΤΑNAP, JHON ZEDRICK",810,-360],["U2501825","TEOFILO, PAUL JAMES BINWAG",225,-525],["U2501750","YAQUITEN, FELIX JAY LAMBINO",-90,-465]],"Echo":[["U2500224","AGONOY, JOEBEL BAJIT",240,-1615],["U2501168","AGSALDA, TYRON REBODOS",520,-280],["U2501421","ΑΝTALAN, ISIAH MATTHEW MELEGRITO",-40,-1305],["U2501616","AQUINO, JOHN PATRICK OMOLIDA",340,-1145],["U2501823","BALUCANAG, JOHN CEDRIC EVANGELISTA",25,-1470],["U2500695","BERNARDINO, LESTER CABAEL",-140,-1285],["U2501174","CABANADA, REYVEN MANZANO",-150,-880],["U2501649","CABEBE, ROMMEL CUICO",90,-1735],["U2501902","CARAMANCION, GABRIEL RAY VICTORIO",120,-85],["U2501337","CARIAGA, KEIRVY ELEVAZO",-160,-1445],["U2501635","CASTILLO, KIM GALDONES",-45,-1405],["U2501144","DALAN, VIRGIL MARK LAMADORA",-100,-245],["U2500278","DRACULAN, RICHARD UGALDE",260,-1615],["U2500783","GUMANGAN, JOSHUA SOMERA",320,-320],["U2500412","HABON, CHARLES DARYLL AQUINO",310,95],["U2500298","HAPITAN, RUDY ABOBO",-105,-1775],["U2500725","LAMADORA, CLINTON MARK CALIPES",5,-495],["U2500092","LIGAN, JONIEL NICOLAS",440,-945],["U2501596","MACEDONIO, CJ LEE NARBONITA",-10,-1006],["U2501846","MAGAT, LAWRENCE SEGUNDO",-135,-1075],["U2500080","MALAPIT, RICHARD MANDAC",420,-820],["U2501507","ΜΑNAOIS, LEOMARK SAGUN",50,-995],["U2500219","MARQUEZ, JIMREX PARINAS",100,-1025],["U2500940","MARQUEZ, SHIRKING LACSON",-230,-685],["U2501469","MENDOZA, KRISTOPHER BON RAMIREZ",100,-885],["U2500081","ΜΕNOR, ROEL DERICK CURAMENG",230,-790],["U2501456","MONTERO, BRANDON KEITH LAUREANO",390,-585],["U2500880","MORALES, BOBBY REBODOS",390,-560],["U2501170","MORENO, JEZREEL DWYN KHAEZER RAMOS",-15,-1510],["U2500185","MUENA, CHRISTIAN DARRYL LICAY",380,-1010],["U2500429","MUNGCAL, LUIS CUNANAN",80,-885],["U2500497","ΝΑΙNG, MARK ANGELO OBILLO",370,-120],["U2500083","OLARTE, RYVIN CHARLES URMA",150,-1550],["U2501270","PASCUA, JAKE KYLLE JUSTINE MARCOS",-10,-1265],["U2500223","PASCUA, JOHN HARVEY COQUILLA",460,-940],["U2501571","PLADO, EDRIAN OLIVARES",190,-1430],["U2501271","RAGUNJAN, MC JUSTINE ANDRADA",285,-950],["U2501111","RAZONABLE, DENMARK BUEN",370,-505],["U2402223","VALDEZ, CARL CHRISTIAN BARLONGO",410,-275],["U2501200","VICTORI, JEREMY LOPEZ",275,-1455]],"Foxtrot":[["U2500212","ABALOS, PRINCE YTSER JAY MARTINEZ",90,-945],["U2501487","ANCHETA, JOHN PAULO BASTO",380,-620],["U2500388","ARCIAGA, MARK JAY HUGO RACOYA",260,-600],["U2500508","ASUNCION, RENE BOY NOTO",305,-270],["U2501453","BASTIAN, BERNIE JULES NGAYDAO",360,-570],["U2500053","CALONGE, ROGER FEREGRINA",370,-920],["U2500766","CAMINIO, LUIZ ALFRED BRUAN",380,-885],["U2501115","CARIAGA, JERICK OBEDOZA",470,420],["U2500951","DE VERA, JAVE DE GUZMAN",240,-390],["U2500128","DELFIN, JHON FRITZ LIBORES",240,-620],["U2501589","DUADUA, ARMAND STEWART ALFONSO",-290,-1775],["U2500874","ETRATA, RAIN CHESTER CAMARAO",360,-1285],["U2500328","FARRO, GIAN JOSHUA LIMOS",295,-275],["U2500292","FERNANDEZ, ROLAN JAY MERLIN",320,-140],["U2500331","GALLARDE, RANNIEL MARK DAPANAS",-320,-860],["U2501283","LAGRIMOSA, MARK LOUIJIE EVANGELIO",460,-635],["U2500915","LUCAS, MARK BENEDICK BAUTISTA",-455,-925],["U2501346","MOLINA, DENVER GAMAYA",795,-905],["U2500227","NARTATES, IVAN LAROZA",320,-670],["U2500387","NASTOR, ROEL GARLITOS",320,-945],["U2500681","OIGOAN, JUNAR SIBAYAN",-40,-95],["U2500003","OSABEL, KIANJAMES CALONGE",-60,0],["U2500214","PATALUD, JHONREY CARALIPIO",120,-665],["U2501455","PELIGRINO, RENJIE ARDEZA",340,-685],["U2500536","RAPANOT, JERVIS CRWYS SANTIAGO",525,-685],["U2500260","SAYSON, JOHN ABEL UNTALAN",-280,-1020],["U2501172","SOLIS, MARK JESTER LONGAY",210,-485],["U2501784","TIGCANGAY, BRUCE BAUTISTA",600,-880],["U2500384","UBALDO, CHRIS VINCENT LOPEZ",490,-970]]}};
-        const OFFICER_NAMES = ["ARMENDEZ, BON CHRISTIAN ANDREW BAUTISTA", "ANGELEO, LANCE KIERWYNNE LUCERO", "CARIAGA, PRINCES CYRIL ANDAYA", "SISON, MARK CHRISTIAN", "FERNANDEZ, JOMAR L."];
-        const firebaseConfig = { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427" };
+        const apiKey = "";
+        const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
+        const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         
-        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const appId = 'pumma-2026-production';
-        window.cadets = []; window.selectedCadetId = null; window.currentUserRole = null; window.appSettings = { papers: 30, maxMeritCap: 450, peerMode: 'dynamic', academicYear: "2025-2026", adminPin: "1234" };
+        const SVG_MALE = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23cbd5e1%22%2F%3E%3Cpath%20d%3D%22M50%2025c-10%200-16%208-16%2018%200%208%204%2013%208%2016-10%204-22%2015-22%2041h60c0-26-12-37-22-41%204-3%208-8%208-16%200-10-6-18-16-18z%22%20fill%3D%22%2394a3b8%22%2F%3E%3Cpath%20d%3D%22M30%2028l40%200-5-12-30%200z%22%20fill%3D%22%231e293b%22%2F%3E%3Cpath%20d%3D%22M25%2028h50v4H25z%22%20fill%3D%22%23000%22%2F%3E%3C%2Fsvg%3E";
+        const SVG_FEMALE = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23cbd5e1%22%2F%3E%3Cpath%20d%3D%22M68%2045a10%2010%200%201%201-10-18%2010%2010%200%200%201%2010%2018z%22%20fill%3D%22%2364748b%22%2F%3E%3Cpath%20d%3D%22M50%2025c-10%200-16%208-16%2018%200%208%204%2013%208%2016-10%204-22%2015-22%2041h60c0-26-12-37-22-41%204-3%208-8%208-16%200-10-6-18-16-18z%22%20fill%3D%22%2394a3b8%22%2F%3E%3Cpath%20d%3D%22M30%2028l40%200-5-12-30%200z%22%20fill%3D%22%231e293b%22%2F%3E%3Cpath%20d%3D%22M25%2028h50v4H25z%22%20fill%3D%22%23000%22%2F%3E%3C%2Fsvg%3E";
 
-        window.toggleDarkMode = () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('pummaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false'); };
-        if (localStorage.getItem('pummaDarkMode') === 'true') document.documentElement.classList.add('dark');
+        const safeSetInnerHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+        const getVal = (id, fallback = '') => { const e = document.getElementById(id); return e ? e.value : fallback; };
+        const getNum = (id, fallback = 0) => { const e = document.getElementById(id); const val = e ? parseFloat(e.value) : fallback; return isNaN(val) ? fallback : val; };
+        const getChk = (id) => { const e = document.getElementById(id); return e ? e.checked : false; };
+        const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.innerText = val; };
+        const setVal = (id, val) => { const e = document.getElementById(id); if (e) e.value = val; };
+        const setChk = (id, val) => { const e = document.getElementById(id); if (e) e.checked = val; };
 
-        const getVal=(id)=>document.getElementById(id)?.value||''; const getNum=(id,f=0)=>parseFloat(document.getElementById(id)?.value)||f;
-        const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.innerText=v}; const setVal=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};
+        window.getDeviceName = () => {
+            const ua = navigator.userAgent;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua)) return "iOS (iPhone/iPad)";
+            if (/Windows NT/.test(ua)) return "Windows PC";
+            if (/Mac OS X/.test(ua)) return "Mac";
+            if (/Linux/.test(ua)) return "Linux PC";
+            return "Unknown Device";
+        };
 
-        window.seedDatabase = async () => {
-            if(!confirm("Seed database with default rosters? This will securely load all 372 cadets. Please do NOT close the browser while this runs!")) return;
+        const defaultChecklistProfiles = {
+            "profile-day1": { label: "Day 1: Ship Survey", tech: ["Verify Documents", "Access Control", "Lighting Check", "Manifest Audit", "Hygiene Audit", "Safety Verification"], soft: ["Gangways", "Ventilation", "Surface Prep", "Glass/Mirrors", "Workstations", "Equipment Dusting", "Deck/Floor", "Final Inspection"] },
+            "profile-day2": { label: "Day 2: MPC", tech: ["Rules Check", "Practice Log", "Double Check", "Create Scenario", "Analyze Impact", "Data Gather", "Trim Calculate"], soft: ["Drill Selection", "Alarm", "Muster", "Roll Call", "Equipment", "Debrief"] },
+            "profile-day3": { label: "Day 3: Emergency", tech: ["Reading Retrieval", "Trim Calculation", "Visual Verification", "Stress Assessment", "Report"], soft: ["Bin Inspection", "Segregation Check", "Bag Replacement", "Discharge Simulation", "Cleaning", "Alarm Protocol", "Containment", "Muster", "Incident Report", "Debrief"] },
+            "profile-day4": { label: "Day 4: Maintenance", tech: ["Verify locks", "Ensure lights", "Secure equipment", "Inspect racks", "Verify seals", "Open windows", "Clear desks", "Wipe surfaces", "Dust equipment", "Sweep floor", "Audit logbook"], soft: ["OOW drill", "Validate battery", "Apply PA", "Proceed to Muster", "Cross-check", "Confirm markers", "Lessons Learned", "Ensure signage clean"] },
+            "profile-day5": { label: "Day 5: Seamanship", tech: ["Mooring Ropes", "Knot Strength", "INTERCO Signal", "Visual Flag", "SMCP Message", "Watch Relief"], soft: ["Emergency Drill", "Muster & Roll", "LSA Speed Run", "Bridge-to-Deck", "5S Shift Handover"] },
+            "profile-day6": { label: "Day 6: Voyage Plan", tech: ["Chart Inventory", "Technical Plotting", "Alarms & Limits", "Voyage Monitoring", "VTS Reporting", "Bridge Team", "Star Finder", "Sextant", "Chronometer", "Altitude", "Intercept", "Celestial", "Compass", "Fix"], soft: ["Flag ID", "Halyard", "Hoisting", "Morse", "Watchkeeping", "Seamanship", "Mooring", "Deck Maint", "Official Log"] },
+            "profile-day7": { label: "Day 7: Nav & Sec", tech: ["AtoN ID", "DR & EP", "Position Fix", "Math Sailings", "Steering", "Track Keeping", "Sim Watch", "Mock Port", "Bridge RM"], soft: ["Inventory Rm", "Restroom", "Hallway", "Fire App", "Waste Seg", "Sim Deck", "PPE", "Gangway", "Visitor Log", "Baggage", "Roving Sec", "Security Comms"] }
+        };
+
+        const defaultViolationsList = [
+            { id: "v1", name: "Improper Haircut", points: -50 }, { id: "v2", name: "Unshined shoes", points: -10 },
+            { id: "v3", name: "Unshined Shoulderboard", points: -25 }, { id: "v4", name: "Unshined Bucklebelt", points: -10 },
+            { id: "v5", name: "No Handkerchief", points: -10 }, { id: "v6", name: "Only 1 Handkerchief", points: -5 },
+            { id: "v7", name: "Unshaved beard/moustache", points: -15 }, { id: "v8", name: "Absent", points: -50 },
+            { id: "v9", name: "Cutting class", points: -50 }, { id: "v10", name: "Improper uniform", points: -30 },
+            { id: "b1", name: "Present / Event (Bonus)", points: 10 }
+        ];
+
+        window.defaultChecklistProfiles = defaultChecklistProfiles;
+        window.defaultViolationsList = defaultViolationsList;
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'pumma-2026-production';
+
+        window.cadets = [];
+        window.selectedCadetId = null;
+        window.activeProfileKey = "profile-day1";
+        window.appSettings = { papers: 30, maxMeritCap: 450, peerMode: 'dynamic', gradedMonths: {}, sectionDuties: {}, academicYear: "2025-2026", adminPin: "1234", announcement: "Orders of the Day: Welcome to the PUMMA Dashboard.", announcements: [] };
+        window.currentUserRole = null; 
+
+        const OFFICER_NAMES = ["ARMENDEZ, BON CHRISTIAN ANDREW BAUTISTA", "ANGELEO, LANCE KIERWYNNE LUCERO", "CARIAGA, PRINCES CYRIL ANDAYA", "SISON, MARK CHRISTIAN", "FERNANDEZ, JOMAR L. (DELTA)"];
+        const ROSTERS = {
+            "Alpha":["ABAD, ARJAY CASISON,60,-220","AGPOON, ARNEL TINGCANG,-1000,-1100","ALVARO, CRIS-PAUL AGUILAR,-880,-1035","BAGAYAN, RENDY MENDOZA,-820,5","BALIGNASAY, RENZ JOFEL SIMBRE,-540,60","BALITON, REMARK VENDIOLA,-370,-775","BARTOLOME, MARWIN NAVALTA NA,140,10","BASCOS, PRINCE BENEDICT SARMIENTO,-90,65","BAUTISTA, JOHN CARLO HAMILTON,-730,-1035","BANAGA, MHICO SALAZAR,-690,-400","BELLO, ADRIAN MARK DE GUZMAN,200,145","BIO, GEDRICK BATEC,-860,-1010","BONAGUA, JHON BENJIE APINADO,-70,-10","CALICA, MARK SHANE REY,170,200","CANTILLO, EMMANUEL TRAYA,190,360","CASISON, MARC ARO,360,405","COLLADO, JERICHO VILORIA,160,265","DE GUZMAN, ASHLEY ROME AGARAN,-60,-25","DECENA, MARC DANEO MACANAS,-880,-750","DOCUSIN, JOMARIE MINGLANA,40,30","ELLORIN, RUSSEL JOSHUA JOAQUIN,130,350","FERNANDEZ, JOMHEL REY NANG IS,-1000,-1100","FERRER, ROMAN NATHANIEL SAGAYNO,-120,-245","GABUA, EMMANUEL JHON LOUIS RODRIGUEZ,200,65","GASCON, JOSHUA ANDRES,-170,-280","GUIANG, JOHN EURIE JOSE AQUINO,-880,-850","ISMAEL, ANTHONY PHILIP SOLOMON,-810,-370","JACINTO, MARK ANTHONY,0,0","JAVIER, CHRISTIAN,0,0","LACSAMANA, JOSE,0,0","LAGMAN, PAOLO,0,0","MACALINTAL, JOHN,0,0","MENDOZA, RAFAEL,0,0","NAVARRO, LUIS,0,0","OCAMPO, MIGUEL,0,0","PASCUAL, CARLO,0,0","QUINTO, GABRIEL,0,0","REYES, ANDREI,0,0","SANTOS, EMMANUEL,0,0","TOLENTINO, VINCENT,0,0","UMALI, JUSTIN,0,0","VILLANUEVA, KEVIN,0,0","ZAMORA, JERICHO,0,0"],
+            "Bravo":["ARMENDEZ, BON CHRISTIAN ANDREW BAUTISTA,540,530","BACLIG, MICHAEL DJUANE LOGRONIO,160,400","BERGONIA, DAVID GABRIEL ALEXANDER SACAMADERO,540,370","BLANCO, MARK COMBIS,270,245","CABRALDA, JOHN ANGELO DAVID,-810,-1100","CAOAYAN, DARWIN DIMAYA JR.,245,245","CARIAGA, PRINCES CYRIL ANDAYA,540,510","CHING, TRISTAN DACALAÑO,100,100","DARANG, ANGELO JOUSEF ALMUETE,-21,-610","DEL ROSARIO, KYLO CAIN CARDENAS,245,245","DULAY, ALEX JR ISRAEL,245,245","EDRADA, JOHN FRANCIS SAMPAYAN,540,520","FABELA, AMANDA BEATRIX CANLAS,260,500","FLORES, POCHOLO JAY PALAJE,129,0","FLORES, YDRIAN JOSH CALVERO,-530,-605","FORTUNA, JOHN EDWARD ALVARO,350,445","HADAP, SHAWN MICHAEL MILLANES,245,245","JOVERO, MANUEL CESAR MACAZO,480,305","LAGASCA, MARK VINCENT,245,245","MACASIEB, MC TRISTAN PASCUAL,100,100","MAGALLANES, JERICK ROMBAOA,-370,-585","MANUEL, MATHEW PEREZ,245,245","MARQUEZ, FRITZ DANIEL MARIANO,270,245","MOLINA, MICHAEL ANGELO LAGASCA,-940,-1100","MORALES, WINNIE GONZALES JR,400,365","ORTIZ, XIAN COSTALES,-150,-415","PALAGANAS, JOHN MARC ALMEROL,-380,-460","PASCUAL, MICHAEL J DELA CRUZ,290,300","RABANZO, RUBEN NONE,245,245","ROSARIO, PRINCE SANDER CAYETANO,245,245","SANTIAGO, PRINCE CEDRIC JAMES FERNANDEZ,-50,-45","SERRA, MARK JEFFERSON CARIAGA,245,245","SIBAYAN, JORIEL LAPITAN,-290,-710","SIBAYAN, LESTER JOHN CARLOS,245,245","SISON, MARK CHRISTIAN JOVERO,560,530","SOLIVEN, JONATHAN TADEO,130,130","STA ANA, KURT CALVIN ESTAYO,245,245","TUBIG, JAN LLOYD ANTONIO,-190,-840","TULAGAN, KIRBY ABELLA,245,245","WACLIN, KLYDE DOTE,210,265"],
+            "Charlie":["AGLANAO, ALYSSON MADRIAGA,-640,-700","ALACAR, GABRIEL NAP PATUNGAN,290,15","ALVENDIA, JUSTINE ANUSENCION,70,-625","AMEN, JESON BANDOLOS,140,-40","ANGELEO, LANCE KIERWYNNE LUCERO,460,530","ATIENZA, ALICIA MAE ASPRER,50,15","AZNAR, MARK JOSEPH LUMBRIA,310,180","BACUYAG, JHAZLEY TROY PACIS,400,210","BUGAYONG, NIÑO ZANDRO MARQUEZ,-750,-1075","CALANTOC, JEMARIE IBAO,260,-230","COMA, JULLIENCE ANDREI LICAYCAY,380,235","COSTALES, MARK DAVID SARMIENTO,-110,-435","DELA CRUZ, LAURO KOBY CALLANTA,0,-1100","DIONIO, MARC IVAN BALMORE,-810,-990","GARCIA, NICOLE ANNE CATOLICO,130,20","GONZALO, MAE VILLAFLOR QUIANΙΟ,240,-175","GUTIERREZ, JAN BENEDICT NAPEEK,30,-620","JAVIEN, JUSTINE SANTOS,-940,-1100","KABIGTING, LIRA KATRINA VILLAMIL,210,-35","LATONIO, JAN PAUL VALEROSO,-1000,-1045","LAUSAN, DENMARC ESTRADA,210,-25","LOMBOY, GLEENBERT GREGORIO,200,-165","MANZANILLO, DAVE FRANCIS BATIN,-470,-600","ΜΑΝΖΑΝΟ, AMIR JOENEIL PADAWANG,-120,-850","MARTIN, GINO SIDRO,-190,-70","MERIALES, JOHAN LUIS COLLADO,370,365","NATIVIDAD, JOSHWEL VELASCO,-680,-1100","ORDANZA, JAMES LOUIS MADRIAGA,-640,-535","PADILLA, CARL ADRIANE BALANON,290,295","PADILLA, RENZ KENNEVIC DONATO,100,-980","PAET, JOHN PAUL GANIGAN,180,330","PAJARITO, FLORENCE EVANGELISTA,-940,-1035","PASCUAL, EISEN GABRIEL,160,-915","PASION, MARK CHRISTIAN ECRAELA,-940,70","RIVERA, SETH EMMANUEL DUPALE,-900,-1100","SAGUN, CHARLS BRADLY PAASA,240,-775","SANTOS, CHRISTOPHER ABELLERA,-380,-990","SISON, ANDRIO MARK PEREZ,-900,-1065","SUMAOANG, STEVEN BRIX DACLAN,150,265","TRICINA, RAVEN SANTOS,-1000,-1100"],
+            "Delta":["ABUAC, MIKE JUNER LAMSIS,-90,-5","ABYADANG, ELV LIGATEN,-120,60","ANAGARAN, JOHN BENEDICT CO,0,-1100","BATALLA, VIVIAN MAE CALDERON,410,330","BERROYA, CHRISTIAN PAUL BACLOHAN,-150,-525","CACHOLA, BENJIE VICTORIO,-630,-730","CARDENAS, STEVEN MOTILLA,50,-710","COCOTAN, CHRISTOPHER JAMES CODIAMAT,-320,-405","DALIWAN, JOHN PAUL GONZALES,-1000,-1100","DOTON, ADRIANNE IVAN PASCUA,-850,-1100","FABILLON, CHRISTIAN LUZANO,-440,-655","FIRME, MARK JOSEPH DAYAG,-680,-575","GABAYAN, ALEXANDER JOHN CALANNO NA,-780,-1065","GALINATO, JHEDRICK AERON FLORES,-900,-1100","GAMBOA, RHYNNE VILLANUEVA,-1000,-1100","GANCEÑA, GHELVIN RAIN TABARA,0,-1100","GARCIA, IAN JAY BASA,-1000,-1100","GARCIA, JOHN NATHANIEL,-900,-1100","GUERRERO, JIMPOY RAPISORA,-540,-995","HIDALGO, RALPH JOLO DURAN,-540,-610","LABRO, EANDREW JAKE,0,-1100","LIANGCOCO, IRRON JEAN BENEDICT SANTIAGO,0,-710","LIBRADO, MARK JEDRICK NUNEZ,-60,200","LUCQUIAO, JOHN PHILIP AQUINO,0,0","MANZANO, VINCE ALDRICH CAOILE,0,-785","MARRON, JONALYN AVILA,-230,-870","MARTIZANO, RONITO GULENG III,0,-1035","MELECIO, SEANJAMES OSIO,40,-5","PAMA, CHRISTOPHER MATT ROXAS,0,-1035","PARAYAOAN, ETHAN PRINCE SISON,-1000,-1100","PASION, JUNABELLE BLANZA,190,70","RENTIQUIANO, HOMER BAUZON,-760,-1100","ROBILLOS, JONNEL ORZAME,0,-1035","ROMANO, JOSHUA RHODGELLE BERDIN,-1000,-1100","ROSARIO, JOHNJUNARD CO,0,-710","SALDIVAR, CHRISTIAN BALLOCANAG,0,-1100","SAURA, CHRISTIAN JAY,0,-1100","SERAFICA, XYRELLE ANGEL VELASCO,-30,-20","TAYNAN, KYLE JHUN PAULINO,-900,-1100","YAPIT, JERALD PANDAY,-1000,-1100"]
+        };
+
+        window.toggleDarkMode = () => {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            localStorage.setItem('pummaDarkMode', html.classList.contains('dark') ? 'true' : 'false');
+            if(!document.getElementById('analytics-modal').classList.contains('hidden')) window.openAnalyticsModal();
+        };
+
+        const yearsStr = [...Array(7)].map((_, i) => `<option value="${2024+i}">${2024+i}</option>`).join('');
+
+        window.refreshProfileDropdown = () => {
+            if(!window.appSettings.checklistProfiles || Object.keys(window.appSettings.checklistProfiles).length === 0) window.appSettings.checklistProfiles = defaultChecklistProfiles;
+            safeSetInnerHTML('select-mockboat-profile', Object.keys(window.appSettings.checklistProfiles).map(k => `<option value="${k}" ${k===window.activeProfileKey ? 'selected' : ''}>${window.appSettings.checklistProfiles[k].label}</option>`).join(''));
+        };
+
+        window.updateGlobalSettings = async () => {
+            window.appSettings.papers = parseInt(getVal('input-papers', 30)) || 30;
+            window.appSettings.peerMode = getVal('select-peer-mode', 'dynamic');
+            window.appSettings.academicYear = getVal('input-acad-year', '2025-2026');
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), {
+                papers: window.appSettings.papers,
+                peerMode: window.appSettings.peerMode,
+                academicYear: window.appSettings.academicYear
+            });
+            window.recalculateMetrics();
+        };
+
+        function initSafeUI() {
             try {
-                document.getElementById('cadets-tbody').innerHTML = `<tr><td colspan="6" class="text-center p-8 font-bold text-brand-blue">Seeding Database... Please Wait!</td></tr>`;
-                
-                const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
-                const existingDocs = await getDocs(cadetsRef);
-                
-                const newC = [];
-                Object.keys(R).forEach(cls => { Object.keys(R[cls]).forEach(sec => { R[cls][sec].forEach(s => {
-                    newC.push({ id: `cadet_${Date.now()}_${Math.random().toString(36).substr(2,9)}`, classNum: parseInt(cls), academicYear: "2025-2026", section: sec, studentId: s[0]||'', name: s[1], gwaSem1: 85.0, gwaSem2: 0, gwaSem3: 0, meritsSem1: parseInt(s[2])||0, meritsSem2: parseInt(s[3])||0, meritsSem3: 0, individualBonus: 0, officer: OFFICER_NAMES.includes(s[1]), starCadet: false, incidents: [], assignedDuties: [] });
-                });});});
+                if (localStorage.getItem('pummaDarkMode') === 'true') document.documentElement.classList.add('dark');
+                safeSetInnerHTML('filter-section', `<option value="ALL">ALL SECTIONS</option>` + SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
+                safeSetInnerHTML('modal-cadet-section', SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
+                safeSetInnerHTML('graded-months-year', yearsStr);
+                safeSetInnerHTML('cal-year-select', yearsStr);
+                setVal('cal-year-select', new Date().getFullYear().toString());
+                setVal('graded-months-year', new Date().getFullYear().toString());
+            } catch(e) {}
+        }
 
-                let batch = writeBatch(db); let c = 0;
-                for (const d of existingDocs.docs) { batch.delete(d.ref); c++; if (c===400) { await batch.commit(); batch=writeBatch(db); c=0; } }
-                if(c>0) await batch.commit();
-                
-                batch = writeBatch(db); c=0;
-                for (const d of newC) { batch.set(doc(cadetsRef, d.id), d); c++; if (c===400) { await batch.commit(); batch=writeBatch(db); c=0; } }
-                if(c>0) await batch.commit();
+        window.openSubmitAppealModal = () => { const m = document.getElementById('submit-appeal-modal'); if(m) { m.classList.remove('hidden'); m.classList.add('flex'); } }
+        window.closeSubmitAppealModal = () => { const m = document.getElementById('submit-appeal-modal'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); } setVal('appeal-message', ''); }
 
-                alert(`SUCCESS! Safely loaded exactly ${newC.length} cadets into the database.`);
-                window.recalculateMetrics();
-            } catch (err) { alert("Error seeding: " + err.message); }
+        window.submitAppeal = async () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const msg = getVal('appeal-message').trim();
+            if(!msg) return alert("Message required.");
+            
+            const newApp = { id: Date.now().toString(), date: new Date().toLocaleDateString(), message: msg, status: 'Pending', response: '' };
+            const updated = JSON.parse(JSON.stringify([...(c.appeals || []), newApp]));
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { appeals: updated });
+            alert("Request submitted to Instructor Inbox.");
+            window.closeSubmitAppealModal();
+        }
+
+        window.openAdminInboxModal = () => { const m = document.getElementById('admin-inbox-modal'); if(m) { m.classList.remove('hidden'); m.classList.add('flex'); } window.renderInbox(); }
+        window.closeAdminInboxModal = () => { const m = document.getElementById('admin-inbox-modal'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); } }
+
+        window.renderInbox = () => {
+            let pendingAppeals = [];
+            window.cadets.forEach(c => {
+                if(c.appeals) {
+                    c.appeals.forEach(a => {
+                        if(a.status === 'Pending') pendingAppeals.push({ ...a, cadetName: c.name || 'Unknown', cadetId: c.id });
+                    });
+                }
+            });
+
+            const html = pendingAppeals.map(a => `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-brand-creamBorder dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-2"><h4 class="font-bold text-sm text-brand-blue dark:text-blue-400">${a.cadetName}</h4><span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">${a.date}</span></div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 bg-brand-creamBg dark:bg-slate-900 p-2 rounded mb-3 whitespace-pre-wrap">${a.message}</p>
+                    <div class="flex gap-2">
+                        <button onclick="resolveAppeal('${a.cadetId}', '${a.id}', 'Approved')" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-3 py-1.5 rounded font-bold shadow-sm transition">Approve Request</button>
+                        <button onclick="resolveAppeal('${a.cadetId}', '${a.id}', 'Denied')" class="bg-red-600 hover:bg-red-700 text-white text-[10px] px-3 py-1.5 rounded font-bold shadow-sm transition">Deny Request</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            safeSetInnerHTML('admin-inbox-list', html || '<div class="text-center text-slate-500 py-8 italic">No pending requests! Your inbox is clean.</div>');
+        }
+
+        window.resolveAppeal = async (cId, aId, status) => {
+            const response = prompt(`Enter your response to the cadet regarding this ${status} request:`);
+            if(response === null) return; 
+            
+            const c = window.cadets.find(x => x.id === cId);
+            if(!c) return;
+            
+            const updated = JSON.parse(JSON.stringify((c.appeals || []).map(a => {
+                if(a.id === aId) return { ...a, status, response };
+                return a;
+            })));
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), { appeals: updated });
+            window.renderInbox();
+        }
+
+        window.openAnnouncementsModal = () => { const m = document.getElementById('announcements-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } window.renderAnnouncements(); };
+        window.closeAnnouncementsModal = () => { const m = document.getElementById('announcements-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.renderAnnouncements = () => {
+            const list = window.appSettings.announcements || [];
+            const html = list.slice().reverse().map(a => `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-brand-creamBorder dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-sm flex items-center gap-1 ${a.type === 'Alert' ? 'text-red-600 dark:text-red-400' : a.type === 'Weekly Order' ? 'text-green-600 dark:text-green-400' : a.type === 'Monthly Memo' ? 'text-purple-600 dark:text-purple-400' : 'text-brand-blue dark:text-blue-400'}">
+                            ${a.type === 'Alert' ? '<i data-lucide="alert-triangle" class="w-4 h-4"></i>' : a.type === 'Weekly Order' ? '<i data-lucide="calendar" class="w-4 h-4"></i>' : a.type === 'Monthly Memo' ? '<i data-lucide="layers" class="w-4 h-4"></i>' : '<i data-lucide="bell" class="w-4 h-4"></i>'} 
+                            ${a.title}
+                        </h4>
+                        <span class="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-600">${a.date}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">${a.content}</p>
+                    ${window.currentUserRole === 'admin' ? `<button onclick="deleteAnnouncement('${a.id}')" class="mt-3 text-[10px] text-red-500 hover:text-red-700 transition flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Delete Post</button>` : ''}
+                </div>
+            `).join('');
+            safeSetInnerHTML('announcements-list-container', html || '<p class="text-xs text-slate-500 text-center py-4">No announcements posted.</p>');
+            lucide.createIcons();
+        };
+
+        window.postAnnouncement = async () => {
+            const title = getVal('announce-title').trim();
+            const type = getVal('announce-type');
+            const content = getVal('announce-content').trim();
+            if(!title || !content) return alert("Title and Content required.");
+            
+            const newA = { id: Date.now().toString(), title, type, content, date: new Date().toLocaleDateString() };
+            const list = JSON.parse(JSON.stringify([...(window.appSettings.announcements || [])]));
+            list.push(newA);
+            
+            window.appSettings.announcement = `${type}: ${title}`; 
+            window.appSettings.announcements = list;
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: window.appSettings.announcement, announcements: list });
+            setVal('announce-title', ''); setVal('announce-content', '');
+            window.renderAnnouncements();
+        };
+
+        window.deleteAnnouncement = async (id) => {
+            if(!confirm("Delete this announcement?")) return;
+            const list = JSON.parse(JSON.stringify((window.appSettings.announcements || []).filter(a => a.id !== id)));
+            window.appSettings.announcements = list;
+            const newBanner = list.length > 0 ? `${list[list.length-1].type}: ${list[list.length-1].title}` : "Orders of the Day: Welcome to the PUMMA Dashboard.";
+            window.appSettings.announcement = newBanner;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: newBanner, announcements: list });
+            window.renderAnnouncements();
+        };
+
+        window.handleSignOut = async () => {
+            const now = new Date().toLocaleString();
+            const device = window.getDeviceName();
+            if (window.currentUserRole === 'admin') {
+                const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
+                logs.unshift({ action: 'Logout', date: now, device: device });
+                if (logs.length > 100) logs.pop();
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
+            } else if (window.currentUserRole === 'cadet' && window.selectedCadetId) {
+                const c = window.cadets.find(x => x.id === window.selectedCadetId);
+                if (c) {
+                    const logs = JSON.parse(JSON.stringify(c.accessLogs || []));
+                    logs.unshift({ action: 'Logout', date: now, device: device });
+                    if (logs.length > 20) logs.pop();
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { accessLogs: logs });
+                }
+            }
+            location.reload();
         };
 
         window.loginAsAdmin = async () => {
-            if(prompt("Enter Instructor PIN:")?.trim() === window.appSettings.adminPin) {
-                window.currentUserRole = 'admin'; document.getElementById('auth-overlay').classList.add('hidden');
-                document.getElementById('nav-logout').classList.remove('hidden');
-                document.querySelectorAll('.admin-controls').forEach(el=>el.classList.remove('hidden')); window.recalculateMetrics();
-            } else alert("Incorrect PIN.");
-        };
-
-        window.loginAsCadet = async () => {
-            const cid = prompt("Enter Cadet ID:")?.trim().toUpperCase(); if (!cid) return;
-            const c = window.cadets.find(x => x.studentId.toUpperCase() === cid || x.name.toUpperCase().includes(cid));
-            if (c && prompt("Enter Password:")?.trim() === (c.password || c.studentId)) {
-                window.currentUserRole = 'cadet'; document.getElementById('auth-overlay').classList.add('hidden');
-                document.getElementById('nav-logout').classList.remove('hidden');
-                document.getElementById('left-panel-admin').classList.add('hidden');
-                document.getElementById('eval-right-panel').className = "lg:col-span-12 w-full max-w-4xl mx-auto";
-                window.selectCadet(c.id);
-            } else alert("Invalid ID or Password.");
-        };
-
-        window.handleSignOut = () => location.reload();
-
-        window.recoverAdminPin = async () => {
-            if(prompt("Master Emergency Key:") === "PUMMA-RESCUE") { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminPin: "1234" }); alert("PIN reset to 1234."); }
-        };
-
-        window.convertRatingToPercentGrade = (vr) => { const r = [{lr:4.51,hr:5,lg:96,hg:98},{lr:4.01,hr:4.5,lg:93,hg:95},{lr:3.51,hr:4,lg:90,hg:92},{lr:3.01,hr:3.5,lg:85,hg:89},{lr:2.51,hr:3,lg:80,hg:84},{lr:2.01,hr:2.5,lg:75,hg:79},{lr:1.51,hr:2,lg:70,hg:73},{lr:1,hr:1.5,lg:60,hg:69}]; let v = Math.max(1,Math.min(5,vr)); let b = r.find(x=>v>=x.lr&&v<=x.hr)||r[r.length-1]; return (b.lg+(((v-b.lr)/(b.hr-b.lr))*(b.hg-b.lg))).toFixed(2); };
-
-        window.recalculateMetrics = () => {
-            const yr = getVal('input-acad-year', '2025-2026'); const tC = parseInt(getVal('filter-class', 3)); const tS = getVal('filter-section', 'ALL').toUpperCase();
-            let cPass=0, cCount=0;
-            const fil = window.cadets.filter(c => c.academicYear === yr || !c.academicYear);
-            
-            fil.forEach(c => {
-                c.totalMeritsSum = (c.meritsSem1||0)+(c.meritsSem2||0)+(c.meritsSem3||0);
-                let gws = [c.gwaSem1, c.gwaSem2, c.gwaSem3].map(parseFloat).filter(g=>g>0);
-                c.meanGwa = gws.length ? gws.reduce((a,b)=>a+b,0)/gws.length : 85;
-            });
-
-            const maxM = Math.max(...fil.filter(c=>parseInt(c.classNum)===tC).map(c=>c.totalMeritsSum), 1);
-            
-            fil.forEach(c => {
-                c.academicCS = c.starCadet ? 5 : c.meanGwa>=90?5:c.meanGwa>=85?4:3;
-                c.leadershipCS = c.officer ? 5 : 3;
-                let mr = c.totalMeritsSum / (window.appSettings.peerMode === 'dynamic' ? maxM : 450);
-                c.patriotismCS = mr>=0.75?5:mr>=0.5?4:mr>=0.25?3:mr>=0.01?2:1;
-                c.finalRating = (c.academicCS*0.1)+(c.leadershipCS*0.25)+(c.patriotismCS*0.25)+(3*0.4);
-                c.specificGradePercent = (parseFloat(window.convertRatingToPercentGrade(c.finalRating))+(c.individualBonus||0)+(c.starCadet?2:0)).toFixed(2);
-                if(parseInt(c.classNum)===tC && (tS==="ALL"||c.section.toUpperCase()===tS)) { cCount++; if(c.finalRating>=3.51) cPass++; }
-            });
-
-            setTxt('stat-total-cadets', cCount); setTxt('stat-pass-rate', cCount?((cPass/cCount)*100).toFixed(1)+'%':'0%'); setTxt('stat-peer-benchmark', maxM);
-            
-            // Render Split Leaderboard
-            if(window.currentUserRole === 'cadet') {
-                const draw = (lst,id) => document.getElementById(id).innerHTML = [...lst].sort((a,b)=>b.specificGradePercent-a.specificGradePercent).slice(0,10).map((c,i)=>`<div class="flex justify-between p-2 border rounded bg-slate-50"><div class="flex gap-2"><b>${i+1}.</b><div class="text-xs"><b>${c.name}</b><br><span class="text-[9px]">Sec ${c.section}</span></div></div><b class="text-brand-green">${c.specificGradePercent}%</b></div>`).join('');
-                draw(fil.filter(c=>c.classNum===3), 'leaderboard-3rd'); draw(fil.filter(c=>c.classNum===4), 'leaderboard-4th');
-            }
-            window.renderTable(); if (window.selectedCadetId) window.loadCadetAppraisal();
-        };
-
-        window.renderTable = () => {
-            const tb = document.getElementById('cadets-tbody'); tb.innerHTML = '';
-            const tC = parseInt(getVal('filter-class', 3)); const tS = getVal('filter-section', 'ALL').toUpperCase(); const srch = getVal('table-search').toLowerCase();
-            window.cadets.filter(c=>parseInt(c.classNum)===tC && (tS==="ALL"||c.section.toUpperCase()===tS) && c.name.toLowerCase().includes(srch)).forEach(c => {
-                tb.innerHTML += `<tr class="border-b ${window.selectedCadetId===c.id?'bg-blue-50':''} hover:bg-slate-50"><td class="p-2 font-bold text-[10px]">${c.name}<br><span class="text-slate-500 font-normal">SEC: ${c.section}</span></td><td class="p-2 text-center font-bold">${c.totalMeritsSum}</td><td class="p-2 text-center">${c.meanGwa.toFixed(2)}</td><td class="p-2 text-center font-bold text-brand-blue">${c.finalRating.toFixed(2)}</td><td class="p-2 text-right font-bold text-brand-green">${c.specificGradePercent}%</td><td class="p-2 text-center"><button onclick="selectCadet('${c.id}')" class="bg-brand-green text-white px-2 py-1 rounded text-[10px] font-bold">Assess</button></td></tr>`;
-            });
-        };
-
-        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); };
-        window.cancelEvaluation = () => { window.selectedCadetId = null; document.getElementById('evaluation-empty').classList.remove('hidden'); document.getElementById('evaluation-inputs').classList.add('hidden'); window.renderTable(); };
-        
-        window.loadCadetAppraisal = () => {
-            const c = window.cadets.find(x => x.id === window.selectedCadetId); if (!c) return;
-            document.getElementById('evaluation-empty').classList.add('hidden'); document.getElementById('evaluation-inputs').classList.remove('hidden');
-            setTxt('eval-cadet-name', c.name); setTxt('eval-id-display', c.studentId || `ID: ${c.id.substr(-4)}`);
-            setVal('eval-gwa-sem1', c.gwaSem1||0); setVal('eval-gwa-sem2', c.gwaSem2||0); setVal('eval-gwa-sem3', c.gwaSem3||0); setTxt('eval-mean-gwa', c.meanGwa.toFixed(2));
-            setVal('eval-merit-sem1', c.meritsSem1||0); setVal('eval-merit-sem2', c.meritsSem2||0); setVal('eval-merit-sem3', c.meritsSem3||0); setTxt('eval-cumulative-merits', c.totalMeritsSum);
-            document.getElementById('eval-input-officer').checked = c.officer; document.getElementById('eval-input-star').checked = c.starCadet;
-            setTxt('eval-final-percent', `${c.specificGradePercent}%`); setTxt('eval-final-rating', c.finalRating.toFixed(2));
-            if (window.currentUserRole === 'cadet') document.querySelectorAll('.cadet-disable').forEach(e=>e.disabled=true); else document.querySelectorAll('.cadet-disable').forEach(e=>e.disabled=false);
-        };
-
-        window.saveEvaluation = async () => {
-            const c = window.cadets.find(x => x.id === window.selectedCadetId); if(!c) return;
-            const up = { gwaSem1:getNum('eval-gwa-sem1'), gwaSem2:getNum('eval-gwa-sem2'), gwaSem3:getNum('eval-gwa-sem3'), meritsSem1:getNum('eval-merit-sem1'), meritsSem2:getNum('eval-merit-sem2'), meritsSem3:getNum('eval-merit-sem3'), officer:document.getElementById('eval-input-officer').checked, starCadet:document.getElementById('eval-input-star').checked };
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), up); alert("Saved!"); window.cancelEvaluation();
-        };
-
-        window.openBulkModal = () => document.getElementById('bulk-modal').classList.remove('hidden');
-        window.applyBulkAction = async () => {
-            const tc = parseInt(getVal('bulk-class')); const ts = getVal('bulk-sec'); const pts = parseInt(getVal('bulk-pts',0)); const sem = getVal('bulk-sem');
-            if(pts===0) return alert("Points cannot be 0.");
-            const targs = window.cadets.filter(c=>c.classNum===tc && (ts==="ALL"||c.section===ts));
-            if(!confirm(`Apply ${pts} pts to ${targs.length} cadets in Sem ${sem}?`)) return;
-            for(let i=0; i<targs.length; i+=400){ const b=writeBatch(db); targs.slice(i,i+400).forEach(c=>{ let u={}; if(sem==="1") u.meritsSem1=(c.meritsSem1||0)+pts; else if(sem==="2") u.meritsSem2=(c.meritsSem2||0)+pts; else u.meritsSem3=(c.meritsSem3||0)+pts; b.update(doc(db,'artifacts',appId,'public','data','cadets',c.id),u); }); await b.commit(); }
-            alert("Success!"); document.getElementById('bulk-modal').classList.add('hidden');
-        };
-
-        window.printMasterlist = () => {
-            const tC = parseInt(getVal('filter-class', 3)); const tS = getVal('filter-section', 'ALL');
-            document.getElementById('print-masterlist-tbody').innerHTML = window.cadets.filter(c=>c.classNum===tC && (tS==="ALL"||c.section.toUpperCase()===tS.toUpperCase())).map(c=>`<tr class="border-b border-black"><td class="p-2 border-r border-black font-bold uppercase">${c.name}</td><td class="p-2 border-r border-black">${c.totalMeritsSum}</td><td class="p-2 border-r border-black">${c.meanGwa.toFixed(2)}</td><td class="p-2 text-right font-bold">${c.specificGradePercent}%</td></tr>`).join('');
-            document.getElementById('print-masterlist-container').classList.remove('hidden'); window.print(); document.getElementById('print-masterlist-container').classList.add('hidden');
-        };
-
-        window.printAppraisalCard = () => {
-            const c = window.cadets.find(x => x.id === window.selectedCadetId); if (!c) return;
-            setTxt('print-name', c.name); setTxt('print-details', `Class: ${c.classNum} | Sec: ${c.section} | ID: ${c.studentId}`); setTxt('print-final-percentage', `${c.specificGradePercent}%`);
-            document.getElementById('print-cadet-report').classList.remove('hidden'); window.print(); document.getElementById('print-cadet-report').classList.add('hidden');
-        };
-
-        // Bind DB real-time sync
-        onAuthStateChanged(auth, user => {
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), snap => {
-                if(snap.exists()) { window.appSettings = {...window.appSettings, ...snap.data()}; setVal('input-papers', window.appSettings.papers||30); setVal('select-peer-mode', window.appSettings.peerMode||'dynamic'); window.recalculateMetrics(); }
-                const bA = document.getElementById('btn-admin-login'); const bC = document.getElementById('btn-cadet-login');
-                if(bA) { bA.disabled=false; bA.innerHTML="Instructor Login"; } if(bC) bC.disabled=false;
+            const correctPin = window.appSettings.adminPin || '1234';
+            const pwd = prompt("Enter Instructor PIN:")?.trim();
+            if (pwd === correctPin) {
+                window.currentUserRole = 'admin';
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
                 lucide.createIcons();
-            });
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cadets'), snap => { window.cadets=[]; snap.forEach(d=>window.cadets.push(d.data())); window.recalculateMetrics(); });
+                
+                const now = new Date().toLocaleString();
+                const device = window.getDeviceName();
+                const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
+                logs.unshift({ action: 'Login', date: now, device: device });
+                if (logs.length > 100) logs.pop();
+                window.appSettings.adminLogs = logs;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
+                window.recalculateMetrics(); 
+            } else if (pwd !== null && pwd !== undefined) {
+                alert("Incorrect PIN. Access Denied.");
+            }
+        };
+
+        window.changeAdminPin = async () => {
+            const currentPin = window.appSettings.adminPin || '1234';
+            const enteredOld = prompt("Enter CURRENT Admin PIN:")?.trim();
+            if (!enteredOld) return;
+            if (enteredOld !== currentPin) { alert("Incorrect current PIN."); return; }
+            
+            const newPin = prompt("Enter NEW Admin PIN:")?.trim();
+            if (!newPin) return;
+            const confirmPin = prompt("Confirm NEW Admin PIN:")?.trim();
+            if (newPin !== confirmPin) { alert("PINs do not match."); return; }
+
+            window.appSettings.adminPin = newPin;
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminPin: newPin });
+                alert("Admin PIN successfully changed!");
+            } catch (e) { alert("Failed to Val + pts });
+                });
+                await batch.commit();
+            }
+            alert(`Applied ${pts > 0 ? '+'+pts : pts} merits to ${filtered.length} cadets.`);
+        }
+        window.closeBulkModal();
+    };
+
+    // GEMINI AI INTEGRATION
+    const apiKey = ""; 
+
+    async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 429) throw new Error("Rate limit exceeded");
+                    throw new Error(`API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                if (i === retries - 1) throw error;
+                await new Promise(res => setTimeout(res, delay));
+                delay *= 2;
+            }
+        }
+    }
+
+    window.generateRemarksWithGemini = async () => {
+        if (!apiKey) {
+            alert("Gemini API Key is missing. Connect to environment to enable AI generation.");
+            return;
+        }
+        
+        const c = window.cadets.find(x => x.id === window.selectedCadetId);
+        if (!c) return;
+
+        const btn = document.getElementById('btn-generate-remarks');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Drafting...`;
+        btn.disabled = true;
+
+        const incNames = (c.incidents || []).map(i => i.name).join(", ") || "None";
+        
+        const prompt = `You are an evaluating officer at a Merchant Marine Academy. 
+        Write a short (2-3 sentences), highly professional performance review remark for Cadet ${c.name || 'Unknown'}.
+        Data: 
+        - Academic GWA: ${c.gwa || 0}
+        - Disciplinary Merits Balance: ${c.totalMeritsSum || 0}
+        - Star Cadet/Officer: ${c.starCadet ? 'Yes' : 'No'} / ${c.officer ? 'Yes' : 'No'}
+        - Recent Incidents/Violations: ${incNames}
+        - Final Computed Rating: ${(c.finalRating || 0).toFixed(2)} out of 5.0 (Higher is better)
+        Be constructive, mentioning strengths and specific areas needing discipline or academic improvement. Keep it professional.`;
+
+        try {
+            const result = await fetchWithBackoff(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: "You are a maritime academy officer providing formal cadet evaluations." }] }
+                    })
+                }
+            );
+
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+                document.getElementById('eval-remarks').value = text.trim();
+            } else {
+                alert("Could not generate remarks.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error generating remarks: " + e.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+    };
+
+    window.openAnalyticsModal = () => {
+        const m = document.getElementById('analytics-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+        
+        const targetAcadYear = getVal('input-acad-year', '2025-2026');
+        const isDark = document.documentElement.classList.contains('dark');
+        Chart.defaults.color = isDark ? '#cbd5e1' : '#64748b';
+        
+        const filtered3rd = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === 3);
+        const filtered4th = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum || 3) === 4);
+        
+        let p3=0, f3=0, p4=0, f4=0;
+        filtered3rd.forEach(c => { if((c.finalRating || 0) >= 3.51) p3++; else f3++; });
+        filtered4th.forEach(c => { if((c.finalRating || 0) >= 3.51) p4++; else f4++; });
+        
+        if(window.passChart) window.passChart.destroy();
+        const ctx1 = document.getElementById('passFailChart').getContext('2d');
+        window.passChart = new Chart(ctx1, {
+            type: 'bar', data: { labels: ['3rd Class', '4th Class'], datasets: [{ label: 'Competent', data: [p3, p4], backgroundColor: '#406f27' }, { label: 'Needs Dev', data: [f3, f4], backgroundColor: isDark ? '#475569' : '#e2e8f0' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
         });
 
-        async function startApp() { lucide.createIcons(); try { await signInAnonymously(auth); } catch(e){} document.getElementById('filter-class').addEventListener('change', window.recalculateMetrics); document.getElementById('filter-section').addEventListener('change', window.recalculateMetrics); document.getElementById('table-search').addEventListener('keyup', window.renderTable); }
-        startApp();
-    </script>
+        let out=0, vcomp=0, comp=0, dev=0, poor=0;
+        [...filtered3rd, ...filtered4th].forEach(c => {
+            const r = c.finalRating || 0;
+            if(r >= 4.51) out++; else if(r >= 4.01) vcomp++; else if(r >= 3.51) comp++; else if(r >= 2.51) dev++; else poor++;
+        });
+
+        if(window.distChart) window.distChart.destroy();
+        const ctx3 = document.getElementById('distributionChart').getContext('2d');
+        window.distChart = new Chart(ctx3, {
+            type: 'pie', data: { labels: ['Outstanding', 'Very Comp.', 'Competent', 'Developing', 'Poor'], datasets: [{ data: [out, vcomp, comp, dev, poor], backgroundColor: ['#406f27', '#059669', '#263f77', '#d97706', '#dc2626'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+
+        const secData = {};
+        [...filtered3rd, ...filtered4th].forEach(c => {
+            const label = `${c.classNum || 3}Cls - ${c.section || 'Unknown'}`;
+            if(!secData[label]) secData[label] = { sum:0, count:0 };
+            secData[label].sum += (c.gwa || 0); secData[label].count += 1;
+        });
+        const labels = Object.keys(secData).sort();
+        const data = labels.map(l => secData[l].sum / secData[l].count);
+
+        if(window.gwaChart) window.gwaChart.destroy();
+        const ctx2 = document.getElementById('sectionGwaChart').getContext('2d');
+        window.gwaChart = new Chart(ctx2, {
+            type: 'bar', data: { labels: labels, datasets: [{ label: 'Average Academic GWA', data: data, backgroundColor: '#263f77', }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 70, max: 100 } } }
+        });
+    };
+    window.closeAnalyticsModal = () => { const m = document.getElementById('analytics-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+    window.openAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } };
+    window.closeAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+    
+    window.saveNewCadet = async () => {
+        const name = getVal('modal-cadet-name').trim();
+        if (!name) return;
+        const nextId = `cadet_${Date.now()}`;
+        let checklists = {};
+        Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(pk => {
+            checklists[pk] = { tech: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].tech.length).fill(false), soft: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].soft.length).fill(false) };
+        });
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
+            id: nextId, classNum: parseInt(getVal('modal-cadet-class', 3)), academicYear: getVal('input-acad-year', "2025-2026"), section: getVal('modal-cadet-section', 'Alpha'),
+            studentId: getVal('modal-cadet-id', ''), gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), gwa: getNum('modal-cadet-gwa', 75.0),
+            meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
+            officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, remarks: ''
+        })));
+        window.closeAddCadetModal(); setVal('modal-cadet-name', ''); setVal('modal-cadet-id', '');
+    };
+
+    // --- Core Application Boot System --- 
+    function bindEvents() {
+        const addEvent = (id, event, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(event, fn); };
+        addEvent('input-papers', 'change', async (e) => {
+            window.appSettings.papers = parseInt(e.target.value);
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { papers: window.appSettings.papers });
+        });
+        addEvent('select-peer-mode', 'change', async (e) => {
+            window.appSettings.peerMode = e.target.value;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { peerMode: window.appSettings.peerMode });
+        });
+        addEvent('input-acad-year', 'change', async (e) => {
+            window.appSettings.academicYear = e.target.value;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { academicYear: window.appSettings.academicYear });
+            window.recalculateMetrics();
+        });
+        addEvent('filter-class', 'change', window.recalculateMetrics);
+        addEvent('filter-section', 'change', window.recalculateMetrics);
+        addEvent('table-search', 'input', window.renderTable);
+    }
+
+    window.seedDatabase = async () => {
+        if (!confirm("This will load the default 3rd Class rosters into the database. Proceed?")) return;
+        
+        const batch = writeBatch(db);
+        let runningIdx = 1;
+        const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
+        
+        Object.keys(ROSTERS).forEach(sec => {
+            const namesData = ROSTERS[sec];
+            namesData.forEach(cStr => {
+                const cParts = cStr.split(',');
+                const cName = cParts[0];
+                const cS1 = parseInt(cParts[1]);
+                const cS2 = parseInt(cParts[2]);
+
+                const docId = `cadet_3_${sec.toLowerCase()}_${runningIdx}`;
+                let checklists = {};
+                Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(pk => {
+                    checklists[pk] = { tech: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].tech.length).fill(false), soft: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].soft.length).fill(false) };
+                });
+
+                const sId = "PUMMA-03-" + String(runningIdx).padStart(3, '0');
+                const isFemale = cName.match(/(MAE|BEATRIX|NICOLE|LIRA|AMANDA|JUNABELLE|JONALYN|ALICIA)/);
+
+                batch.set(doc(cadetsRef, docId), JSON.parse(JSON.stringify({
+                    id: docId, classNum: 3, section: sec,
+                    academicYear: getVal('input-acad-year', "2025-2026"),
+                    studentId: sId, gender: isFemale ? "F" : "M",
+                    name: cName, meritsSem1: cS1 || 0, meritsSem2: cS2 || 0, meritsSem3: 0,
+                    individualBonus: 0, incidents: [], starCadet: false,
+                    officer: OFFICER_NAMES.includes(cName), gwa: 85.5 + (Math.random()*10),
+                    logbook2026: {}, logbook: {}, checklists: checklists, remarks: ''
+                })));
+                runningIdx++;
+            });
+        });
+
+        try { await batch.commit(); alert("Rosters loaded!"); } catch (e) { console.error(e); alert("Error loading."); }
+    };
+
+    async function startApp() {
+        lucide.createIcons();
+        
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (err) { console.error("Auth init error:", err); }
+    }
+
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', startApp); } else { startApp(); }
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) return;
+        const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+        const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
+
+        onSnapshot(settingsRef, async (snap) => {
+            if (snap.exists()) {
+                window.appSettings = snap.data();
+                window.appSettings.checklistProfiles = window.appSettings.checklistProfiles || defaultChecklistProfiles;
+                setVal('input-papers', window.appSettings.papers || 30);
+                setVal('select-peer-mode', window.appSettings.peerMode || 'dynamic');
+                setVal('input-acad-year', window.appSettings.academicYear || "2025-2026");
+                setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
+                
+                if (window.appSettings.adminPin && window.appSettings.adminPin !== '1234') {
+                    const hint = document.getElementById('login-pin-hint');
+                    if (hint) hint.innerText = "Admin PIN is active.";
+                }
+                window.refreshProfileDropdown();
+                bindEvents(); 
+                window.recalculateMetrics();
+            } else {
+                const initData = JSON.parse(JSON.stringify({
+                    academicYear: "2025-2026",
+                    papers: 30, maxMeritCap: 450, peerMode: 'dynamic', bonusPerTen: 0.5, gradedMonths: {}, sectionDuties: {},
+                    adminPin: "1234", announcement: "Orders of the Day: Welcome to the PUMMA Dashboard.", announcements: [],
+                    violationsList: defaultViolationsList,
+                    checklistProfiles: defaultChecklistProfiles
+                }));
+                await setDoc(settingsRef, initData);
+            }
+        });
+
+        onSnapshot(query(cadetsRef), async (snap) => {
+            window.cadets = [];
+            if (!snap.empty) snap.forEach(docSnap => window.cadets.push(docSnap.data()));
+            window.recalculateMetrics();
+        });
+    });
+</script>
 </body>
 </html>
