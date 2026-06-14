@@ -905,18 +905,21 @@
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[70vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 bg-indigo-700 border-b border-indigo-800 flex items-center justify-between shrink-0">
                 <h3 class="font-bold text-white text-sm flex items-center gap-2 uppercase tracking-wide">
-                    <i data-lucide="book-open-check" class="text-indigo-300 w-5 h-5"></i> 2nd Mates Review Deck
+                    <i data-lucide="book-open-check" class="text-indigo-300 w-5 h-5"></i> PUMMA Review Deck
                 </h3>
                 <button onclick="closeExamPrepModal()" class="text-white/70 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex-1 p-6 bg-brand-creamBg dark:bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
                 
-                <div id="exam-prep-setup" class="w-full max-w-md text-center">
-                    <i data-lucide="layers" class="w-16 h-16 mx-auto mb-4 text-indigo-500/50"></i>
-                    <h2 class="text-lg font-bold text-brand-blue dark:text-white mb-6 uppercase tracking-wider">Select Study Deck</h2>
-                    <div class="space-y-3" id="exam-deck-list">
+                <div id="exam-prep-setup" class="w-full max-w-4xl">
+                        <div class="text-center mb-6">
+                            <h2 class="text-lg font-bold text-brand-blue dark:text-white uppercase tracking-wider">Select Review Subject</h2>
+                            <p class="text-xs text-slate-500">Practice core concepts for board exams and structural watchkeeping duties</p>
                         </div>
-                </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="exam-deck-list">
+                            </div>
+                    </div>
 
                 <div id="exam-prep-active" class="hidden w-full h-full flex-col">
                     <div class="flex justify-between items-center mb-4 text-xs font-bold text-slate-500 uppercase tracking-widest shrink-0">
@@ -1703,11 +1706,22 @@
             try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs }); } catch(e){}
         };
 
+window.logAdminSettingsActivity = async (action, details) => {
+            if (window.currentUserRole !== 'admin') return;
+            const now = new Date().toLocaleString();
+            const device = window.getDeviceName ? window.getDeviceName() : 'System';
+            const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
+            logs.unshift({ action: 'System Config', details: `${action}: ${details}`, adminName: window.currentAdminName || 'System', date: now, device: device });
+            if (logs.length > 1500) logs.pop();
+            window.appSettings.adminLogs = logs;
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs }); } catch(e){}
+        };
+
         window.saveTripleRLink = async () => {
             const link = getVal('input-triple-r').trim();
             window.appSettings.tripleRLink = link;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { tripleRLink: link });
-            window.logAdminSettingsActivity('Updated TRIPLE R', 'Changed official handbook link');
+            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Updated TRIPLE R', 'Changed official handbook link');
             alert("TRIPLE R link successfully updated globally!");
         };
 
@@ -1717,7 +1731,7 @@
             window.appSettings.logoUrl = logoUrl;
             window.appSettings.bgUrl = bgUrl;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { logoUrl: logoUrl, bgUrl: bgUrl });
-            window.logAdminSettingsActivity('Custom Branding', 'Modified system UI logos or backgrounds');
+            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Custom Branding', 'Modified system UI logos or backgrounds');
             alert("Custom branding successfully saved!\n\nThe page will now refresh to apply your changes.");
             setTimeout(() => location.reload(), 1500);
         };
@@ -1734,15 +1748,19 @@
             setVal('input-logo-url', logo || ''); setVal('input-bg-url', bg || '');
         };
 
-        // --- FULLY DYNAMIC EXAM PREP & FLASHCARD CMS ---
+        // --- FULLY DYNAMIC PUMMA REVIEW DECK & CMS ---
         window.examTitles = {
             ror: { title: "Rules of the Road (COLREGs)", desc: "Nav Lights, Day Shapes & Steering Rules" },
-            iala: { title: "IALA Buoyage System", desc: "Region A & B, Marks, Topmarks" }
+            iala: { title: "IALA Buoyage System", desc: "Region A & B, Marks, Topmarks" },
+            navigation: { title: "Terrestrial & Celestial Navigation", desc: "Lines of position, gyro errors, corrections" },
+            seamanship: { title: "Seamanship & Cargo Handling", desc: "Marlinespike command, stability, stowage safely" }
         };
 
         window.examDatabase = {
             ror: [{ q: "What day shape is exhibited by a Vessel Aground?", a: "Three black balls in a vertical line." }, { q: "What is the arc of visibility of a Masthead Light?", a: "225 degrees." }],
-            iala: [{ q: "In IALA Region A, what is the color of a Port Hand Mark?", a: "Red." }]
+            iala: [{ q: "In IALA Region A, what is the color of a Port Hand Mark?", a: "Red." }],
+            navigation: [{ q: "What causes Gyro Error on a commercial vessel?", a: "The combined effects of the gyroscope's mechanical imperfections, speed error, and latitude change deviations." }],
+            seamanship: [{ q: "What standard method is used to determine structural draft indicators?", a: "Reading vertical metric or imperial markings permanently welded onto the hull exterior." }]
         };
 
         window.currentExamDeck = [];
@@ -1763,33 +1781,35 @@
             window.renderSubjectDropdown();
             const subject = document.getElementById('manage-deck-subject').value;
             const container = document.getElementById('manage-deck-list');
-            if(!subject) { container.innerHTML = ''; return; }
+            if(!subject) { if(container) container.innerHTML = ''; return; }
             
             const deck = window.appSettings.examDatabase[subject] || [];
             if (deck.length === 0) {
-                container.innerHTML = '<p class="text-[10px] text-slate-500 text-center italic py-4 border border-dashed border-slate-300 dark:border-slate-700 rounded">No questions in this deck yet.</p>';
+                if(container) container.innerHTML = '<p class="text-[10px] text-slate-500 text-center italic py-4 border border-dashed border-slate-300 dark:border-slate-700 rounded">No questions in this deck yet.</p>';
                 return;
             }
-            container.innerHTML = deck.map((item, index) => `
-                <div class="bg-white dark:bg-slate-800 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 flex justify-between gap-3 items-start relative group shadow-sm">
-                    <div class="flex-1 min-w-0"><p class="text-[10px] font-bold text-brand-blue dark:text-blue-300 whitespace-pre-wrap">Q: ${item.q}</p><p class="text-[9px] text-slate-500 whitespace-pre-wrap mt-1">A: ${item.a}</p></div>
-                    <button onclick="deleteQuestionFromDeck('${subject}', ${index})" class="text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 p-1.5 rounded transition shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                </div>
-            `).join('');
+            if(container) {
+                container.innerHTML = deck.map((item, index) => `
+                    <div class="bg-white dark:bg-slate-800 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 flex justify-between gap-3 items-start relative group shadow-sm">
+                        <div class="flex-1 min-w-0"><p class="text-[10px] font-bold text-brand-blue dark:text-blue-300 whitespace-pre-wrap">Q: ${item.q}</p><p class="text-[9px] text-slate-500 whitespace-pre-wrap mt-1">A: ${item.a}</p></div>
+                        <button onclick="deleteQuestionFromDeck('${subject}', ${index})" class="text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 p-1.5 rounded transition shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                `).join('');
+            }
             if (window.lucide) window.lucide.createIcons();
         };
 
         window.addExamSubject = async () => {
-            const title = await customPrompt("Enter the NEW subject title:", "e.g., General Seamanship");
+            const title = await window.customPrompt ? await window.customPrompt("Enter the NEW subject title:", "e.g., General Seamanship") : prompt("Enter the NEW subject title:", "e.g., General Seamanship");
             if(!title) return;
-            const desc = await customPrompt("Enter a short description:", "e.g., Core terminology and basics");
+            const desc = await window.customPrompt ? await window.customPrompt("Enter a short description:", "e.g., Core terminology and basics") : prompt("Enter a short description:", "e.g., Core terminology and basics");
             
             const id = 'subj_' + Date.now();
             window.appSettings.examTitles[id] = { title: title.trim(), desc: desc ? desc.trim() : "Review questions" };
             window.appSettings.examDatabase[id] = [];
             
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            window.logAdminSettingsActivity('Subject Added', `Created new review deck: ${title}`);
+            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Added', `Created new review deck: ${title}`);
             window.renderSubjectDropdown();
             document.getElementById('manage-deck-subject').value = id;
             window.renderDeckManager(); 
@@ -1799,15 +1819,15 @@
             const id = document.getElementById('manage-deck-subject').value;
             if(!id) return;
             const currentTitle = window.appSettings.examTitles[id].title;
-            const newTitle = await customPrompt("Rename subject:", currentTitle);
+            const newTitle = await window.customPrompt ? await window.customPrompt("Rename subject:", currentTitle) : prompt("Rename subject:", currentTitle);
             if(!newTitle || newTitle.trim() === currentTitle) return;
-            const newDesc = await customPrompt("Update description:", window.appSettings.examTitles[id].desc);
+            const newDesc = await window.customPrompt ? await window.customPrompt("Update description:", window.appSettings.examTitles[id].desc) : prompt("Update description:", window.appSettings.examTitles[id].desc);
             
             window.appSettings.examTitles[id].title = newTitle.trim();
             if(newDesc) window.appSettings.examTitles[id].desc = newDesc.trim();
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles });
-            window.logAdminSettingsActivity('Subject Renamed', `Renamed deck to ${newTitle.trim()}`);
+            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Renamed', `Renamed deck to ${newTitle.trim()}`);
             window.renderDeckManager();
         };
 
@@ -1816,14 +1836,14 @@
             if(!id) return;
             if(Object.keys(window.appSettings.examTitles).length <= 1) return alert("You must have at least one subject deck.");
             const currentTitle = window.appSettings.examTitles[id].title;
-            const confirmed = await customConfirm(`Are you sure you want to delete the ENTIRE "${currentTitle}" deck? This deletes all its questions.`);
+            const confirmed = await window.customConfirm ? await window.customConfirm(`Are you sure you want to delete the ENTIRE "${currentTitle}" deck? This deletes all its questions.`) : confirm(`Are you sure you want to delete the ENTIRE "${currentTitle}" deck? This deletes all its questions.`);
             if(!confirmed) return;
 
             delete window.appSettings.examTitles[id];
             delete window.appSettings.examDatabase[id];
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            window.logAdminSettingsActivity('Subject Deleted', `Deleted deck: ${currentTitle}`);
+            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Deleted', `Deleted deck: ${currentTitle}`);
             window.renderDeckManager();
         };
 
@@ -1855,7 +1875,7 @@
 
             try {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examDatabase: window.appSettings.examDatabase });
-                window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
+                if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
                 window.examDatabase = JSON.parse(JSON.stringify(window.appSettings.examDatabase));
                 alert("Database successfully saved! All cadets will now see the updated questions.");
             } catch (error) { alert("Error saving database: " + error.message); }
@@ -1872,15 +1892,17 @@
             const activeTitles = window.appSettings.examTitles || window.examTitles;
             const colors = ['indigo', 'emerald', 'amber', 'rose', 'sky', 'purple'];
             
-            listEl.innerHTML = Object.keys(activeTitles).map((k, i) => {
-                const c = colors[i % colors.length];
-                return `
-                    <button onclick="startExamDeck('${k}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:border-${c}-500 p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
-                        <div class="bg-${c}-100 dark:bg-${c}-900/50 p-3 rounded-lg text-${c}-600 dark:text-${c}-400 group-hover:scale-110 transition"><i data-lucide="book" class="w-6 h-6"></i></div>
-                        <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${activeTitles[k].title}</h4><p class="text-[11px] text-slate-500">${activeTitles[k].desc}</p></div>
-                    </button>
-                `;
-            }).join('');
+            if (listEl) {
+                listEl.innerHTML = Object.keys(activeTitles).map((k, i) => {
+                    const c = colors[i % colors.length];
+                    return `
+                        <button onclick="startExamDeck('${k}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:border-${c}-500 p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
+                            <div class="bg-${c}-100 dark:bg-${c}-900/50 p-3 rounded-lg text-${c}-600 dark:text-${c}-400 group-hover:scale-110 transition"><i data-lucide="book" class="w-6 h-6"></i></div>
+                            <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${activeTitles[k].title}</h4><p class="text-[11px] text-slate-500">${activeTitles[k].desc}</p></div>
+                        </button>
+                    `;
+                }).join('');
+            }
             if (window.lucide) window.lucide.createIcons();
             
             document.getElementById('exam-prep-setup').classList.remove('hidden');
