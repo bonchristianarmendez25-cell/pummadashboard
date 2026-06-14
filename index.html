@@ -43,7 +43,7 @@
             @page { margin: 0.5cm; }
         }
         
-        .bg-login-decor { background-image: url('okay.jpg.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .bg-login-decor { background-image: url('okay.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
         .dark .bg-login-decor { background-color: #0f172a; }
     </style>
 </head>
@@ -53,7 +53,7 @@
         <div class="absolute inset-0 bg-brand-blue/30 dark:bg-slate-950/50 backdrop-blur-[1px]"></div>
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-t-4 border-brand-green relative overflow-hidden z-10">
             <div class="w-20 h-20 bg-brand-creamAccent dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-creamBorder dark:border-slate-600 shadow-inner overflow-hidden">
-                <img src="MOCKBOAT LOGO.png.png" alt="PUMMA" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield\' class=\'w-10 h-10 text-brand-green\'></i>';">
+                <img src="MOCKBOAT LOGO.png" alt="PUMMA" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield\' class=\'w-10 h-10 text-brand-green\'></i>';">
             </div>
             <h1 class="font-serif text-2xl font-bold text-brand-blue dark:text-brand-green mb-2">PUMMA Dashboard</h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Please select your access level</p>
@@ -3132,8 +3132,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
 `;
 
             const body = encodeURIComponent(bodyText);
-            // Opens directly in Gmail Web Composer
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${targetEmail}&su=${subject}&body=${body}`, '_blank');
+            // Opens natively in the user's mobile Mail or Gmail app!
+            window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
         };
 
         window.emailAtRiskReport = async () => {
