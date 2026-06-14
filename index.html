@@ -568,6 +568,23 @@
     </div>
 
     <!-- Hidden Modals (Admin Logs, Calendars, Analytics etc.) -->
+    <div id="pumma-dialog" class="fixed inset-0 z-[200] bg-brand-black/60 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-transform duration-200 border-t-4 border-brand-blue" id="pumma-dialog-box">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="pumma-dialog-icon" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"></div>
+                <h3 id="pumma-dialog-title" class="font-bold text-lg text-brand-blue dark:text-white leading-tight font-serif tracking-wide"></h3>
+            </div>
+            <p id="pumma-dialog-message" class="text-[13px] text-slate-600 dark:text-slate-300 mb-5 whitespace-pre-wrap font-medium leading-relaxed"></p>
+            <div id="pumma-dialog-input-container" class="hidden mb-5">
+                <input type="text" id="pumma-dialog-input" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-brand-black dark:text-white focus:outline-none focus:border-brand-green focus:ring-1 focus:ring-brand-green font-semibold">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="pumma-dialog-cancel" class="hidden px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold transition-all shadow-sm">Cancel</button>
+                <button id="pumma-dialog-confirm" class="px-5 py-2 rounded-lg text-white text-xs font-bold transition-all shadow-md flex items-center gap-1">OK</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="admin-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl">
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
@@ -877,6 +894,76 @@
         window.currentAdminName = null;
         window.currentAdminUsername = null;
         window.currentDutyCalDate = new Date();
+        
+        const customConfirm = (msg) => window.pummaDialog({ title: 'System Confirmation', message: msg, type: 'confirm' });
+        const customPrompt = (msg, ph) => window.pummaDialog({ title: 'Input Required', message: msg, isPrompt: true, placeholder: ph });
+
+        window.pummaDialog = (options) => {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('pumma-dialog');
+                const box = document.getElementById('pumma-dialog-box');
+                const iconC = document.getElementById('pumma-dialog-icon');
+                const titleE = document.getElementById('pumma-dialog-title');
+                const msgE = document.getElementById('pumma-dialog-message');
+                const inpC = document.getElementById('pumma-dialog-input-container');
+                const inpE = document.getElementById('pumma-dialog-input');
+                const btnCancel = document.getElementById('pumma-dialog-cancel');
+                const btnConfirm = document.getElementById('pumma-dialog-confirm');
+
+                titleE.innerText = options.title || 'System Message';
+                msgE.innerText = options.message || '';
+                
+                box.className = "bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-transform duration-200 border-t-4 " + 
+                    (options.type === 'error' ? 'border-red-500' : options.type === 'warning' || options.type === 'confirm' ? 'border-amber-500' : options.type === 'success' ? 'border-brand-green' : 'border-brand-blue');
+
+                iconC.className = "w-10 h-10 rounded-full flex items-center justify-center shrink-0 " + 
+                    (options.type === 'error' ? 'bg-red-50 text-red-600 dark:bg-red-900/40 dark:text-red-400' : 
+                     options.type === 'warning' || options.type === 'confirm' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : 
+                     options.type === 'success' ? 'bg-green-50 text-brand-green dark:bg-green-900/40 dark:text-green-400' : 
+                     'bg-blue-50 text-brand-blue dark:bg-blue-900/40 dark:text-blue-400');
+                
+                iconC.innerHTML = `<i data-lucide="${options.type === 'error' ? 'x-circle' : options.type === 'warning' || options.type === 'confirm' ? 'help-circle' : options.type === 'success' ? 'check-circle-2' : 'info'}" class="w-5 h-5"></i>`;
+
+                btnConfirm.className = "px-5 py-2 rounded-lg text-white text-xs font-bold transition-all shadow-md flex items-center gap-1 " + 
+                    (options.type === 'error' ? 'bg-red-600 hover:bg-red-700' : options.type === 'warning' || options.type === 'confirm' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-green hover:bg-brand-green-hover');
+                btnConfirm.innerHTML = options.isPrompt ? `<i data-lucide="check"></i> Submit` : options.type === 'confirm' ? `<i data-lucide="check"></i> Confirm` : `OK`;
+
+                if (options.isPrompt) {
+                    inpC.classList.remove('hidden'); inpE.value = '';
+                    inpE.type = options.inputType || 'text';
+                    inpE.placeholder = options.placeholder || 'Type here...';
+                } else { inpC.classList.add('hidden'); }
+
+                if (options.showCancel || options.type === 'confirm' || options.isPrompt) btnCancel.classList.remove('hidden');
+                else btnCancel.classList.add('hidden');
+
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+
+                overlay.classList.remove('hidden'); overlay.classList.add('flex');
+                void overlay.offsetWidth; overlay.classList.remove('opacity-0'); box.classList.remove('scale-95');
+                setTimeout(() => { if (options.isPrompt) inpE.focus(); else btnConfirm.focus(); }, 100);
+
+                const cleanup = () => {
+                    overlay.classList.add('opacity-0'); box.classList.add('scale-95');
+                    setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }, 200);
+                };
+
+                btnConfirm.onclick = () => { cleanup(); resolve(options.isPrompt ? inpE.value : true); };
+                btnCancel.onclick = () => { cleanup(); resolve(options.isPrompt ? null : false); };
+                if (options.isPrompt) inpE.onkeypress = (e) => { if (e.key === 'Enter') btnConfirm.click(); };
+            });
+        };
+
+        // This instantly overwrites every basic alert() in the system to use the new aesthetic ones
+        window.alert = (msg) => {
+            if(typeof msg !== 'string') msg = String(msg);
+            let title = 'System Notification'; let type = 'info';
+            const m = msg.toLowerCase();
+            if (m.includes('error') || m.includes('denied') || m.includes('fail') || m.includes('incorrect') || m.includes('invalid') || m.includes('cannot') || m.includes('must attach')) { title = 'Command Failed'; type = 'error'; } 
+            else if (m.includes('success') || m.includes('updated') || m.includes('applied') || m.includes('saved')) { title = 'Action Successful'; type = 'success'; }
+            else if (m.includes('warning') || m.includes('cancelled')) { title = 'Warning'; type = 'warning'; }
+            window.pummaDialog({ title, message: msg, type });
+        };
 
         window.toggleDarkMode = () => {
             const html = document.documentElement;
@@ -1114,7 +1201,8 @@
 
         window.handleDeleteCadet = async (btn) => {
             if (!window.selectedCadetId) return;
-            if (!confirm("Are you absolutely sure you want to permanently delete this cadet?")) return;
+            const confirmed = await customConfirm("Are you absolutely sure you want to permanently delete this cadet?");
+            if (!confirmed) return;
             
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             const cName = c ? c.name : 'Unknown Cadet';
@@ -1124,9 +1212,7 @@
                 window.logAuditActivity('Cadet Deleted', `Permanently deleted cadet record`, cName);
                 alert("Cadet deleted successfully.");
                 window.cancelEvaluation();
-            } catch (e) {
-                alert("Error deleting cadet.");
-            }
+            } catch (e) { alert("Error deleting cadet."); }
         };
 
         window.uploadCadetAvatar = (event) => {
@@ -1415,7 +1501,7 @@
         }
 
         window.resolveAppeal = async (cId, aId, status) => {
-            const response = prompt(`Enter your response to the cadet regarding this ${status} request:`);
+            const response = await customPrompt(`Enter your response to the cadet regarding this ${status} request:`, "Admin response (Optional)");
             if(response === null) return; 
             const c = window.cadets.find(x => x.id === cId);
             if(!c) return;
@@ -1464,7 +1550,8 @@
         };
 
         window.deleteAnnouncement = async (id) => {
-            if(!confirm("Delete this announcement?")) return;
+            const confirmed = await customConfirm("Delete this announcement?");
+            if(!confirmed) return;
             const list = JSON.parse(JSON.stringify((window.appSettings.announcements || []).filter(a => a.id !== id)));
             window.appSettings.announcements = list;
             const newBanner = list.length > 0 ? `${list[list.length-1].type}: ${list[list.length-1].title}` : "Orders of the Day: Welcome to the PUMMA Dashboard.";
@@ -1498,22 +1585,19 @@
             const instructors = JSON.parse(JSON.stringify(window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }]));
             const myIndex = instructors.findIndex(i => i.username === window.currentAdminUsername);
             
-            if (myIndex === -1) {
-                alert("Critical Error: Your instructor session is invalid.");
-                return;
-            }
+            if (myIndex === -1) { alert("Critical Error: Your instructor session is invalid."); return; }
 
             const currentPin = instructors[myIndex].pin;
-            const enteredOld = prompt("Enter your CURRENT PIN:")?.trim();
-            if (!enteredOld) return;
-            if (enteredOld !== currentPin) { alert("Incorrect current PIN."); return; }
+            const enteredOld = await customPrompt("Enter your CURRENT PIN:", "Current PIN");
+            if (enteredOld === null) return;
+            if (enteredOld.trim() !== currentPin) { alert("Incorrect current PIN."); return; }
             
-            const newPin = prompt("Enter your NEW Personal PIN:")?.trim();
+            const newPin = await customPrompt("Enter your NEW Personal PIN:", "New PIN");
             if (!newPin) return;
-            const confirmPin = prompt("Confirm NEW Personal PIN:")?.trim();
-            if (newPin !== confirmPin) { alert("PINs do not match."); return; }
+            const confirmPin = await customPrompt("Confirm NEW Personal PIN:", "Confirm PIN");
+            if (newPin.trim() !== confirmPin.trim()) { alert("PINs do not match."); return; }
             
-            instructors[myIndex].pin = newPin;
+            instructors[myIndex].pin = newPin.trim();
             window.appSettings.instructors = instructors;
             
             const now = new Date().toLocaleString();
@@ -1524,19 +1608,19 @@
             window.appSettings.adminLogs = logs;
 
             try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instructors, adminPin: newPin, adminLogs: logs });
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instructors, adminPin: newPin.trim(), adminLogs: logs });
                 alert("Your Personal PIN was successfully updated!");
             } catch (e) { alert("Failed to update PIN."); }
         };
 
         window.recoverAdminPin = async () => {
-            const mKey = prompt("Enter Master Recovery Key to reset an Instructor's PIN:")?.trim();
+            const mKey = await customPrompt("Enter Master Recovery Key to reset an Instructor's PIN:", "Master Key");
             if (mKey === "PUMMA2027") {
-                const targetUser = prompt("Enter the USERNAME of the Instructor to reset:")?.trim().toLowerCase();
+                const targetUser = await customPrompt("Enter the USERNAME of the Instructor to reset:", "Instructor Username");
                 if (!targetUser) return;
                 
                 const instructors = JSON.parse(JSON.stringify(window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }]));
-                const targetIndex = instructors.findIndex(i => i.username.toLowerCase() === targetUser);
+                const targetIndex = instructors.findIndex(i => i.username.toLowerCase() === targetUser.trim().toLowerCase());
                 
                 if (targetIndex !== -1) {
                     instructors[targetIndex].pin = "1234";
@@ -1545,14 +1629,14 @@
                     const now = new Date().toLocaleString();
                     const device = window.getDeviceName();
                     const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
-                    logs.unshift({ action: 'Security', details: `PIN reset for instructor: ${targetUser}`, adminName: 'System Recovery', date: now, device: device });
+                    logs.unshift({ action: 'Security', details: `PIN reset for instructor: ${targetUser.trim()}`, adminName: 'System Recovery', date: now, device: device });
                     if (logs.length > 1500) logs.pop();
                     window.appSettings.adminLogs = logs;
 
                     try {
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instructors, adminPin: "1234", adminLogs: logs });
-                        alert(`Instructor '${targetUser}' has been successfully recovered. PIN reset to '1234'.`);
-                    } catch(e) { alert("Error connecting to database. Make sure you are online."); }
+                        alert(`Instructor '${targetUser.trim()}' has been successfully recovered. PIN reset to '1234'.`);
+                    } catch(e) { alert("Error connecting to database."); }
                 } else {
                     alert("Instructor username not found in the database.");
                 }
@@ -1566,7 +1650,7 @@
             if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             setVal('admin-login-user', '');
             setVal('admin-login-pin', '');
-            document.getElementById('admin-login-user')?.focus();
+            setTimeout(() => document.getElementById('admin-login-user')?.focus(), 100);
         };
 
         window.closeAdminLoginModal = () => {
@@ -1583,10 +1667,7 @@
             const instructors = window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }];
             const instructor = instructors.find(i => i.username.toLowerCase() === uname);
 
-            if (!instructor) {
-                alert("Authentication Failed: Instructor username not found.");
-                return;
-            }
+            if (!instructor) { alert("Authentication Failed: Instructor username not found."); return; }
 
             if (pwd === instructor.pin) {
                 window.currentUserRole = 'admin';
@@ -1605,20 +1686,17 @@
                 logs.unshift({ action: 'Login', adminName: instructor.name, date: now, device: device });
                 if (logs.length > 1500) logs.pop();
                 window.appSettings.adminLogs = logs;
-                try {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
-                } catch(e) {}
+                try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs }); } catch(e) {}
                 window.recalculateMetrics(); 
             } else {
                 alert("Authentication Failed: Incorrect PIN.");
             }
         };
 
-        // Replaces the old loginAsAdmin which was just a prompt
         window.loginAsAdmin = window.openAdminLoginModal;
         
-        window.openManageInstructorsModal = () => {
-            const mKey = prompt("SECURITY CHECK:\nEnter the Master Key to access Instructor Account Management:");
+        window.openManageInstructorsModal = async () => {
+            const mKey = await customPrompt("SECURITY CHECK:\nEnter the Master Key to access Instructor Account Management:", "Master Key");
             if (mKey !== "PUMMA2027") {
                 if (mKey !== null) alert("Access Denied: Invalid Master Key.");
                 return;
@@ -1651,7 +1729,7 @@
 
         window.updateInstructorAccount = async (idx, field, val) => {
             const instList = JSON.parse(JSON.stringify(window.appSettings.instructors || []));
-            if (field === 'username') val = val.toLowerCase().replace(/[^a-z0-9_]/g, ''); // alphanumeric usernames
+            if (field === 'username') val = val.toLowerCase().replace(/[^a-z0-9_]/g, ''); 
             instList[idx][field] = val;
             window.appSettings.instructors = instList;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
@@ -1659,11 +1737,9 @@
 
         window.deleteInstructorAccount = async (idx) => {
             const instList = JSON.parse(JSON.stringify(window.appSettings.instructors || []));
-            if (instList.length <= 1) {
-                alert("You cannot delete the last remaining instructor account. The system must have at least one admin.");
-                return;
-            }
-            if (!confirm(`Are you sure you want to delete the account for ${instList[idx].username}?`)) return;
+            if (instList.length <= 1) { alert("You cannot delete the last remaining instructor account."); return; }
+            const confirmed = await customConfirm(`Are you sure you want to delete the account for ${instList[idx].username}?`);
+            if (!confirmed) return;
             instList.splice(idx, 1);
             window.appSettings.instructors = instList;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
@@ -1679,8 +1755,9 @@
         };
 
         window.loginAsCadet = async () => {
-            const cid = prompt("Enter student ID (e.g. U123456):")?.trim();
-            if (!cid) return;
+            const cidRaw = await customPrompt("Enter student ID (e.g. U123456):", "Student ID");
+            if (!cidRaw) return;
+            const cid = cidRaw.trim();
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
             
             const c = window.cadets.find(x => 
@@ -1691,22 +1768,20 @@
             if (c) {
                 const expectedPwd = c.password || c.studentId || `PUMMA-0${c.classNum}-${c.id.substring(c.id.length - 4)}`;
                 const promptMsg = !c.password ? `Enter your Password\n(Your default password is your ID: ${expectedPwd}):` : `Enter your private Password:`;
-                const pwd = prompt(promptMsg)?.trim();
+                
+                const pwdRaw = await customPrompt(promptMsg, "Password");
+                if (pwdRaw === null) return;
+                const pwd = pwdRaw.trim();
                 
                 if (pwd !== expectedPwd) { alert("Incorrect Password. If you forgot your password, ask your Instructor to reset it."); return; }
 
-                // --- REQUIRED EMAIL SETUP ---
                 if (!c.email || c.email.trim() === '') {
-                    const emailInput = prompt("SYSTEM REQUIREMENT:\nPlease register your official Panpacific University email account to continue:");
-                    if (!emailInput || emailInput.trim() === '') {
-                        alert("Access Denied: University email is required to log into the dashboard.");
-                        return; // Blocks login
-                    }
+                    const emailInput = await customPrompt("SYSTEM REQUIREMENT:\nPlease register your official Panpacific University email account to continue:", "Email Address");
+                    if (!emailInput || emailInput.trim() === '') { alert("Access Denied: University email is required to log into the dashboard."); return; }
                     c.email = emailInput.trim();
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { email: c.email });
                     alert("Account email successfully registered!");
                 }
-                // ----------------------------
 
                 window.currentUserRole = 'cadet';
                 document.getElementById('auth-overlay').classList.add('hidden');
@@ -1729,42 +1804,45 @@
                 c.accessLogs = logs;
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { accessLogs: logs });
 
-            } else {
-                alert("Cadet not found. Please verify your ID or Name.");
-            }
+            } else { alert("Cadet not found. Please verify your ID or Name."); }
         };
 
         window.changeCadetPassword = async () => {
             if (!window.selectedCadetId) return;
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             const expectedPwd = c.password || c.studentId || `PUMMA-0${c.classNum}-${c.id.substring(c.id.length - 4)}`;
-            const oldP = prompt("Enter your CURRENT Password:")?.trim();
-            if (oldP !== expectedPwd) { alert("Incorrect current password."); return; }
-            const newP = prompt("Enter NEW Password:")?.trim();
-            if (!newP) return;
-            const confP = prompt("Confirm NEW Password:")?.trim();
-            if (newP !== confP) { alert("Passwords do not match."); return; }
             
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { password: newP });
+            const oldP = await customPrompt("Enter your CURRENT Password:", "Current Password");
+            if (oldP === null) return;
+            if (oldP.trim() !== expectedPwd) { alert("Incorrect current password."); return; }
+            
+            const newP = await customPrompt("Enter NEW Password:", "New Password");
+            if (!newP) return;
+            
+            const confP = await customPrompt("Confirm NEW Password:", "Confirm Password");
+            if (newP.trim() !== confP.trim()) { alert("Passwords do not match."); return; }
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { password: newP.trim() });
             alert("Password updated securely.");
-            c.password = newP;
+            c.password = newP.trim();
         };
 
         window.updateCadetEmail = async () => {
             if (!window.selectedCadetId) return;
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
-            const newEmail = prompt(`Update Email Account\nCurrent Email: ${c.email || 'None'}\n\nEnter your official Panpacific University email address:`)?.trim();
-            if (newEmail === undefined || newEmail === null) return;
-            if (newEmail === '') { alert("Email address cannot be empty."); return; }
+            const newEmail = await customPrompt(`Update Email Account\nCurrent Email: ${c.email || 'None'}\n\nEnter your official Panpacific University email address:`, "user@domain.com");
+            if (newEmail === null) return;
+            if (newEmail.trim() === '') { alert("Email address cannot be empty."); return; }
             
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { email: newEmail });
-            alert(`Email successfully updated to: ${newEmail}`);
-            c.email = newEmail;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { email: newEmail.trim() });
+            alert(`Email successfully updated to: ${newEmail.trim()}`);
+            c.email = newEmail.trim();
         };
 
         window.resetCadetPassword = async () => {
             if (!window.selectedCadetId || window.currentUserRole !== 'admin') return;
-            if(!confirm("Reset this cadet's password to their default ID?")) return;
+            const confirmed = await customConfirm("Reset this cadet's password to their default ID?");
+            if(!confirmed) return;
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             const defP = c.studentId || `PUMMA-0${c.classNum}-${c.id.substring(c.id.length - 4)}`;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { password: defP });
@@ -1774,7 +1852,8 @@
 
         window.clearCadetEmail = async () => {
             if (!window.selectedCadetId || window.currentUserRole !== 'admin') return;
-            if(!confirm("Clear this cadet's email? They will be forced to re-enter it the next time they log in.")) return;
+            const confirmed = await customConfirm("Clear this cadet's email? They will be forced to re-enter it the next time they log in.");
+            if(!confirmed) return;
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { email: '' });
             alert(`Email wiped. Cadet will be prompted to register it again on next login.`);
@@ -2354,7 +2433,8 @@
 
         window.deleteIncident = async (incId, sem, pts) => {
             if(window.currentUserRole !== 'admin') return;
-            if(!confirm("Remove this log and revert points?")) return;
+            const confirmed = await customConfirm("Remove this log and revert points?");
+            if(!confirmed) return;
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             const updatedInc = JSON.parse(JSON.stringify(c.incidents.filter(i => i.id !== incId)));
             const curVal = parseInt(c[`meritsSem${sem}`]) || 0;
@@ -2796,13 +2876,12 @@
             if (action === 'Approve' || action === 'ForceApprove') {
                 updatedLog[window.currentLogbookKey] = true; 
             } else if (action === 'Reject') {
-                // ADDED COMMENT FEATURE
-                const reason = prompt("Enter a reason for rejecting this logbook submission (e.g. 'Blurry image', 'Wrong date'):");
-                if (reason === null) return; // User clicked Cancel, abort action.
+                const reason = await customPrompt("Enter a reason for rejecting this logbook submission (e.g. 'Blurry image', 'Wrong date'):", "Reason for rejection");
+                if (reason === null) return; 
                 
                 updatedLog[window.currentLogbookKey] = { 
                     status: 'Rejected', 
-                    comment: reason || 'Invalid evidence provided.' 
+                    comment: reason.trim() || 'Invalid evidence provided.' 
                 };
             } else if (action === 'Revoke') {
                 delete updatedLog[window.currentLogbookKey];
@@ -3152,14 +3231,12 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                return classMatch && secMatch && acadMatch;
             });
 
-            if (filtered.length === 0) {
-                alert("No cadets match your selected filters.");
-                return;
-            }
+            if (filtered.length === 0) { alert("No cadets match your selected filters."); return; }
 
             if (typ === 'delete') {
-                if(!confirm(`EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} targeted cadets. This cannot be undone. Type "DELETE" to confirm.`)) return;
-                const verify = prompt('Type "DELETE" to confirm:');
+                const confirmed = await customConfirm(`EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} targeted cadets. This cannot be undone.`);
+                if(!confirmed) return;
+                const verify = await customPrompt('Type "DELETE" to confirm:', "Type DELETE here");
                 if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
                 
                 for(let i=0; i<filtered.length; i+=400){
