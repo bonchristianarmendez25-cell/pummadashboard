@@ -560,7 +560,21 @@
     </div>
 
     <!-- Hidden Modals (Admin Logs, Calendars, Analytics etc.) -->
-    <div id="admin-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Admin Access History</h3><button onclick="closeAdminLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950"><ul id="admin-logs-list" class="space-y-2 text-xs font-mono"></ul></div></div></div>
+    <div id="admin-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Admin Access History</h3>
+                <div class="flex items-center gap-3">
+                    <button onclick="exportAdminLogsCSV()" class="text-[10px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-2 py-1.5 rounded font-bold transition flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> CSV</button>
+                    <button onclick="closeAdminLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950">
+                <ul id="admin-logs-list" class="space-y-2 text-xs font-mono"></ul>
+            </div>
+        </div>
+    </div>
+    
     <div id="cadet-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Cadet Access History</h3><button onclick="closeCadetLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950"><ul id="cadet-logs-list" class="space-y-2 text-xs font-mono"></ul></div></div></div>
     <div id="announcements-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-amber-900 dark:text-amber-200 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="megaphone" class="w-5 h-5"></i> Communications & Orders Board</h3></div><button onclick="closeAnnouncementsModal()" class="text-amber-700 hover:text-amber-900 dark:text-amber-300 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="admin-controls hidden col-span-1 bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm h-fit sticky top-0"><h4 class="text-xs font-bold text-brand-blue dark:text-brand-green uppercase mb-3 border-b dark:border-slate-700 pb-2">Post New Announcement</h4><label class="text-[10px] font-bold text-slate-500 mb-1 block">Title</label><input type="text" id="announce-title" class="w-full mb-3 bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white"><label class="text-[10px] font-bold text-slate-500 mb-1 block">Type of Order</label><div class="flex gap-2 mb-3"><select id="announce-type" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white"><option value="Daily Announcement">Daily Announcement</option><option value="Weekly Order">Weekly Order</option><option value="Monthly Memo">Monthly Memo</option><option value="Alert">Urgent Alert</option></select></div><label class="text-[10px] font-bold text-slate-500 mb-1 block">Detailed Message</label><textarea id="announce-content" rows="4" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white mb-2"></textarea><button onclick="postAnnouncement()" class="w-full bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Publish to Board</button></div><div class="col-span-1 lg:col-span-2 flex flex-col gap-4"><h4 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Recent Transmissions</h4><div id="announcements-list-container" class="space-y-4"></div></div></div></div></div>
     <div id="manage-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="settings-2" class="text-brand-green w-5 h-5"></i> Manage Duty Checklists</h3></div><button onclick="closeManageDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950" id="duties-editor-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><button onclick="addDutyDay()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-sm"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Day</button><button onclick="closeManageDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done</button></div></div></div>
@@ -584,7 +598,10 @@
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl">
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
                 <h3 class="font-bold text-brand-green dark:text-green-400 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="file-search" class="w-5 h-5"></i> System Activity & Edit Ledger</h3>
-                <button onclick="closeAuditLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <div class="flex items-center gap-3">
+                    <button onclick="exportAuditLogsCSV()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV</button>
+                    <button onclick="closeAuditLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950">
                 <ul id="audit-logs-list" class="space-y-3 text-xs"></ul>
@@ -1449,7 +1466,7 @@
             if (window.currentUserRole === 'admin') {
                 const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
                 logs.unshift({ action: 'Logout', adminName: window.currentAdminName || 'Admin', date: now, device: device });
-                if (logs.length > 100) logs.pop();
+                if (logs.length > 1500) logs.pop();
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
             } else if (window.currentUserRole === 'cadet' && window.selectedCadetId) {
                 const c = window.cadets.find(x => x.id === window.selectedCadetId);
@@ -1489,7 +1506,7 @@
             const device = window.getDeviceName();
             const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
             logs.unshift({ action: 'Security', details: 'Instructor changed their personal PIN', adminName: window.currentAdminName || 'Admin', date: now, device: device });
-            if (logs.length > 100) logs.pop();
+            if (logs.length > 1500) logs.pop();
             window.appSettings.adminLogs = logs;
 
             try {
@@ -1515,7 +1532,7 @@
                     const device = window.getDeviceName();
                     const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
                     logs.unshift({ action: 'Security', details: `PIN reset for instructor: ${targetUser}`, adminName: 'System Recovery', date: now, device: device });
-                    if (logs.length > 100) logs.pop();
+                    if (logs.length > 1500) logs.pop();
                     window.appSettings.adminLogs = logs;
 
                     try {
@@ -1572,7 +1589,7 @@
                 const device = window.getDeviceName();
                 const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
                 logs.unshift({ action: 'Login', adminName: instructor.name, date: now, device: device });
-                if (logs.length > 100) logs.pop();
+                if (logs.length > 1500) logs.pop();
                 window.appSettings.adminLogs = logs;
                 try {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
@@ -1773,14 +1790,25 @@
         window.closeAdminLogsModal = () => { const m = document.getElementById('admin-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
         window.logAuditActivity = async (action, details, targetCadet = 'System') => {
-            if (window.currentUserRole !== 'admin') return; // Only track admin actions
-            const now = new Date().toLocaleString();
+            if (window.currentUserRole !== 'admin') return; 
+            const now = new Date();
             const adminName = window.currentAdminName || 'Instructor';
-            const logs = JSON.parse(JSON.stringify(window.appSettings.auditLogs || []));
-            logs.unshift({ action, details, adminName, date: now, target: targetCadet });
-            if (logs.length > 300) logs.pop(); // Keeps the last 300 records to prevent DB bloat
+            let logs = JSON.parse(JSON.stringify(window.appSettings.auditLogs || []));
+            
+            logs.unshift({ action, details, adminName, date: now.toLocaleString(), timestamp: now.getTime(), target: targetCadet });
+            
+            // STRICT 30-DAY ROLLING DELETION
+            const thirtyDaysAgo = now.getTime() - (30 * 24 * 60 * 60 * 1000);
+            logs = logs.filter(l => {
+                const t = l.timestamp || new Date(l.date).getTime();
+                return t >= thirtyDaysAgo;
+            });
+            
+            // DATABASE CRASH SAFETY NET (Prevents exceeding 1MB limit)
+            if (logs.length > 2500) logs = logs.slice(0, 2500); 
+            
             window.appSettings.auditLogs = logs;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { auditLogs: logs });
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { auditLogs: logs }); } catch(e){}
         };
 
         window.openAuditLogsModal = () => {
@@ -1798,6 +1826,44 @@
             `).join('');
             safeSetInnerHTML('audit-logs-list', html || '<li class="text-center text-slate-500 py-8 italic flex flex-col items-center gap-2"><i data-lucide="shield-check" class="w-10 h-10 opacity-30 text-brand-green"></i>No administrative actions recorded yet.</li>');
             if(typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        
+        window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.exportAuditLogsCSV = () => {
+            const logs = window.appSettings.auditLogs || [];
+            if (logs.length === 0) return alert("No activity logs to export.");
+            let csv = "Date,Action,Target,Authorizing Admin,Details\n";
+            logs.forEach(l => {
+                const date = `"${l.date}"`;
+                const action = `"${l.action}"`;
+                const target = `"${l.target}"`;
+                const admin = `"${l.adminName}"`;
+                const details = `"${(l.details||'').replace(/"/g, '""')}"`;
+                csv += `${date},${action},${target},${admin},${details}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `PUMMA_Activity_Ledger_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        };
+
+        window.exportAdminLogsCSV = () => {
+            const logs = window.appSettings.adminLogs || [];
+            if (logs.length === 0) return alert("No access logs to export.");
+            let csv = "Date,Action,Admin Name,Device,Details\n";
+            logs.forEach(l => {
+                const date = `"${l.date}"`;
+                const action = `"${l.action}"`;
+                const admin = `"${l.adminName}"`;
+                const device = `"${l.device}"`;
+                const details = `"${(l.details||'').replace(/"/g, '""')}"`;
+                csv += `${date},${action},${admin},${device},${details}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `PUMMA_Admin_Access_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         };
         
         window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
@@ -2233,7 +2299,7 @@
                 const device = window.getDeviceName();
                 const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
                 logs.unshift({ action: 'Edit Record', details: `Edited ${c.name}: ${changes.join(', ')}`, adminName: window.currentAdminName || 'Admin', date: now, device: device });
-                if (logs.length > 100) logs.pop();
+                if (logs.length > 1500) logs.pop();
                 window.appSettings.adminLogs = logs;
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
                 window.logAuditActivity('Profile Modified', `Edited fields: ${changes.join(', ')}`, c.name);
