@@ -74,6 +74,7 @@
             <span id="announcement-display" class="truncate">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
             <div class="ml-auto flex items-center gap-2 shrink-0">
                 <button onclick="event.stopPropagation(); openTripleR()" class="bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
+                <button onclick="event.stopPropagation(); openExamPrepModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open-check" class="w-3.5 h-3.5 hidden sm:block"></i> Exam Prep</button>
                 <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
                 <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
             </div>
@@ -874,6 +875,68 @@
                 <button onclick="closeMaritimeNewsModal()" class="text-white/70 hover:text-white transition-colors absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="maritime-news-container">
+            </div>
+        </div>
+    </div>
+    
+<div id="exam-prep-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[70vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 bg-indigo-700 border-b border-indigo-800 flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2 uppercase tracking-wide">
+                    <i data-lucide="book-open-check" class="text-indigo-300 w-5 h-5"></i> 2nd Mates Review Deck
+                </h3>
+                <button onclick="closeExamPrepModal()" class="text-white/70 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 p-6 bg-brand-creamBg dark:bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
+                
+                <div id="exam-prep-setup" class="w-full max-w-md text-center">
+                    <i data-lucide="layers" class="w-16 h-16 mx-auto mb-4 text-indigo-500/50"></i>
+                    <h2 class="text-lg font-bold text-brand-blue dark:text-white mb-6 uppercase tracking-wider">Select Study Deck</h2>
+                    <div class="space-y-3">
+                        <button onclick="startExamDeck('ror')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:border-indigo-500 p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
+                            <div class="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-lg text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition"><i data-lucide="ship" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-brand-black dark:text-white">Rules of the Road (ROR)</h4>
+                                <p class="text-xs text-slate-500">Nav Lights, Day Shapes & Steering Rules</p>
+                            </div>
+                        </button>
+                        <button onclick="startExamDeck('iala')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:border-emerald-500 p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
+                            <div class="bg-emerald-100 dark:bg-emerald-900/50 p-3 rounded-lg text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition"><i data-lucide="map-pin" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-brand-black dark:text-white">IALA Buoyage System</h4>
+                                <p class="text-xs text-slate-500">Region A & B, Marks, Topmarks</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="exam-prep-active" class="hidden w-full h-full flex-col">
+                    <div class="flex justify-between items-center mb-4 text-xs font-bold text-slate-500 uppercase tracking-widest shrink-0">
+                        <span id="exam-deck-title">Deck Name</span>
+                        <span id="exam-card-counter" class="bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded">Card 1 / 10</span>
+                    </div>
+                    
+                    <div class="flex-1 w-full relative perspective-1000">
+                        <div id="exam-card-front" onclick="toggleCardFlip()" class="absolute inset-0 bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-slate-700 rounded-2xl shadow-lg p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:border-indigo-300 transition-colors">
+                            <span class="absolute top-4 left-4 text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 px-2 py-1 rounded">QUESTION</span>
+                            <h2 id="exam-q-text" class="text-lg sm:text-2xl font-serif font-bold text-brand-blue dark:text-white leading-relaxed">Question text here?</h2>
+                            <p class="absolute bottom-4 text-xs text-slate-400 animate-pulse flex items-center gap-1"><i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5"></i> Tap card to reveal answer</p>
+                        </div>
+                        <div id="exam-card-back" onclick="toggleCardFlip()" class="hidden absolute inset-0 bg-indigo-50 dark:bg-indigo-900/40 border-2 border-indigo-300 dark:border-indigo-600 rounded-2xl shadow-lg p-6 sm:p-10 flex-col items-center justify-center text-center cursor-pointer hover:border-indigo-400 transition-colors">
+                            <span class="absolute top-4 left-4 text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded">ANSWER</span>
+                            <h2 id="exam-a-text" class="text-base sm:text-xl font-bold text-indigo-900 dark:text-indigo-200 leading-relaxed">Answer text here.</h2>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-6 gap-4 shrink-0">
+                        <button onclick="endExamDeck()" class="px-4 py-3 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition">Exit Deck</button>
+                        <div class="flex gap-2">
+                            <button onclick="nextExamCard(-1)" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-brand-blue dark:text-white px-4 py-3 rounded-lg shadow-sm transition"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+                            <button onclick="nextExamCard(1)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg shadow-md transition font-bold tracking-wider flex items-center gap-2">NEXT <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -3141,6 +3204,96 @@
         window.closeMaritimeNewsModal = () => {
             const m = document.getElementById('maritime-news-modal');
             if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        // --- 2ND MATES EXAM PREP ENGINE ---
+        window.examDatabase = {
+            ror: [
+                { q: "What lights are exhibited by a Vessel Restricted in her Ability to Manoeuvre (RAM) underway?", a: "Masthead light(s), sidelights, sternlight AND Red-White-Red all-round lights vertically." },
+                { q: "What day shape is exhibited by a Vessel Aground?", a: "Three black balls in a vertical line." },
+                { q: "What is the sound signal for a vessel underway but stopped and making no way through the water in restricted visibility?", a: "Two prolonged blasts at intervals of not more than 2 minutes." },
+                { q: "What is the arc of visibility of a Masthead Light?", a: "225 degrees (from right ahead to 22.5 degrees abaft the beam on either side)." },
+                { q: "What day shape is exhibited by a vessel Constrained By Her Draught (CBD)?", a: "A cylinder." },
+                { q: "If you see a vessel exhibiting a Green light over a White light, what is it?", a: "Trawling vessel underway." }
+            ],
+            iala: [
+                { q: "In IALA Region A, what is the color of a Port Hand Mark?", a: "Red." },
+                { q: "What is the topmark of an Isolated Danger Mark?", a: "Two black spheres in a vertical line." },
+                { q: "What light rhythm does a Safe Water Mark flash?", a: "Isophase, Occulting, one Long Flash every 10s, or Morse 'A'." },
+                { q: "In IALA Region B, what shape and color is a Starboard Hand Buoy?", a: "Conical (or spar/pillar) and Red." },
+                { q: "What is the color sequence of a South Cardinal Mark?", a: "Yellow over Black." }
+            ]
+        };
+
+        window.currentExamDeck = [];
+        window.currentCardIndex = 0;
+
+        window.openExamPrepModal = () => {
+            const m = document.getElementById('exam-prep-modal');
+            if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            document.getElementById('exam-prep-setup').classList.remove('hidden');
+            
+            const active = document.getElementById('exam-prep-active');
+            active.classList.add('hidden'); active.classList.remove('flex');
+        };
+
+        window.closeExamPrepModal = () => {
+            const m = document.getElementById('exam-prep-modal');
+            if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.startExamDeck = (deckId) => {
+            // Load and shuffle the cards so it's different every time
+            window.currentExamDeck = [...window.examDatabase[deckId]].sort(() => Math.random() - 0.5); 
+            window.currentCardIndex = 0;
+            
+            document.getElementById('exam-deck-title').innerText = deckId === 'ror' ? 'Rules of the Road (ROR)' : 'IALA Buoyage';
+            document.getElementById('exam-prep-setup').classList.add('hidden');
+            
+            const active = document.getElementById('exam-prep-active');
+            active.classList.remove('hidden'); active.classList.add('flex');
+            
+            window.renderExamCard();
+        };
+
+        window.renderExamCard = () => {
+            const card = window.currentExamDeck[window.currentCardIndex];
+            document.getElementById('exam-card-counter').innerText = `Card ${window.currentCardIndex + 1} of ${window.currentExamDeck.length}`;
+            document.getElementById('exam-q-text').innerText = card.q;
+            document.getElementById('exam-a-text').innerText = card.a;
+            
+            // Always ensure the front (question) is showing first
+            const front = document.getElementById('exam-card-front');
+            const back = document.getElementById('exam-card-back');
+            front.classList.remove('hidden'); front.classList.add('flex');
+            back.classList.add('hidden'); back.classList.remove('flex');
+        };
+
+        window.toggleCardFlip = () => {
+            const front = document.getElementById('exam-card-front');
+            const back = document.getElementById('exam-card-back');
+            
+            if(front.classList.contains('hidden')) {
+                front.classList.remove('hidden'); front.classList.add('flex');
+                back.classList.add('hidden'); back.classList.remove('flex');
+            } else {
+                front.classList.add('hidden'); front.classList.remove('flex');
+                back.classList.remove('hidden'); back.classList.add('flex');
+            }
+        };
+
+        window.nextExamCard = (dir) => {
+            window.currentCardIndex += dir;
+            // Wrap around logic
+            if(window.currentCardIndex < 0) window.currentCardIndex = window.currentExamDeck.length - 1;
+            if(window.currentCardIndex >= window.currentExamDeck.length) window.currentCardIndex = 0;
+            window.renderExamCard();
+        };
+
+        window.endExamDeck = () => {
+            document.getElementById('exam-prep-setup').classList.remove('hidden');
+            const active = document.getElementById('exam-prep-active');
+            active.classList.add('hidden'); active.classList.remove('flex');
         };
 
         window.renderDutyCalendar = () => {
