@@ -2506,6 +2506,26 @@
             setTxt('cal-total-days', totalCount);
         };
 
+        window.toggleMonthLogbook = async (year, monthIdx, daysInMonth, forceState) => {
+            if (window.currentUserRole !== 'admin') return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+            for(let d=0; d<daysInMonth; d++){
+                const k = `${year}-${monthIdx}-${d}`;
+                if (forceState) updatedLog[k] = true;
+                else delete updatedLog[k];
+            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook2026: updatedLog, logbook: updatedLog });
+            window.renderCalendarModal();
+        };
+
+        window.closeCalendarModal = () => { 
+            const cm = document.getElementById('calendar-modal');
+            if (cm) { cm.classList.add('hidden'); cm.classList.remove('flex'); }
+            window.recalculateMetrics(); 
+        };
+
         window.currentLogbookKey = null;
 
         window.handleLogbookDayClick = (key, monthName, dayNum) => {
