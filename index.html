@@ -43,7 +43,7 @@
             @page { margin: 0.5cm; }
         }
         
-        .bg-login-decor { ... url('assets/okay.jpg'); } background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .bg-login-decor { background-image: url('okay.jpg.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
         .dark .bg-login-decor { background-color: #0f172a; }
     </style>
 </head>
@@ -53,7 +53,7 @@
         <div class="absolute inset-0 bg-brand-blue/30 dark:bg-slate-950/50 backdrop-blur-[1px]"></div>
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-t-4 border-brand-green relative overflow-hidden z-10">
             <div class="w-20 h-20 bg-brand-creamAccent dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-creamBorder dark:border-slate-600 shadow-inner overflow-hidden">
-                <img src="MOCKBOAT%20LOGO.png" alt="PUMMA" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield\' class=\'w-10 h-10 text-brand-green\'></i>';">
+                <img src="MOCKBOAT LOGO.png.png" alt="PUMMA" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield\' class=\'w-10 h-10 text-brand-green\'></i>';">
             </div>
             <h1 class="font-serif text-2xl font-bold text-brand-blue dark:text-brand-green mb-2">PUMMA Dashboard</h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Please select your access level</p>
@@ -72,7 +72,10 @@
         <div class="flex items-center gap-2 max-w-7xl mx-auto w-full px-4">
             <i data-lucide="megaphone" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i> 
             <span id="announcement-display" class="truncate">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
-            <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="ml-auto bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition shrink-0"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
+            <div class="ml-auto flex items-center gap-2 shrink-0">
+                <button onclick="event.stopPropagation(); openTripleR()" class="bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
+                <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
+            </div>
             <span class="ml-2 text-[10px] opacity-70 underline hidden sm:block">View Board</span>
         </div>
     </div>
@@ -83,7 +86,7 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center shadow-inner overflow-hidden border border-slate-200 dark:border-slate-600">
-                    <img src="assets/MOCKBOAT LOGO.png"> class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield-check\' class=\'w-6 h-6 text-brand-blue dark:text-brand-green\'></i>';">
+                    <img src="MOCKBOAT LOGO.png.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\'shield-check\' class=\'w-6 h-6 text-brand-blue dark:text-brand-green\'></i>';">
                 </div>
                 <div>
                     <h1 class="font-serif font-bold text-lg md:text-xl tracking-wider text-brand-blue dark:text-white uppercase leading-none">Panpacific University</h1>
@@ -222,6 +225,15 @@
                             <input type="number" id="input-bonus-rate" value="0.5" step="0.1" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green" title="Auto Bonus % added per 10 excess merits">
                             <span class="text-[9px] text-brand-green dark:text-green-400 font-semibold mt-1 block leading-tight">Per 10 merits over cap</span>
                         </div>
+                    </div>
+                    
+                    <div class="mt-4 border-t border-brand-creamBorder dark:border-slate-700 pt-4">
+                        <label class="block text-xs font-semibold text-brand-blue dark:text-blue-300 mb-1 flex items-center gap-1"><i data-lucide="link" class="w-3.5 h-3.5"></i> TRIPLE R Document Link (Google Drive / PDF)</label>
+                        <div class="flex gap-2">
+                            <input type="url" id="input-triple-r" placeholder="https://docs.google.com/..." class="flex-1 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
+                            <button onclick="saveTripleRLink()" class="bg-brand-green hover:bg-brand-green-hover text-white px-4 py-2 rounded text-xs font-bold transition shadow-sm">Save Link</button>
+                        </div>
+                        <p class="text-[9px] text-slate-500 mt-1">This opens the official handbook when cadets click the TRIPLE R button in the top banner.</p>
                     </div>
                 </div>
 
@@ -792,7 +804,7 @@
     <!-- Printable Templates -->
     <div id="print-masterlist-container" class="hidden font-sans text-black bg-white p-4">
         <div class="text-center border-b-2 border-brand-blue pb-4 mb-6">
-            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT%20LOGO.png" style="width: 40px; height: 40px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
+            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT LOGO.png.png" style="width: 40px; height: 40px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
             <p class="text-xs text-slate-600 tracking-wider font-semibold uppercase">Cadet Masterlist & Appraisal Report</p>
             <p class="text-sm font-bold mt-2" id="print-masterlist-title">--</p>
         </div>
@@ -804,7 +816,7 @@
 
     <div id="print-cadet-report" class="hidden p-8 max-w-2xl mx-auto bg-white font-sans text-black">
         <div class="text-center border-b-2 border-brand-blue pb-4 mb-6">
-            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT%20LOGO.png" style="width: 50px; height: 50px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
+            <h1 class="font-serif font-bold text-2xl text-brand-blue tracking-wide uppercase flex items-center justify-center gap-4"><img src="MOCKBOAT LOGO.png.png" style="width: 50px; height: 50px;" onerror="this.style.display='none'">PANPACIFIC UNIVERSITY</h1>
             <p class="text-xs text-slate-600 tracking-wider font-semibold uppercase">Merchant Marine Academy Competency Dashboard</p>
         </div>
         <div class="bg-slate-50 p-4 rounded mb-6 border border-slate-200 flex items-center gap-4">
@@ -1567,16 +1579,27 @@
             window.renderAnnouncements();
         };
 
-        window.deleteAnnouncement = async (id) => {
-            const confirmed = await customConfirm("Delete this announcement?");
-            if(!confirmed) return;
-            const list = JSON.parse(JSON.stringify((window.appSettings.announcements || []).filter(a => a.id !== id)));
-            window.appSettings.announcements = list;
-            const newBanner = list.length > 0 ? `${list[list.length-1].type}: ${list[list.length-1].title}` : "Orders of the Day: Welcome to the PUMMA Dashboard.";
-            window.appSettings.announcement = newBanner;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: newBanner, announcements: list });
-            window.logAuditActivity('Announcement Deleted', `Removed an announcement from the board`, 'Communications Board');
-            window.renderAnnouncements();
+        window.openTripleR = () => {
+            const link = window.appSettings.tripleRLink;
+            if (!link || link.trim() === '') {
+                alert("The TRIPLE R document link has not been configured yet. Please ask your Instructor to set it up in the General Config panel.");
+                return;
+            }
+            
+            // Auto-format the URL to prevent errors
+            let finalLink = link.trim();
+            if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+                finalLink = 'https://' + finalLink;
+            }
+            window.open(finalLink, '_blank');
+        };
+
+        window.saveTripleRLink = async () => {
+            const link = getVal('input-triple-r').trim();
+            window.appSettings.tripleRLink = link;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { tripleRLink: link });
+            window.logAuditActivity('System Config', 'Updated TRIPLE R Document Link', 'System');
+            alert("TRIPLE R link successfully updated globally!");
         };
 
         window.handleSignOut = async () => {
@@ -3507,6 +3530,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     setVal('select-peer-mode', window.appSettings.peerMode || 'dynamic');
                     setVal('input-acad-year', window.appSettings.academicYear || "2025-2026");
                     setVal('input-bonus-rate', window.appSettings.bonusPerTen || 0.5);
+                    setVal('input-triple-r', window.appSettings.tripleRLink || '');
                     setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
                     
                     if (window.appSettings.adminPin && window.appSettings.adminPin !== '1234') {
