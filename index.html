@@ -1622,7 +1622,7 @@
         };
 
         window.recoverAdminPin = async () => {
-            const mKey = await customPrompt("EMERGENCY RECOVERY:\nOnly the Regimental Commander (ISO) should use this.\n\nEnter the Master Key to securely reset an Instructor's PIN:", "Master Key");
+            const mKey = await customPrompt("EMERGENCY RECOVERY:\nOnly the Dean and the Regimental Intelligence and Security Officer should use this.\n\nEnter the Master Key to securely reset an Instructor's PIN:", "Master Key");
             
             if (mKey === "PUMMA2027") {
                 const instructors = JSON.parse(JSON.stringify(window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }]));
