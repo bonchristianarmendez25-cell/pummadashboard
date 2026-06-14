@@ -366,6 +366,7 @@
                                     <div id="cadet-incidents-log" class="max-h-32 overflow-y-auto space-y-1.5 pr-1 text-[9px] relative z-10 custom-scrollbar"></div>
                                 </div>
                             </div>
+                        </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="flex items-center justify-between bg-brand-creamAccent dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 text-xs">
@@ -1072,7 +1073,7 @@
                             </div>
                         </div>
                     `;
-                }
+                }).join('');
 
             if (window.currentUserRole === 'cadet') {
                 document.querySelectorAll('.cadet-disable').forEach(el => { el.disabled = true; el.classList.add('opacity-70', 'cursor-not-allowed'); });
