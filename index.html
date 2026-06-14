@@ -192,6 +192,7 @@
                             <button onclick="changeAdminPin()" class="text-[11px] bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800 text-red-800 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 font-semibold flex items-center gap-1 transition"><i data-lucide="key" class="w-3.5 h-3.5"></i> My PIN</button>
                             <button onclick="backupDB()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition" title="Download Database Backup"><i data-lucide="download-cloud" class="w-3.5 h-3.5"></i> Backup</button>
                             <button onclick="openAdminLogsModal()" class="text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 font-semibold flex items-center gap-1 transition"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Admin Logs</button>
+                            <button onclick="openAuditLogsModal()" class="text-[11px] bg-brand-green-glow dark:bg-green-900/30 hover:bg-brand-green/20 dark:hover:bg-green-800 text-brand-green dark:text-green-300 px-2.5 py-1.5 rounded border border-brand-green/30 dark:border-green-800 font-semibold flex items-center gap-1 transition shadow-sm"><i data-lucide="file-search" class="w-3.5 h-3.5"></i> Activity Logs</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mt-4">
@@ -576,6 +577,18 @@
             </div>
             <div class="p-5 space-y-4" id="logbook-action-content">
                 </div>
+        </div>
+    </div>
+
+    <div id="audit-logs-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-brand-green dark:text-green-400 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="file-search" class="w-5 h-5"></i> System Activity & Edit Ledger</h3>
+                <button onclick="closeAuditLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950">
+                <ul id="audit-logs-list" class="space-y-3 text-xs"></ul>
+            </div>
         </div>
     </div>
 
@@ -1373,6 +1386,7 @@
             if(!c) return;
             const updated = JSON.parse(JSON.stringify((c.appeals || []).map(a => { if(a.id === aId) return { ...a, status, response }; return a; })));
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), { appeals: updated });
+            window.logAuditActivity('Appeal Resolved', `Action: ${status} | Note provided: ${response || 'None'}`, c.name);
             window.renderInbox();
         }
 
@@ -1750,6 +1764,36 @@
             if(typeof lucide !== 'undefined') lucide.createIcons();
         };
         window.closeAdminLogsModal = () => { const m = document.getElementById('admin-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
+
+        window.logAuditActivity = async (action, details, targetCadet = 'System') => {
+            if (window.currentUserRole !== 'admin') return; // Only track admin actions
+            const now = new Date().toLocaleString();
+            const adminName = window.currentAdminName || 'Instructor';
+            const logs = JSON.parse(JSON.stringify(window.appSettings.auditLogs || []));
+            logs.unshift({ action, details, adminName, date: now, target: targetCadet });
+            if (logs.length > 300) logs.pop(); // Keeps the last 300 records to prevent DB bloat
+            window.appSettings.auditLogs = logs;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { auditLogs: logs });
+        };
+
+        window.openAuditLogsModal = () => {
+            const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            const logs = window.appSettings.auditLogs || [];
+            const html = logs.map(l => `
+                <li class="flex flex-col p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+                    <div class="flex justify-between items-start mb-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5 text-brand-green"></i> ${l.date}</span>
+                        <span class="text-[9px] bg-brand-green-glow dark:bg-green-900/30 text-brand-green dark:text-green-400 px-2 py-0.5 rounded border border-brand-green/30 font-bold uppercase tracking-wider">${l.action}</span>
+                    </div>
+                    <div class="text-xs text-slate-700 dark:text-slate-300 font-medium mb-1"><span class="text-brand-blue dark:text-blue-400 font-bold uppercase text-[10px]">Authorizing Admin:</span> ${l.adminName}</div>
+                    <div class="text-[11px] text-slate-600 dark:text-slate-400 bg-brand-creamBg dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 font-mono mt-1"><strong class="text-brand-black dark:text-white">Target (${l.target}):</strong> ${l.details}</div>
+                </li>
+            `).join('');
+            safeSetInnerHTML('audit-logs-list', html || '<li class="text-center text-slate-500 py-8 italic flex flex-col items-center gap-2"><i data-lucide="shield-check" class="w-10 h-10 opacity-30 text-brand-green"></i>No administrative actions recorded yet.</li>');
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        
+        window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
         window.openCadetLogsModal = () => {
             let logsToDisplay = [];
@@ -2185,6 +2229,7 @@
                 if (logs.length > 100) logs.pop();
                 window.appSettings.adminLogs = logs;
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { adminLogs: logs });
+                window.logAuditActivity('Profile Modified', `Edited fields: ${changes.join(', ')}`, c.name);
             }
             
             const toast = document.createElement('div');
@@ -2216,6 +2261,7 @@
             });
             c.incidents = updatedInc;
             c[`meritsSem${sem}`] = curVal + v.points;
+            window.logAuditActivity('Incident Logged', `Added "${v.name}" (${v.points} pts) to Semester ${sem}`, c.name);
             window.loadCadetAppraisal();
         };
 
@@ -2232,6 +2278,7 @@
             });
             c.incidents = updatedInc;
             c[`meritsSem${sem}`] = curVal - pts;
+            window.logAuditActivity('Incident Removed', `Revoked incident (${pts} pts) from Semester ${sem}`, c.name);
             window.loadCadetAppraisal();
         };
 
@@ -2667,6 +2714,7 @@
             }
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
+            window.logAuditActivity('Logbook Review', `Action: ${action} | Date Key: ${window.currentLogbookKey}`, c.name);
             window.closeLogbookActionModal();
             window.renderCalendarModal();
             window.recalculateMetrics(); 
