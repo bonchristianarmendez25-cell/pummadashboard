@@ -3331,34 +3331,73 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         window.closeAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
         
         window.saveNewCadet = async () => {
-            const name = getVal('modal-cadet-name').trim();
-            if (!name) return;
-            const nextId = `cadet_${Date.now()}`;
-            let checklists = {};
-            Object.keys(window.appSettings.checklistProfiles || defaultChecklistProfiles).forEach(pk => {
-                checklists[pk] = { tech: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].tech.length).fill(false), soft: Array((window.appSettings.checklistProfiles || defaultChecklistProfiles)[pk].soft.length).fill(false) };
-            });
-            
-            const gwa1 = getNum('modal-cadet-gwa1', 0);
-            const gwa2 = getNum('modal-cadet-gwa2', 0);
-            const gwa3 = getNum('modal-cadet-gwa3', 0);
-            const email = getVal('modal-cadet-email').trim();
-            
-            let gSum = 0; let gCount = 0;
-            if(gwa1 > 0) { gSum += gwa1; gCount++; }
-            if(gwa2 > 0) { gSum += gwa2; gCount++; }
-            if(gwa3 > 0) { gSum += gwa3; gCount++; }
-            const avgGwa = gCount > 0 ? (gSum / gCount) : 0;
-            
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
-                id: nextId, classNum: parseInt(getVal('modal-cadet-class', 3)), academicYear: getVal('input-acad-year', "2025-2026"), section: getVal('modal-cadet-section', 'Alpha'),
-                studentId: getVal('modal-cadet-id', ''), email: email, gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), 
-                gwaSem1: gwa1, gwaSem2: gwa2, gwaSem3: gwa3, gwa: avgGwa,
-                meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
-                officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, accessLogs: []
-            })));
-            window.logAuditActivity('Cadet Registered', `Added new cadet: ${name.toUpperCase()}`, 'System');
-            window.closeAddCadetModal(); setVal('modal-cadet-name', ''); setVal('modal-cadet-id', ''); setVal('modal-cadet-email', '');
+            try {
+                const name = getVal('modal-cadet-name').trim();
+                if (!name) {
+                    alert("Registration Failed: Please enter the cadet's full name.");
+                    return;
+                }
+                
+                const nextId = `cadet_${Date.now()}`;
+                let checklists = {};
+                
+                // Bulletproof Checklist Initialization (Prevents crashes if tasks are empty)
+                const profs = window.appSettings.checklistProfiles || defaultChecklistProfiles;
+                Object.keys(profs).forEach(pk => {
+                    const prof = profs[pk];
+                    checklists[pk] = { 
+                        tech: Array(prof.tech ? prof.tech.length : 0).fill(false), 
+                        soft: Array(prof.soft ? prof.soft.length : 0).fill(false) 
+                    };
+                });
+                
+                const classVal = parseInt(getVal('modal-cadet-class', 3));
+                const secVal = getVal('modal-cadet-section', 'Alpha');
+                const gwa1 = getNum('modal-cadet-gwa1', 0);
+                const gwa2 = getNum('modal-cadet-gwa2', 0);
+                const gwa3 = getNum('modal-cadet-gwa3', 0);
+                const email = getVal('modal-cadet-email').trim();
+                
+                let gSum = 0; let gCount = 0;
+                if(gwa1 > 0) { gSum += gwa1; gCount++; }
+                if(gwa2 > 0) { gSum += gwa2; gCount++; }
+                if(gwa3 > 0) { gSum += gwa3; gCount++; }
+                const avgGwa = gCount > 0 ? (gSum / gCount) : 0;
+                
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
+                    id: nextId, classNum: classVal, academicYear: getVal('input-acad-year', "2025-2026"), section: secVal,
+                    studentId: getVal('modal-cadet-id', ''), email: email, gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), 
+                    gwaSem1: gwa1, gwaSem2: gwa2, gwaSem3: gwa3, gwa: avgGwa,
+                    meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
+                    officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, accessLogs: []
+                })));
+                
+                window.logAuditActivity('Cadet Registered', `Added new cadet: ${name.toUpperCase()}`, 'System');
+                
+                // UX FIX: Automatically switch the dashboard filters so the admin instantly sees the cadet they just added!
+                setVal('filter-class', classVal.toString());
+                setVal('filter-section', secVal);
+                
+                // Give visual success confirmation
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-[200]';
+                toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> ${name.toUpperCase()} Registered!`;
+                document.body.appendChild(toast); 
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => toast.remove(), 3000);
+                
+                window.closeAddCadetModal(); 
+                setVal('modal-cadet-name', ''); 
+                setVal('modal-cadet-id', ''); 
+                setVal('modal-cadet-email', '');
+                setVal('modal-cadet-gwa1', '');
+                setVal('modal-cadet-gwa2', '');
+                setVal('modal-cadet-gwa3', '');
+                setVal('modal-cadet-bonus', '0');
+            } catch (err) {
+                console.error("Database save error: ", err);
+                alert("Critical Error: Failed to save cadet. Please check your internet connection and try again.");
+            }
         };
 
         // --- Core Application Boot System --- 
