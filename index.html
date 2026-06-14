@@ -2483,6 +2483,8 @@
                         totalCount++; monthCheckedCount++;
                     } else if (entry && entry.status === 'Pending') {
                         btnClass = 'bg-amber-500 text-white border-amber-600 animate-pulse';
+                    } else if (entry && entry.status === 'Rejected') {
+                        btnClass = 'bg-red-500 text-white border-red-600 font-bold shadow-sm';
                     }
 
                     return `<button onclick="handleLogbookDayClick('${key}', '${m}', ${dIdx+1})" class="cal-btn h-6 w-6 border border-slate-200 dark:border-slate-600 rounded text-[9px] font-medium transition-colors shadow-sm ${btnClass}">${dIdx+1}</button>`;
@@ -2504,26 +2506,6 @@
             setTxt('cal-total-days', totalCount);
         };
 
-        window.toggleMonthLogbook = async (year, monthIdx, daysInMonth, forceState) => {
-            if (window.currentUserRole !== 'admin') return;
-            const c = window.cadets.find(x => x.id === window.selectedCadetId);
-            if (!c) return;
-            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
-            for(let d=0; d<daysInMonth; d++){
-                const k = `${year}-${monthIdx}-${d}`;
-                if (forceState) updatedLog[k] = true;
-                else delete updatedLog[k];
-            }
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook2026: updatedLog, logbook: updatedLog });
-            window.renderCalendarModal();
-        };
-
-        window.closeCalendarModal = () => { 
-            const cm = document.getElementById('calendar-modal');
-            if (cm) { cm.classList.add('hidden'); cm.classList.remove('flex'); }
-            window.recalculateMetrics(); 
-        };
-
         window.currentLogbookKey = null;
 
         window.handleLogbookDayClick = (key, monthName, dayNum) => {
@@ -2538,6 +2520,7 @@
             
             let isPending = entry && entry.status === 'Pending';
             let isApproved = entry === true;
+            let isRejected = entry && entry.status === 'Rejected';
 
             let html = `<h4 class="text-center font-bold text-brand-blue dark:text-blue-400 mb-2 border-b dark:border-slate-700 pb-2">${monthName} ${dayNum}, ${key.split('-')[0]}</h4>`;
 
@@ -2547,8 +2530,16 @@
                 } else if (isPending) {
                     html += `<div class="text-center text-amber-500 font-bold py-4"><i data-lucide="clock" class="w-12 h-12 mx-auto mb-2 animate-pulse"></i> Verification Pending...</div>`;
                 } else {
+                    if (isRejected) {
+                        html += `
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 mb-4 text-center">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500 mx-auto mb-1"></i>
+                            <p class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider">Submission Rejected</p>
+                            <p class="text-[11px] text-red-600 dark:text-red-300 mt-1">Admin Note: <strong class="italic">"${entry.comment}"</strong></p>
+                        </div>`;
+                    }
                     html += `
-                        <p class="text-[11px] font-bold text-slate-500 text-center mb-3">Upload a photo of your signed daily logbook.</p>
+                        <p class="text-[11px] font-bold text-slate-500 text-center mb-3">${isRejected ? 'Please upload a new image.' : 'Upload a photo of your signed daily logbook.'}</p>
                         <input type="file" id="daily-log-upload" accept="image/*" class="w-full text-xs mb-3 border border-slate-300 dark:border-slate-600 rounded p-1" onchange="compressDailyLog(event)">
                         <input type="hidden" id="daily-log-b64">
                         <img id="daily-log-preview" src="" class="hidden w-full h-32 object-cover rounded mb-3 border border-brand-creamBorder shadow-sm">
@@ -2572,10 +2563,17 @@
                         </div>
                     `;
                 } else {
-                    html += `
-                        <div class="text-center text-slate-500 py-4 font-bold text-xs"><i data-lucide="file-warning" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>No submission from cadet yet.</div>
-                        <button onclick="reviewDailyLogbook('ForceApprove')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded text-xs font-bold transition">Force Approve (Override)</button>
-                    `;
+                    if (isRejected) {
+                        html += `
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 mb-4 text-center">
+                            <i data-lucide="x-circle" class="w-6 h-6 text-red-500 mx-auto mb-1"></i>
+                            <p class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase">You Rejected This Submission</p>
+                            <p class="text-[11px] text-red-600 dark:text-red-300 mt-1">Reason given: <strong class="italic">"${entry.comment}"</strong></p>
+                        </div>`;
+                    } else {
+                        html += `<div class="text-center text-slate-500 py-4 font-bold text-xs"><i data-lucide="file-warning" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>No submission from cadet yet.</div>`;
+                    }
+                    html += `<button onclick="reviewDailyLogbook('ForceApprove')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded text-xs font-bold transition mt-2">Force Approve (Override)</button>`;
                 }
             }
             
@@ -2605,7 +2603,7 @@
                     else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                    const b64 = canvas.toDataURL('image/jpeg', 0.5); // High compression
+                    const b64 = canvas.toDataURL('image/jpeg', 0.5); 
                     document.getElementById('daily-log-b64').value = b64;
                     document.getElementById('daily-log-preview').src = b64;
                     document.getElementById('daily-log-preview').classList.remove('hidden');
@@ -2634,15 +2632,24 @@
             const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
             
             if (action === 'Approve' || action === 'ForceApprove') {
-                updatedLog[window.currentLogbookKey] = true; // Setting to true deletes the image to save DB space
-            } else if (action === 'Reject' || action === 'Revoke') {
+                updatedLog[window.currentLogbookKey] = true; 
+            } else if (action === 'Reject') {
+                // ADDED COMMENT FEATURE
+                const reason = prompt("Enter a reason for rejecting this logbook submission (e.g. 'Blurry image', 'Wrong date'):");
+                if (reason === null) return; // User clicked Cancel, abort action.
+                
+                updatedLog[window.currentLogbookKey] = { 
+                    status: 'Rejected', 
+                    comment: reason || 'Invalid evidence provided.' 
+                };
+            } else if (action === 'Revoke') {
                 delete updatedLog[window.currentLogbookKey];
             }
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
             window.closeLogbookActionModal();
             window.renderCalendarModal();
-            window.recalculateMetrics(); // Updates soft skills score
+            window.recalculateMetrics(); 
         };
 
         window.openDutyCalendarModal = () => {
