@@ -233,6 +233,14 @@
                             <input type="url" id="input-triple-r" placeholder="https://docs.google.com/..." class="flex-1 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
                             <button onclick="saveTripleRLink()" class="bg-brand-green hover:bg-brand-green-hover text-white px-4 py-2 rounded text-xs font-bold transition shadow-sm">Save Link</button>
                         </div>
+                        <div class="mt-4 border-t border-brand-creamBorder dark:border-slate-700 pt-3">
+                            <label class="block text-[11px] font-semibold text-brand-blue dark:text-blue-300 mb-1 flex items-center gap-1"><i data-lucide="image" class="w-3.5 h-3.5"></i> Custom Branding Links (Overrides default images)</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                                <input type="url" id="input-logo-url" placeholder="Custom Logo URL (Optional)" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
+                                <input type="url" id="input-bg-url" placeholder="Custom Background URL (Optional)" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-green">
+                            </div>
+                            <button onclick="saveBrandingLinks()" class="bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded text-xs font-bold transition shadow-sm w-full">Save Custom Branding</button>
+                        </div>
                         <p class="text-[9px] text-slate-500 mt-1">This opens the official handbook when cadets click the TRIPLE R button in the top banner.</p>
                     </div>
                 </div>
@@ -1600,6 +1608,44 @@
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { tripleRLink: link });
             window.logAuditActivity('System Config', 'Updated TRIPLE R Document Link', 'System');
             alert("TRIPLE R link successfully updated globally!");
+        };
+
+        window.saveBrandingLinks = async () => {
+            const logoUrl = getVal('input-logo-url').trim();
+            const bgUrl = getVal('input-bg-url').trim();
+            window.appSettings.logoUrl = logoUrl;
+            window.appSettings.bgUrl = bgUrl;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { logoUrl: logoUrl, bgUrl: bgUrl });
+            window.logAuditActivity('System Config', 'Updated Custom Branding Links', 'System');
+            alert("Custom branding successfully saved!\n\nThe page will now refresh to apply your changes.");
+            setTimeout(() => location.reload(), 1500);
+        };
+
+        window.applyCustomBranding = () => {
+            const logo = window.appSettings.logoUrl;
+            const bg = window.appSettings.bgUrl;
+            
+            // Override Background
+            if (bg && bg !== '') {
+                let style = document.getElementById('custom-bg-style');
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'custom-bg-style';
+                    document.head.appendChild(style);
+                }
+                style.innerHTML = `.bg-login-decor { background-image: url('${bg}') !important; }`;
+            }
+            
+            // Override Logos
+            if (logo && logo !== '') {
+                document.querySelectorAll('img[src="MOCKBOAT%20LOGO.png"], img[src="MOCKBOAT LOGO.png"]').forEach(img => {
+                    img.src = logo;
+                });
+            }
+
+            // Populate the Admin Input Fields
+            setVal('input-logo-url', logo || '');
+            setVal('input-bg-url', bg || '');
         };
 
         window.handleSignOut = async () => {
@@ -3531,6 +3577,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     setVal('input-acad-year', window.appSettings.academicYear || "2025-2026");
                     setVal('input-bonus-rate', window.appSettings.bonusPerTen || 0.5);
                     setVal('input-triple-r', window.appSettings.tripleRLink || '');
+                    window.applyCustomBranding();
                     setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
                     
                     if (window.appSettings.adminPin && window.appSettings.adminPin !== '1234') {
