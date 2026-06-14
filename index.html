@@ -350,15 +350,22 @@
                                 </div>
                             </div>
                             
-                            <div class="mt-3 pt-3 border-t border-brand-creamBorder dark:border-slate-700">
-                                <div class="flex justify-between items-center mb-1"><h6 class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3"></i> My Appeals & Excuses</h6><button onclick="openSubmitAppealModal()" class="cadet-controls hidden text-[9px] bg-brand-blue hover:bg-blue-800 text-white px-2 py-0.5 rounded shadow-sm transition flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i> Submit Grade / Request</button></div>
-                                <div id="cadet-appeals-log" class="max-h-32 overflow-y-auto space-y-1.5 pr-1 text-[10px]"></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-brand-creamBorder dark:border-slate-700">
+                                <div class="bg-white dark:bg-slate-800 p-3.5 rounded-xl border-t-4 border-t-sky-500 border-x border-b border-brand-creamBorder dark:border-slate-700 shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                                    <div class="absolute -right-4 -top-4 text-sky-500/5 group-hover:scale-110 transition-transform duration-700 pointer-events-none"><i data-lucide="mail" class="w-20 h-20"></i></div>
+                                    <div class="flex justify-between items-center mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-2 relative z-10">
+                                        <h6 class="text-[10px] font-extrabold text-sky-700 dark:text-sky-400 uppercase flex items-center gap-1.5"><div class="bg-sky-50 dark:bg-sky-900/40 p-1 rounded"><i data-lucide="mail" class="w-3 h-3 text-sky-600 dark:text-sky-400"></i></div> Appeals & Excuses</h6>
+                                        <button onclick="openSubmitAppealModal()" class="cadet-controls hidden text-[9px] bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="upload" class="w-3 h-3"></i> Submit</button>
+                                    </div>
+                                    <div id="cadet-appeals-log" class="max-h-32 overflow-y-auto space-y-2 pr-1 text-[10px] relative z-10 custom-scrollbar"></div>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-800 p-3.5 rounded-xl border-t-4 border-t-rose-500 border-x border-b border-brand-creamBorder dark:border-slate-700 shadow-sm relative overflow-hidden group transition-all hover:shadow-md">
+                                    <div class="absolute -right-4 -top-4 text-rose-500/5 group-hover:scale-110 transition-transform duration-700 pointer-events-none"><i data-lucide="shield-alert" class="w-20 h-20"></i></div>
+                                    <h6 class="text-[10px] font-extrabold text-rose-700 dark:text-rose-400 uppercase flex items-center gap-1.5 mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-2 relative z-10"><div class="bg-rose-50 dark:bg-rose-900/40 p-1 rounded"><i data-lucide="book-open" class="w-3 h-3 text-rose-600 dark:text-rose-400"></i></div> Incident Log</h6>
+                                    <div id="cadet-incidents-log" class="max-h-32 overflow-y-auto space-y-1.5 pr-1 text-[9px] relative z-10 custom-scrollbar"></div>
+                                </div>
                             </div>
-                            <div class="mt-3 pt-3 border-t border-brand-creamBorder dark:border-slate-700">
-                                <h6 class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1"><i data-lucide="book-open" class="w-3 h-3"></i> Incident & Demerit Log</h6>
-                                <div id="cadet-incidents-log" class="max-h-24 overflow-y-auto space-y-1 pr-1 text-[9px]"></div>
-                            </div>
-                        </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="flex items-center justify-between bg-brand-creamAccent dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 text-xs">
@@ -1031,36 +1038,41 @@
                     const cProf = c.checklists && c.checklists[pKey] ? c.checklists[pKey] : { tech: [], soft: [] };
                     
                     const techHtml = (prof.tech || []).map((t, i) => `
-                        <label class="flex items-start gap-2 p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer transition">
-                            <input type="checkbox" class="cadet-disable mt-0.5 border-slate-300 rounded text-brand-green focus:ring-brand-green" ${cProf.tech && cProf.tech[i] ? 'checked' : ''} onchange="updateCadetChecklist('${pKey}', 'tech', ${i}, this.checked)">
-                            <span class="text-[10px] text-slate-700 dark:text-slate-300 leading-tight">${t}</span>
+                        <label class="flex items-start gap-2 p-2 bg-white dark:bg-slate-800 hover:bg-brand-creamAccent dark:hover:bg-slate-700 rounded-lg border border-brand-creamBorder dark:border-slate-600 cursor-pointer transition shadow-sm mb-1.5">
+                            <input type="checkbox" class="cadet-disable mt-0.5 border-slate-300 rounded text-brand-green focus:ring-brand-green shadow-sm" ${cProf.tech && cProf.tech[i] ? 'checked' : ''} onchange="updateCadetChecklist('${pKey}', 'tech', ${i}, this.checked)">
+                            <span class="text-[10px] text-slate-700 dark:text-slate-300 leading-tight font-medium">${t}</span>
                         </label>
                     `).join('');
 
                     const softHtml = (prof.soft || []).map((t, i) => `
-                        <label class="flex items-start gap-2 p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer transition">
-                            <input type="checkbox" class="cadet-disable mt-0.5 border-slate-300 rounded text-brand-blue focus:ring-brand-blue" ${cProf.soft && cProf.soft[i] ? 'checked' : ''} onchange="updateCadetChecklist('${pKey}', 'soft', ${i}, this.checked)">
-                            <span class="text-[10px] text-slate-700 dark:text-slate-300 leading-tight">${t}</span>
+                        <label class="flex items-start gap-2 p-2 bg-white dark:bg-slate-800 hover:bg-brand-creamAccent dark:hover:bg-slate-700 rounded-lg border border-brand-creamBorder dark:border-slate-600 cursor-pointer transition shadow-sm mb-1.5">
+                            <input type="checkbox" class="cadet-disable mt-0.5 border-slate-300 rounded text-amber-500 focus:ring-amber-500 shadow-sm" ${cProf.soft && cProf.soft[i] ? 'checked' : ''} onchange="updateCadetChecklist('${pKey}', 'soft', ${i}, this.checked)">
+                            <span class="text-[10px] text-slate-700 dark:text-slate-300 leading-tight font-medium">${t}</span>
                         </label>
                     `).join('');
 
                     return `
-                        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3">
-                            <h5 class="text-xs font-bold text-brand-blue dark:text-brand-green mb-2 border-b border-brand-creamBorder dark:border-slate-700 pb-1">${prof.label}</h5>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h6 class="text-[9px] font-bold text-slate-500 uppercase mb-1">Tech Tasks</h6>
-                                    <div class="space-y-0.5">${techHtml || '<p class="text-[9px] text-slate-400">None</p>'}</div>
+                        <div class="bg-white dark:bg-slate-800 border-t-4 border-t-brand-blue border-x border-b border-brand-creamBorder dark:border-slate-700 rounded-xl p-4 shadow-md relative overflow-hidden group hover:shadow-lg transition-all mt-4">
+                            <div class="absolute -right-6 -top-6 text-brand-blue/5 dark:text-blue-400/5 group-hover:scale-110 transition-transform duration-700 pointer-events-none"><i data-lucide="clipboard-check" class="w-32 h-32"></i></div>
+                            
+                            <div class="flex items-center gap-2 mb-4 relative z-10 border-b border-brand-creamBorder dark:border-slate-700 pb-2">
+                                <div class="bg-blue-50 dark:bg-blue-900/40 p-1.5 rounded-lg border border-blue-200/50 dark:border-blue-800 shadow-sm"><i data-lucide="check-square" class="text-brand-blue dark:text-blue-400 w-4 h-4"></i></div>
+                                <h5 class="text-xs font-extrabold text-brand-blue dark:text-white uppercase tracking-wide">${prof.label}</h5>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                                <div class="bg-brand-creamBg dark:bg-slate-900/50 p-3 rounded-xl border border-brand-creamBorder dark:border-slate-700">
+                                    <h6 class="text-[10px] font-bold text-brand-green uppercase mb-3 flex items-center gap-1.5"><div class="bg-white dark:bg-slate-800 p-1 rounded shadow-sm"><i data-lucide="wrench" class="w-3 h-3 text-brand-green"></i></div> Technical Tasks</h6>
+                                    <div class="space-y-0.5">${techHtml || '<p class="text-[10px] text-slate-400 italic pl-1">No tasks assigned.</p>'}</div>
                                 </div>
-                                <div>
-                                    <h6 class="text-[9px] font-bold text-slate-500 uppercase mb-1">Soft Skills</h6>
-                                    <div class="space-y-0.5">${softHtml || '<p class="text-[9px] text-slate-400">None</p>'}</div>
+                                <div class="bg-brand-creamBg dark:bg-slate-900/50 p-3 rounded-xl border border-brand-creamBorder dark:border-slate-700">
+                                    <h6 class="text-[10px] font-bold text-amber-600 uppercase mb-3 flex items-center gap-1.5"><div class="bg-white dark:bg-slate-800 p-1 rounded shadow-sm"><i data-lucide="users" class="w-3 h-3 text-amber-600"></i></div> Soft Skills</h6>
+                                    <div class="space-y-0.5">${softHtml || '<p class="text-[10px] text-slate-400 italic pl-1">No skills assigned.</p>'}</div>
                                 </div>
                             </div>
                         </div>
                     `;
-                }).join('');
-            }
+                }
 
             if (window.currentUserRole === 'cadet') {
                 document.querySelectorAll('.cadet-disable').forEach(el => { el.disabled = true; el.classList.add('opacity-70', 'cursor-not-allowed'); });
