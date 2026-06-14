@@ -2892,7 +2892,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${targetEmail}&su=${subject}&body=${body}`, '_blank');
         };
 
-        window.emailAtRiskReport = () => {
+        window.emailAtRiskReport = async () => {
             const atRiskList = window.cadets.filter(c => {
                 let isAtRisk = false;
                 if (c.totalMeritsSum < 0) isAtRisk = true;
@@ -2907,17 +2907,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 return;
             }
 
-            const subject = encodeURIComponent(`URGENT COMMAND ADVISORY: "At-Risk" Cadet Radar Report`);
-            let bodyText = `ATTENTION ON DECK!
-
-URGENT COMMAND ADVISORY: "AT-RISK" CADET RADAR REPORT
-CLASSIFICATION: REQUIRED ACTION / INTERVENTION
-
-To all commanding officers and designated administrative personnel:
-The following midshipmen have triggered the automated early-warning monitoring system on the PUMMA Dashboard. Immediate academic review or disciplinary intervention is hereby ordered.
-
-========================================
---- AT-RISK MIDSHIPMEN DIRECTORY (${atRiskList.length} DETECTED) ---\n\n`;
+            const subject = `URGENT COMMAND ADVISORY: "At-Risk" Cadet Radar Report`;
+            let bodyText = `ATTENTION ON DECK!\n\nURGENT COMMAND ADVISORY: "AT-RISK" CADET RADAR REPORT\nCLASSIFICATION: REQUIRED ACTION / INTERVENTION\n\nTo all commanding officers and designated administrative personnel:\nThe following midshipmen have triggered the automated early-warning monitoring system on the PUMMA Dashboard. Immediate academic review or disciplinary intervention is hereby ordered.\n\n========================================\n--- AT-RISK MIDSHIPMEN DIRECTORY (${atRiskList.length} DETECTED) ---\n\n`;
 
             atRiskList.forEach(c => {
                 let factors = [];
@@ -2926,21 +2917,28 @@ The following midshipmen have triggered the automated early-warning monitoring s
                 if (c.finalRating > 0 && c.finalRating < 2.51) factors.push('Poor Rating');
                 if (c.logbookCompletion !== undefined && c.logbookCompletion < 0.5) factors.push('Missing Logs');
 
-                bodyText += `- CADET: ${c.name} (${c.classNum}Cls, Sec ${c.section})
-  Current Standing: ${c.specificGradePercent}% | Merit Balance: ${c.totalMeritsSum}
-  Critical Triggers: ${factors.join(', ')}\n\n`;
+                bodyText += `- CADET: ${c.name} (${c.classNum}Cls, Sec ${c.section})\n  Current Standing: ${c.specificGradePercent}% | Merit Balance: ${c.totalMeritsSum}\n  Critical Triggers: ${factors.join(', ')}\n\n`;
             });
 
-            bodyText += `========================================
-TRANSMITTED SECURELY VIA PUMMA COMMAND DASHBOARD
-Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Security Officer
-`;
+            bodyText += `========================================\nTRANSMITTED SECURELY VIA PUMMA COMMAND DASHBOARD\nAuthorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Security Officer\n`;
 
-            const body = encodeURIComponent(bodyText);
-            // Opens directly in Gmail Web Composer
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
+            // 1. Copy to clipboard automatically as a fail-safe
+            try {
+                await navigator.clipboard.writeText(bodyText);
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-brand-blue text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-[100]';
+                toast.innerHTML = `<i data-lucide="clipboard-check" class="w-4 h-4"></i> Report auto-copied to clipboard!`;
+                document.body.appendChild(toast);
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => toast.remove(), 4000);
+            } catch (err) {
+                console.warn("Clipboard copy failed.", err);
+            }
+
+            // 2. Open default mail client
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
         };
-
+        
         window.exportExcel = () => {
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
             const targetClass = parseInt(getVal('filter-class', 3));
