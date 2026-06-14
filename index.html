@@ -1085,8 +1085,12 @@
             if (!window.selectedCadetId) return;
             if (!confirm("Are you absolutely sure you want to permanently delete this cadet?")) return;
             
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const cName = c ? c.name : 'Unknown Cadet';
+
             try {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.selectedCadetId));
+                window.logAuditActivity('Cadet Deleted', `Permanently deleted cadet record`, cName);
                 alert("Cadet deleted successfully.");
                 window.cancelEvaluation();
             } catch (e) {
@@ -1423,6 +1427,7 @@
             window.appSettings.announcement = `${type}: ${title}`; 
             window.appSettings.announcements = list;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: window.appSettings.announcement, announcements: list });
+            window.logAuditActivity('Announcement Posted', `[${type}] ${title}`, 'Communications Board');
             setVal('announce-title', ''); setVal('announce-content', '');
             window.renderAnnouncements();
         };
@@ -1434,6 +1439,7 @@
             const newBanner = list.length > 0 ? `${list[list.length-1].type}: ${list[list.length-1].title}` : "Orders of the Day: Welcome to the PUMMA Dashboard.";
             window.appSettings.announcement = newBanner;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: newBanner, announcements: list });
+            window.logAuditActivity('Announcement Deleted', `Removed an announcement from the board`, 'Communications Board');
             window.renderAnnouncements();
         };
 
@@ -1586,6 +1592,7 @@
                 if (mKey !== null) alert("Access Denied: Invalid Master Key.");
                 return;
             }
+            window.logAuditActivity('Master Key Used', 'Accessed Instructor Management Panel', 'System Security');
             const m = document.getElementById('manage-instructors-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             window.renderInstructorsEditor();
@@ -2330,6 +2337,7 @@
             const gm = JSON.parse(JSON.stringify({ ...(window.appSettings.gradedMonths || {}) }));
             gm[`${y}-${mIdx}`] = isChecked;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { gradedMonths: gm });
+            window.logAuditActivity('Graded Months Update', `Month ${MONTHS[mIdx]} ${y} marked as ${isChecked ? 'Active' : 'Inactive'}`, 'System');
             window.recalculateMetrics();
         };
 
@@ -2384,6 +2392,7 @@
 
             window.appSettings.sectionDuties = maps;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { sectionDuties: maps });
+            window.logAuditActivity('Duties Mapped', `${isChecked ? 'Assigned' : 'Removed'} "${profileKey}" for ${cls}Cls Sec ${sec}`, 'System');
             
             if(window.selectedCadetId) {
                 const currentCadet = window.cadets.find(c => c.id === window.selectedCadetId);
@@ -2447,18 +2456,21 @@
             profs[pId].label = val;
             window.appSettings.checklistProfiles = profs;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.logAuditActivity('Task Profile Edited', `Renamed profile to "${val}"`, 'System');
         };
         window.updateDutyTask = async (pId, type, idx, val) => {
             const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
             profs[pId][type][idx] = val;
             window.appSettings.checklistProfiles = profs;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.logAuditActivity('Task Edited', `Updated a ${type} task item`, 'System');
         };
         window.deleteDutyTask = async (pId, type, idx) => {
             const profs = JSON.parse(JSON.stringify(window.appSettings.checklistProfiles || defaultChecklistProfiles));
             profs[pId][type].splice(idx, 1);
             window.appSettings.checklistProfiles = profs;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.logAuditActivity('Task Deleted', `Removed a ${type} task item`, 'System');
             window.renderDutiesEditor(); 
         };
         window.addDutyTask = async (pId, type) => {
@@ -2467,6 +2479,7 @@
             profs[pId][type].push("New task");
             window.appSettings.checklistProfiles = profs;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.logAuditActivity('Task Added', `Added new ${type} task item`, 'System');
             window.renderDutiesEditor();
         };
         window.addDutyDay = async () => {
@@ -2476,6 +2489,7 @@
             profs[keyId] = { label: `Day ${nextIdNum}: New Duty`, tech: ["Task 1"], soft: ["Task 1"] };
             window.appSettings.checklistProfiles = profs;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+            window.logAuditActivity('Duty Profile Created', `Created "Day ${nextIdNum}: New Duty"`, 'System');
             window.renderDutiesEditor();
         };
         window.deleteDutyProfile = async (btn, pId) => {
@@ -2484,6 +2498,7 @@
                 delete profs[pId];
                 window.appSettings.checklistProfiles = profs;
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { checklistProfiles: profs });
+                window.logAuditActivity('Duty Profile Deleted', `Deleted a duty profile`, 'System');
                 window.renderDutiesEditor();
             } else {
                 btn.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4"></i> Confirm Delete`;
@@ -2830,6 +2845,7 @@
             
             window.appSettings.dutySchedule = sched;
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { dutySchedule: sched });
+            window.logAuditActivity('Master Schedule Update', sec ? `Assigned Sec ${sec} to ${dateStr} (${classNum}Cls)` : `Cleared assignment for ${dateStr} (${classNum}Cls)`, 'System');
             window.renderDutyCalendar();
         };
 
@@ -3170,6 +3186,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
                 officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, accessLogs: []
             })));
+            window.logAuditActivity('Cadet Registered', `Added new cadet: ${name.toUpperCase()}`, 'System');
             window.closeAddCadetModal(); setVal('modal-cadet-name', ''); setVal('modal-cadet-id', ''); setVal('modal-cadet-email', '');
         };
 
