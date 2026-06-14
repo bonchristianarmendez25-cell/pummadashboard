@@ -74,6 +74,7 @@
             <span id="announcement-display" class="truncate">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
             <div class="ml-auto flex items-center gap-2 shrink-0">
                 <button onclick="event.stopPropagation(); openTripleR()" class="bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
+                <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
                 <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
             </div>
             <span class="ml-2 text-[10px] opacity-70 underline hidden sm:block">View Board</span>
@@ -860,6 +861,19 @@
         </div>
     </div>
 
+<div id="maritime-news-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-5xl w-full h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 bg-brand-blue border-b border-brand-blue-hover flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2 uppercase tracking-wide">
+                    <i data-lucide="globe" class="text-brand-green w-5 h-5 animate-pulse"></i> Global Maritime Intelligence Feed
+                </h3>
+                <button onclick="closeMaritimeNewsModal()" class="text-white/70 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="maritime-news-container">
+                </div>
+        </div>
+    </div>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -3036,6 +3050,61 @@
         window.changeDutyMonth = (offset) => {
             window.currentDutyCalDate.setMonth(window.currentDutyCalDate.getMonth() + offset);
             window.renderDutyCalendar();
+        };
+
+        window.openMaritimeNewsModal = async () => {
+            const m = document.getElementById('maritime-news-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+
+            const container = document.getElementById('maritime-news-container');
+            container.innerHTML = '<div class="text-center py-20 text-brand-blue dark:text-blue-400 font-bold uppercase tracking-widest text-xs flex flex-col items-center gap-3"><i data-lucide="loader-2" class="w-10 h-10 animate-spin text-brand-green"></i> Intercepting global satellite feeds...</div>';
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+
+            try {
+                // Free API proxy to bypass Google News CORS security
+                const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=maritime+shipping+merchant+marine&hl=en-US&gl=US&ceid=US:en');
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+                const data = await res.json();
+
+                if (data.status === 'ok' && data.items.length > 0) {
+                    container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">` + data.items.map(item => {
+                        // Clean up Google News formatting
+                        let title = item.title;
+                        let source = "Maritime News";
+                        const splitIdx = title.lastIndexOf(' - ');
+                        if(splitIdx !== -1) {
+                            source = title.substring(splitIdx + 3);
+                            title = title.substring(0, splitIdx);
+                        }
+                        const date = new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+                        return `
+                            <a href="${item.link}" target="_blank" class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm hover:border-brand-blue dark:hover:border-brand-green hover:shadow-lg transition-all group flex flex-col h-full relative overflow-hidden">
+                                <div class="absolute -right-4 -top-4 text-brand-blue/5 dark:text-white/5 group-hover:scale-110 transition-transform duration-500 pointer-events-none"><i data-lucide="ship" class="w-24 h-24"></i></div>
+                                <div class="flex justify-between items-start mb-3 relative z-10">
+                                    <span class="text-[9px] font-bold bg-brand-blue-glow dark:bg-blue-900/30 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded uppercase tracking-wider border border-brand-blue/20 shadow-sm">${source}</span>
+                                    <span class="text-[9px] text-slate-500 dark:text-slate-400 font-bold">${date}</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-brand-black dark:text-white leading-snug mb-4 group-hover:text-brand-blue dark:group-hover:text-brand-green transition-colors relative z-10">${title}</h4>
+                                <div class="mt-auto pt-3 border-t border-brand-creamBorder dark:border-slate-700 flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider group-hover:text-brand-blue dark:group-hover:text-brand-green relative z-10">
+                                    <span>Read Dispatch</span>
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                </div>
+                            </a>
+                        `;
+                    }).join('') + `</div>`;
+                } else {
+                    container.innerHTML = '<div class="text-center py-20 text-rose-500 font-bold uppercase tracking-widest text-xs flex flex-col items-center gap-2"><i data-lucide="wifi-off" class="w-10 h-10"></i> No intel available. Database empty.</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center py-20 text-rose-500 font-bold uppercase tracking-widest text-xs flex flex-col items-center gap-2"><i data-lucide="wifi-off" class="w-10 h-10"></i> Satellite interference detected. Connection failed.</div>';
+            }
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.closeMaritimeNewsModal = () => {
+            const m = document.getElementById('maritime-news-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
         };
 
         window.renderDutyCalendar = () => {
