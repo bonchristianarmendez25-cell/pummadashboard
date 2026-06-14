@@ -862,12 +862,15 @@
     </div>
 
 <div id="maritime-news-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-5xl w-full h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 bg-brand-blue border-b border-brand-blue-hover flex items-center justify-between shrink-0">
-                <h3 class="font-bold text-white text-sm flex items-center gap-2 uppercase tracking-wide">
-                    <i data-lucide="globe" class="text-brand-green w-5 h-5 animate-pulse"></i> Global Maritime Intelligence Feed
+        <div class="p-4 bg-brand-blue border-b border-brand-blue-hover flex flex-col sm:flex-row items-center justify-between shrink-0 gap-3 relative">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2 uppercase tracking-wide pr-8">
+                    <i data-lucide="globe" class="text-brand-green w-5 h-5 animate-pulse"></i> Maritime Intelligence Feed
                 </h3>
-                <button onclick="closeMaritimeNewsModal()" class="text-white/70 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <div class="flex bg-brand-blue-hover p-1 rounded-lg shrink-0">
+                    <button onclick="openMaritimeNewsModal('local')" id="btn-news-local" class="px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors text-white/60 hover:text-white">Local (PH)</button>
+                    <button onclick="openMaritimeNewsModal('intl')" id="btn-news-intl" class="px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors bg-white/20 text-white shadow-sm">International</button>
+                </div>
+                <button onclick="closeMaritimeNewsModal()" class="text-white/70 hover:text-white transition-colors absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="maritime-news-container">
                 </div>
@@ -3052,18 +3055,50 @@
             window.renderDutyCalendar();
         };
 
-        window.openMaritimeNewsModal = async () => {
+        window.openMaritimeNewsModal = async (feedType = 'intl') => {
             const m = document.getElementById('maritime-news-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
 
+            // Toggle Button Aesthetics
+            const btnLocal = document.getElementById('btn-news-local');
+            const btnIntl = document.getElementById('btn-news-intl');
+            if (btnLocal && btnIntl) {
+                if (feedType === 'local') {
+                    btnLocal.className = "px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors bg-white/20 text-white shadow-sm";
+                    btnIntl.className = "px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors text-white/60 hover:text-white";
+                } else {
+                    btnIntl.className = "px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors bg-white/20 text-white shadow-sm";
+                    btnLocal.className = "px-4 py-1.5 text-[10px] font-bold uppercase rounded transition-colors text-white/60 hover:text-white";
+                }
+            }
+
             const container = document.getElementById('maritime-news-container');
-            container.innerHTML = '<div class="text-center py-20 text-brand-blue dark:text-blue-400 font-bold uppercase tracking-widest text-xs flex flex-col items-center gap-3"><i data-lucide="loader-2" class="w-10 h-10 animate-spin text-brand-green"></i> Intercepting global satellite feeds...</div>';
+            container.innerHTML = `<div class="text-center py-20 text-brand-blue dark:text-blue-400 font-bold uppercase tracking-widest text-xs flex flex-col items-center gap-3"><i data-lucide="loader-2" class="w-10 h-10 animate-spin text-brand-green"></i> Intercepting ${feedType === 'local' ? 'domestic' : 'global'} satellite feeds...</div>`;
             if(typeof lucide !== 'undefined') lucide.createIcons();
 
             try {
+                // Advanced Boolean Search Algorithms
+                let query = '';
+                if (feedType === 'local') {
+                    // Targets Philippine-specific maritime updates, MARINA, PCG, local shipping economy, and seafarer laws
+                    query = 'Philippines (maritime OR "shipping" OR "merchant marine" OR seafarer OR MARINA OR "Coast Guard") (law OR economy OR accident OR update)';
+                } else {
+                    // Targets massive international sector shifts, global supply chain, wars, piracy, and maritime law
+                    query = '("maritime shipping" OR "merchant marine" OR "global supply chain") (laws OR economy OR war OR piracy OR accident)';
+                }
+                
+                const safeQuery = encodeURIComponent(query);
+                let rssLink = `https://news.google.com/rss/search?q=${safeQuery}&hl=en-US&gl=US&ceid=US:en`;
+                
+                // Forces Google News to prioritize the PH region server for local news
+                if (feedType === 'local') {
+                    rssLink = `https://news.google.com/rss/search?q=${safeQuery}&hl=en-PH&gl=PH&ceid=PH:en`;
+                }
+
                 // Free API proxy to bypass Google News CORS security
-                const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=maritime+shipping+merchant+marine&hl=en-US&gl=US&ceid=US:en');
-                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+                const finalUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssLink)}`;
+                
+                const res = await fetch(finalUrl);
                 const data = await res.json();
 
                 if (data.status === 'ok' && data.items.length > 0) {
