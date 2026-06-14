@@ -568,6 +568,17 @@
     <div id="section-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="users" class="text-brand-green w-5 h-5"></i> Map Multiple Section Duties</h3></div><button onclick="closeSectionDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="section-duties-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end shrink-0"><button onclick="closeSectionDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
     <div id="calendar-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calendar" class="text-brand-green w-5 h-5"></i> Daily Logbook Tracker</h3></div><div class="flex items-center gap-3"><select id="cal-year-select" onchange="renderCalendarModal()" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 rounded px-3 py-1.5 text-xs font-bold text-brand-blue dark:text-blue-300 focus:outline-none"></select><button onclick="closeCalendarModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="calendar-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><span class="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Submitted (Selected Year): <strong id="cal-total-days" class="text-brand-blue dark:text-blue-400 text-sm">0</strong> days</span><button onclick="closeCalendarModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
 
+    <div id="logbook-action-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-sm w-full overflow-hidden shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between">
+                <h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="book-open" class="text-brand-green w-5 h-5"></i> Daily Logbook</h3>
+                <button onclick="closeLogbookActionModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 space-y-4" id="logbook-action-content">
+                </div>
+        </div>
+    </div>
+
     <div id="duty-calendar-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl">
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
@@ -2453,7 +2464,6 @@
             grid.innerHTML = '';
             
             let totalCount = 0;
-            const dis = window.currentUserRole === 'cadet' ? 'disabled' : '';
 
             MONTHS.forEach((m, mIdx) => {
                 const md = document.createElement('div');
@@ -2464,17 +2474,27 @@
 
                 const btns = [...Array(daysInMonth)].map((_, dIdx) => {
                     const key = `${year}-${mIdx}-${dIdx}`;
-                    const isSet = logbook[key] || logbook[`${mIdx}-${dIdx}`];
-                    if (isSet) { totalCount++; monthCheckedCount++; }
-                    return `<button ${dis} data-key="${key}" class="cal-btn cadet-disable h-6 w-6 border border-slate-200 dark:border-slate-600 rounded text-[9px] font-medium transition-colors ${isSet ? 'bg-brand-green text-white border-brand-green' : 'bg-brand-creamBg dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}">${dIdx+1}</button>`;
+                    const entry = logbook[key] || logbook[`${mIdx}-${dIdx}`];
+                    
+                    let btnClass = 'bg-brand-creamBg dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700';
+                    
+                    if (entry === true) {
+                        btnClass = 'bg-brand-green text-white border-brand-green';
+                        totalCount++; monthCheckedCount++;
+                    } else if (entry && entry.status === 'Pending') {
+                        btnClass = 'bg-amber-500 text-white border-amber-600 animate-pulse';
+                    }
+
+                    return `<button onclick="handleLogbookDayClick('${key}', '${m}', ${dIdx+1})" class="cal-btn h-6 w-6 border border-slate-200 dark:border-slate-600 rounded text-[9px] font-medium transition-colors shadow-sm ${btnClass}">${dIdx+1}</button>`;
                 }).join('');
                 
                 const allChecked = monthCheckedCount === daysInMonth;
+                const dis = window.currentUserRole === 'cadet' ? 'hidden' : '';
 
                 md.innerHTML = `
                     <div class="flex justify-between items-center border-b dark:border-slate-700 pb-1 mb-2">
                         <h4 class="text-xs font-bold uppercase text-brand-blue dark:text-brand-green">${m}</h4>
-                        <button ${dis} onclick="toggleMonthLogbook('${year}', ${mIdx}, ${daysInMonth}, ${!allChecked})" class="cadet-disable text-[9px] bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-semibold transition">${allChecked ? 'Clear' : 'Check All'}</button>
+                        <button ${dis} onclick="toggleMonthLogbook('${year}', ${mIdx}, ${daysInMonth}, ${!allChecked})" class="text-[9px] bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-semibold transition">${allChecked ? 'Clear' : 'Force All'}</button>
                     </div>
                     <div class="grid grid-cols-7 gap-1 place-items-center">${btns}</div>
                 `;
@@ -2482,18 +2502,6 @@
             });
             
             setTxt('cal-total-days', totalCount);
-
-            if (window.currentUserRole === 'admin') {
-                grid.querySelectorAll('.cal-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const k = e.target.getAttribute('data-key');
-                        const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
-                        if (updatedLog[k]) { delete updatedLog[k]; } else { updatedLog[k] = true; }
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook2026: updatedLog, logbook: updatedLog });
-                        window.renderCalendarModal();
-                    });
-                });
-            }
         };
 
         window.toggleMonthLogbook = async (year, monthIdx, daysInMonth, forceState) => {
@@ -2514,6 +2522,127 @@
             const cm = document.getElementById('calendar-modal');
             if (cm) { cm.classList.add('hidden'); cm.classList.remove('flex'); }
             window.recalculateMetrics(); 
+        };
+
+        window.currentLogbookKey = null;
+
+        window.handleLogbookDayClick = (key, monthName, dayNum) => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+            window.currentLogbookKey = key;
+            const logbook = c.logbook || c.logbook2026 || {};
+            const entry = logbook[key] || logbook[`${key.split('-')[1]}-${key.split('-')[2]}`];
+            
+            const modal = document.getElementById('logbook-action-modal');
+            const content = document.getElementById('logbook-action-content');
+            
+            let isPending = entry && entry.status === 'Pending';
+            let isApproved = entry === true;
+
+            let html = `<h4 class="text-center font-bold text-brand-blue dark:text-blue-400 mb-2 border-b dark:border-slate-700 pb-2">${monthName} ${dayNum}, ${key.split('-')[0]}</h4>`;
+
+            if (window.currentUserRole === 'cadet') {
+                if (isApproved) {
+                    html += `<div class="text-center text-brand-green font-bold py-4"><i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2"></i> Logbook Verified & Approved</div>`;
+                } else if (isPending) {
+                    html += `<div class="text-center text-amber-500 font-bold py-4"><i data-lucide="clock" class="w-12 h-12 mx-auto mb-2 animate-pulse"></i> Verification Pending...</div>`;
+                } else {
+                    html += `
+                        <p class="text-[11px] font-bold text-slate-500 text-center mb-3">Upload a photo of your signed daily logbook.</p>
+                        <input type="file" id="daily-log-upload" accept="image/*" class="w-full text-xs mb-3 border border-slate-300 dark:border-slate-600 rounded p-1" onchange="compressDailyLog(event)">
+                        <input type="hidden" id="daily-log-b64">
+                        <img id="daily-log-preview" src="" class="hidden w-full h-32 object-cover rounded mb-3 border border-brand-creamBorder shadow-sm">
+                        <button onclick="submitDailyLogbook()" class="w-full bg-brand-blue hover:bg-blue-800 text-white py-2 rounded text-xs font-bold transition">Submit Evidence</button>
+                    `;
+                }
+            } else { 
+                // ADMIN VIEW
+                if (isApproved) {
+                    html += `
+                        <div class="text-center text-brand-green font-bold py-2"><i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2"></i> Logbook Approved</div>
+                        <button onclick="reviewDailyLogbook('Revoke')" class="w-full bg-red-50 text-red-600 py-2 rounded text-xs font-bold border border-red-200 mt-2 hover:bg-red-100 transition">Revoke Approval</button>
+                    `;
+                } else if (isPending) {
+                    html += `
+                        <p class="text-[11px] font-bold text-slate-500 text-center mb-2">Cadet submitted evidence for review:</p>
+                        <img src="${entry.image}" class="w-full h-48 object-contain bg-slate-100 dark:bg-slate-900 rounded mb-3 border border-slate-300 cursor-pointer shadow-sm hover:opacity-90 transition" onclick="this.classList.toggle('fixed'); this.classList.toggle('inset-4'); this.classList.toggle('z-[70]'); this.classList.toggle('h-auto'); this.classList.toggle('bg-black/90');" title="Click to enlarge">
+                        <div class="flex gap-2">
+                            <button onclick="reviewDailyLogbook('Approve')" class="flex-1 bg-brand-green hover:bg-green-700 text-white py-2 rounded text-xs font-bold transition flex items-center justify-center gap-1"><i data-lucide="check" class="w-4 h-4"></i> Approve</button>
+                            <button onclick="reviewDailyLogbook('Reject')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded text-xs font-bold transition flex items-center justify-center gap-1"><i data-lucide="x" class="w-4 h-4"></i> Reject</button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="text-center text-slate-500 py-4 font-bold text-xs"><i data-lucide="file-warning" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>No submission from cadet yet.</div>
+                        <button onclick="reviewDailyLogbook('ForceApprove')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded text-xs font-bold transition">Force Approve (Override)</button>
+                    `;
+                }
+            }
+            
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        };
+
+        window.closeLogbookActionModal = () => {
+            const m = document.getElementById('logbook-action-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            window.currentLogbookKey = null;
+        }
+
+        window.compressDailyLog = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 600; 
+                    let width = img.width; let height = img.height;
+                    if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+                    else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    const b64 = canvas.toDataURL('image/jpeg', 0.5); // High compression
+                    document.getElementById('daily-log-b64').value = b64;
+                    document.getElementById('daily-log-preview').src = b64;
+                    document.getElementById('daily-log-preview').classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.submitDailyLogbook = async () => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const b64 = document.getElementById('daily-log-b64').value;
+            if (!b64) return alert("Please upload a photo of your logbook.");
+            
+            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+            updatedLog[window.currentLogbookKey] = { status: 'Pending', image: b64 };
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
+            alert("Logbook evidence submitted for review!");
+            window.closeLogbookActionModal();
+            window.renderCalendarModal();
+        };
+
+        window.reviewDailyLogbook = async (action) => {
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+            
+            if (action === 'Approve' || action === 'ForceApprove') {
+                updatedLog[window.currentLogbookKey] = true; // Setting to true deletes the image to save DB space
+            } else if (action === 'Reject' || action === 'Revoke') {
+                delete updatedLog[window.currentLogbookKey];
+            }
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
+            window.closeLogbookActionModal();
+            window.renderCalendarModal();
+            window.recalculateMetrics(); // Updates soft skills score
         };
 
         window.openDutyCalendarModal = () => {
