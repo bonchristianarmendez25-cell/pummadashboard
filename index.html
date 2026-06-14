@@ -898,8 +898,13 @@
         const customConfirm = (msg) => window.pummaDialog({ title: 'System Confirmation', message: msg, type: 'confirm' });
         const customPrompt = (msg, ph) => window.pummaDialog({ title: 'Input Required', message: msg, isPrompt: true, placeholder: ph });
 
+        window.pummaDialogTimer = null;
+        
         window.pummaDialog = (options) => {
             return new Promise((resolve) => {
+                // Instantly stops the previous box from closing if a new one opens!
+                if (window.pummaDialogTimer) clearTimeout(window.pummaDialogTimer);
+                
                 const overlay = document.getElementById('pumma-dialog');
                 const box = document.getElementById('pumma-dialog-box');
                 const iconC = document.getElementById('pumma-dialog-icon');
@@ -944,8 +949,11 @@
                 setTimeout(() => { if (options.isPrompt) inpE.focus(); else btnConfirm.focus(); }, 100);
 
                 const cleanup = () => {
+                    btnConfirm.onclick = null; btnCancel.onclick = null; inpE.onkeypress = null;
                     overlay.classList.add('opacity-0'); box.classList.add('scale-95');
-                    setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }, 200);
+                    window.pummaDialogTimer = setTimeout(() => { 
+                        overlay.classList.add('hidden'); overlay.classList.remove('flex'); 
+                    }, 200);
                 };
 
                 btnConfirm.onclick = () => { cleanup(); resolve(options.isPrompt ? inpE.value : true); };
@@ -1614,12 +1622,17 @@
         };
 
         window.recoverAdminPin = async () => {
-            const mKey = await customPrompt("Enter Master Recovery Key to reset an Instructor's PIN:", "Master Key");
+            const mKey = await customPrompt("EMERGENCY RECOVERY:\nOnly the Regimental Commander (ISO) should use this.\n\nEnter the Master Key to securely reset an Instructor's PIN:", "Master Key");
+            
             if (mKey === "PUMMA2027") {
-                const targetUser = await customPrompt("Enter the USERNAME of the Instructor to reset:", "Instructor Username");
+                const instructors = JSON.parse(JSON.stringify(window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }]));
+                
+                // Automatically generate a readable list of all registered instructors
+                let userList = instructors.map(i => `• ${i.name} (Username: ${i.username})`).join('\n');
+                
+                const targetUser = await customPrompt(`Master Key Accepted.\n\nRegistered Instructors:\n${userList}\n\nEnter the exact USERNAME of the account to reset:`, "Type username here");
                 if (!targetUser) return;
                 
-                const instructors = JSON.parse(JSON.stringify(window.appSettings.instructors || [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }]));
                 const targetIndex = instructors.findIndex(i => i.username.toLowerCase() === targetUser.trim().toLowerCase());
                 
                 if (targetIndex !== -1) {
@@ -1629,16 +1642,16 @@
                     const now = new Date().toLocaleString();
                     const device = window.getDeviceName();
                     const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
-                    logs.unshift({ action: 'Security', details: `PIN reset for instructor: ${targetUser.trim()}`, adminName: 'System Recovery', date: now, device: device });
+                    logs.unshift({ action: 'Security', details: `Emergency PIN reset executed for: ${instructors[targetIndex].username}`, adminName: 'System Recovery', date: now, device: device });
                     if (logs.length > 1500) logs.pop();
                     window.appSettings.adminLogs = logs;
 
                     try {
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instructors, adminPin: "1234", adminLogs: logs });
-                        alert(`Instructor '${targetUser.trim()}' has been successfully recovered. PIN reset to '1234'.`);
-                    } catch(e) { alert("Error connecting to database."); }
+                        alert(`Recovery Successful!\n\nThe PIN for '${instructors[targetIndex].name}' has been successfully reset to '1234'.\n\nThey can now log in and change it via the 'My PIN' button.`);
+                    } catch(e) { alert("Error connecting to database. Please check your connection."); }
                 } else {
-                    alert("Instructor username not found in the database.");
+                    alert("Recovery Failed: The username you entered does not match any registered instructor accounts.");
                 }
             } else if (mKey !== null) {
                 alert("Invalid Master Recovery Key. Access Denied.");
