@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUMMA Dashboard Grade Converter</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --accent-gold: #F2A900;
+            --bg-color: #f4f6f9;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--accent-gold);
+            padding-bottom: 10px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .btn {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+        .btn:hover { background-color: #002244; }
+        .btn-export { background-color: #217346; } /* Excel Green */
+        .btn-export:hover { background-color: #1a5c38; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        .header-group {
+            background-color: #e0e0e0;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚢 PUMMA Grade Appraiser: Dashboard to Grading Sheet</h2>
+    
+    <div class="form-grid">
+        <div class="input-group">
+            <label>Student No.</label>
+            <input type="text" id="studentNo" placeholder="e.g. 03-2425-1234">
+        </div>
+        <div class="input-group">
+            <label>Cadet Name</label>
+            <input type="text" id="cadetName" placeholder="Last Name, First Name">
+        </div>
+        <div class="input-group">
+            <label>Academic Term</label>
+            <select id="term">
+                <option value="PRELIM">Prelim</option>
+                <option value="MIDTERM">Midterm</option>
+                <option value="SEMI">Semi-Finals</option>
+                <option value="FINAL">Finals</option>
+            </select>
+        </div>
+    </div>
+
+    <h4>Raw Dashboard Metrics (0-100)</h4>
+    <div class="form-grid">
+        <div class="input-group">
+            <label>Mockboat Duties (50% of CS)</label>
+            <input type="number" id="mockboat" min="0" max="100" placeholder="0">
+        </div>
+        <div class="input-group">
+            <label>Logbook Recording (25% of CS)</label>
+            <input type="number" id="logbook" min="0" max="100" placeholder="0">
+        </div>
+        <div class="input-group">
+            <label>Patriotism/Merits (25% of CS)</label>
+            <input type="number" id="patriotism" min="0" max="100" placeholder="0">
+        </div>
+        <div class="input-group">
+            <label>ICPE / Major Exam (100% of PT)</label>
+            <input type="number" id="icpe" min="0" max="100" placeholder="0">
+        </div>
+    </div>
+
+    <button class="btn" onclick="addGradeRecord()">Calculate & Add to List</button>
+    <button class="btn btn-export" onclick="exportToExcel()">Download Panpacific Excel (.xlsx)</button>
+
+    <table id="gradesTable">
+        <thead>
+            <tr>
+                <th rowspan="2">Student No.</th>
+                <th rowspan="2">Name of Student</th>
+                <th colspan="3" class="header-group">PRELIM</th>
+                <th colspan="3" class="header-group">MID-TERM</th>
+                <th colspan="3" class="header-group">SEMI-FINALS</th>
+                <th colspan="3" class="header-group">FINAL</th>
+            </tr>
+            <tr>
+                <th>CS (60%)</th><th>PT (40%)</th><th>FG</th>
+                <th>CS (60%)</th><th>PT (40%)</th><th>FG</th>
+                <th>CS (60%)</th><th>PT (40%)</th><th>FG</th>
+                <th>CS (60%)</th><th>PT (40%)</th><th>FG</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Store cadet records internally to allow updating across different terms
+    const records = {};
+
+    function addGradeRecord() {
+        const studentNo = document.getElementById('studentNo').value;
+        const name = document.getElementById('cadetName').value.toUpperCase();
+        const term = document.getElementById('term').value;
+        
+        const mockboat = parseFloat(document.getElementById('mockboat').value) || 0;
+        const logbook = parseFloat(document.getElementById('logbook').value) || 0;
+        const patriotism = parseFloat(document.getElementById('patriotism').value) || 0;
+        const icpe = parseFloat(document.getElementById('icpe').value) || 0;
+
+        if (!studentNo || !name) {
+            alert("Please enter Student No. and Name.");
+            return;
+        }
+
+        // Mathematical Translation to Syllabus Rubric
+        const classStanding = (mockboat * 0.50) + (logbook * 0.25) + (patriotism * 0.25);
+        const periodicalTest = icpe;
+        const finalGrade = (classStanding * 0.60) + (periodicalTest * 0.40);
+
+        // Initialize cadet record if they don't exist
+        if (!records[studentNo]) {
+            records[studentNo] = {
+                name: name,
+                PRELIM: { cs: "", pt: "", fg: "" },
+                MIDTERM: { cs: "", pt: "", fg: "" },
+                SEMI: { cs: "", pt: "", fg: "" },
+                FINAL: { cs: "", pt: "", fg: "" }
+            };
+        }
+
+        // Update the specific term
+        records[studentNo][term] = {
+            cs: classStanding.toFixed(2),
+            pt: periodicalTest.toFixed(2),
+            fg: finalGrade.toFixed(2)
+        };
+
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = ""; // Clear existing rows
+
+        for (const [id, data] of Object.entries(records)) {
+            const row = `<tr>
+                <td>${id}</td>
+                <td style="text-align: left;">${data.name}</td>
+                <td>${data.PRELIM.cs}</td><td>${data.PRELIM.pt}</td><td><b>${data.PRELIM.fg}</b></td>
+                <td>${data.MIDTERM.cs}</td><td>${data.MIDTERM.pt}</td><td><b>${data.MIDTERM.fg}</b></td>
+                <td>${data.SEMI.cs}</td><td>${data.SEMI.pt}</td><td><b>${data.SEMI.fg}</b></td>
+                <td>${data.FINAL.cs}</td><td>${data.FINAL.pt}</td><td><b>${data.FINAL.fg}</b></td>
+            </tr>`;
+            tbody.innerHTML += row;
+        }
+    }
+
+    function exportToExcel() {
+        // Construct the structured array for Panpacific Format
+        let excelData = [
+            ["PANPACIFIC UNIVERSITY"],
+            ["Campus"],
+            ["GRADING SHEET"],
+            ["Term / A.Y.", "2526"],
+            [], // Blank row
+            ["Student No.", "NAME OF STUDENT", "PRELIM", "", "", "MID-TERM", "", "", "SEMI-FINALS", "", "", "FINAL", "", "", "REMARKS"],
+            ["", "", "CS", "PT", "FG", "CS", "PT", "FG", "CS", "PT", "FG", "CS", "PT", "FG", "SG"]
+        ];
+
+        // Append cadet data
+        for (const [id, data] of Object.entries(records)) {
+            let remarks = data.FINAL.fg >= 75 ? "P" : (data.FINAL.fg ? "F" : ""); // Basic pass/fail logic placeholder
+            excelData.push([
+                id, data.name,
+                data.PRELIM.cs, data.PRELIM.pt, data.PRELIM.fg,
+                data.MIDTERM.cs, data.MIDTERM.pt, data.MIDTERM.fg,
+                data.SEMI.cs, data.SEMI.pt, data.SEMI.fg,
+                data.FINAL.cs, data.FINAL.pt, data.FINAL.fg,
+                remarks
+            ]);
+        }
+
+        // Create workbook and worksheet
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        
+        // Merge header cells for visual formatting
+        if(!ws["!merges"]) ws["!merges"] = [];
+        ws["!merges"].push(
+            {s:{r:5,c:2}, e:{r:5,c:4}}, // Merge PRELIM
+            {s:{r:5,c:5}, e:{r:5,c:7}}, // Merge MID-TERM
+            {s:{r:5,c:8}, e:{r:5,c:10}}, // Merge SEMI-FINALS
+            {s:{r:5,c:11}, e:{r:5,c:13}} // Merge FINAL
+        );
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Grading Sheet");
+
+        // Download file
+        XLSX.writeFile(wb, "PUMMA_Official_Grading_Sheet.xlsx");
+    }
+</script>
+
+</body>
+</html>
