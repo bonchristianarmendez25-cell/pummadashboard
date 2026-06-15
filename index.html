@@ -1181,57 +1181,80 @@
         <div class="bg-white rounded-xl w-full max-w-[98vw] h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-300">
             
             <div class="bg-emerald-800 p-3 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide">
-                    <i data-lucide="sheet" class="w-5 h-5"></i> PUMMA Grading System (Smart Sheet)
-                </h3>
-                <div class="flex items-center gap-4">
-                 <button onclick="exportPummaGradesheet()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1 shadow-sm"><i data-lucide="download" class="w-3 h-3"></i> Export Excel (CSV)</button>
-                 <button onclick="savePummaGrades()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save Sheet</button>
-                 <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-             </div>
-         </div>
-
-         <div class="p-4 border-b border-slate-300 bg-slate-50 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-700 font-medium">
-             <div>
-                 <h2 class="font-black text-sm text-emerald-900 mb-1">PANPACIFIC UNIVERSITY</h2>
-                 <div>GRADING SHEET</div>
-                 <div class="flex items-center gap-2 mt-1">Term / A.Y.: <input type="text" id="pumma-term" value="1ST / 2526" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner w-32"></div>
-             </div>
-             <div>
-                 <div class="flex items-center gap-2 mb-1">Course/Year/Sec: <input type="text" id="pumma-course-sec" value="BSMT 2B" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
-                 <div class="flex items-center gap-2 mb-1">Course Code: <input type="text" id="pumma-course-code" value="Nav 254" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
-                 <div class="flex items-center gap-2">Course Title: <input type="text" id="pumma-course-title" value="Celestial Navigation" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
-             </div>
-                <div class="bg-emerald-100 border border-emerald-300 p-2 rounded text-emerald-900 flex flex-col justify-center">
-                    <div class="font-bold mb-1"><i data-lucide="calculator" class="w-3 h-3 inline"></i> Active Formula Engine:</div>
-                    <div>Class Standing (CS): <strong>60%</strong> (0.6 Weight)</div>
-                    <div>Periodical Test (PT): <strong>40%</strong> (0.4 Weight)</div>
+                <div class="flex items-center gap-3">
+                    <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide">
+                        <i data-lucide="calculator" class="w-4 h-4"></i> PU Grade Auto-Generator
+                    </h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="savePummaGrades()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save Data</button>
+                    <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white ml-2"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-auto bg-slate-200 p-2 custom-scrollbar relative">
-                <table class="w-full bg-white border-collapse border border-slate-400 text-[11px]">
-                    <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm text-slate-700">
-                        <tr>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-8 bg-slate-200">No.</th>
-                            <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left bg-slate-200">NAME OF STUDENT</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-16 bg-slate-800 text-white">S.G.</th>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-20 bg-slate-200">REMARKS</th>
-                        </tr>
-                        <tr class="text-[10px]">
-                            <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-blue-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-teal-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-amber-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-rose-200 font-bold">FG</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pumma-gradesheet-body">
-                        </tbody>
-                </table>
+            <div class="p-3 border-b border-slate-300 bg-slate-50 shrink-0 flex flex-wrap gap-4 items-end text-xs text-slate-700 font-medium">
+                <div class="flex-1 min-w-[300px]">
+                    <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Course & Class</label>
+                    <select id="pumma-course-sec" class="w-full border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900">
+                        <option value="PIC 136">Competency Appraisal 1 (PIC 136) - 4th Class</option>
+                        <option value="PIC 267">Competency Appraisal 2 (PIC 267) - 3rd Class</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Section</label>
+                    <input type="text" id="pumma-section" value="BSMT " class="w-32 border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold">
+                </div>
+                <div class="bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded text-emerald-900 flex items-center gap-4">
+                    <span><strong>Formula:</strong> CS (60%) + PT (40%)</span>
+                    <span class="text-red-600"><strong>Max Grade:</strong> 98</span>
+                </div>
+            </div>
+
+            <div class="flex bg-slate-200 border-b border-slate-300 shrink-0">
+                <button onclick="switchGradeTab('input')" id="tab-input" class="grade-tab active-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">1. DATA ENTRY</button>
+                <div class="w-px bg-slate-300 my-2"></div>
+                <button onclick="switchGradeTab('pre')" id="tab-pre" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Prelim</button>
+                <button onclick="switchGradeTab('mid')" id="tab-mid" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Midterm</button>
+                <button onclick="switchGradeTab('sem')" id="tab-sem" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Semi-Final</button>
+                <button onclick="switchGradeTab('fin')" id="tab-fin" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Final</button>
+                <div class="w-px bg-slate-300 my-2"></div>
+                <button onclick="switchGradeTab('master')" id="tab-master" class="grade-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">MASTER SHEET</button>
+            </div>
+
+            <div class="flex-1 overflow-auto bg-slate-100 p-4 custom-scrollbar relative">
+                <div id="grade-view-input" class="block">
+                    <div class="mb-2 text-xs text-slate-500 italic"><i data-lucide="info" class="w-3 h-3 inline"></i> Enter raw Class Standing (CS) and Periodical Test (PT) scores here. The system will auto-cap at 98.</div>
+                    <table class="w-full bg-white border-collapse border border-slate-400 text-[11px] whitespace-nowrap">
+                        <thead class="bg-slate-200 sticky top-0 z-10 shadow-sm text-slate-700">
+                            <tr>
+                                <th rowspan="2" class="border border-slate-400 p-1 w-8">No.</th>
+                                <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left">NAME OF CADET</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
+                            </tr>
+                            <tr class="text-[10px]">
+                                <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pumma-input-body">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="grade-view-output" class="hidden max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 id="output-title" class="font-black text-lg text-emerald-900 uppercase">GENERATED REPORT</h4>
+                        <button onclick="copyGeneratedTable()" class="bg-emerald-100 text-emerald-700 border border-emerald-300 hover:bg-emerald-200 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copy to Clipboard</button>
+                    </div>
+                    <div class="bg-white p-6 rounded shadow border border-slate-300" id="output-container">
+                        </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -2528,12 +2551,13 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
         };
         
-        // --- PUMMA SMART GRADESHEET ENGINE ---
+        // --- PUMMA SMART GRADESHEET ENGINE (AUTO-GENERATOR) ---
         window.openPummaGradesheet = () => {
             const m = document.getElementById('pumma-gradesheet-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            const tbody = document.getElementById('pumma-gradesheet-body');
-            if (tbody && tbody.innerHTML.trim() === '') { window.renderPummaRows(); }
+            const tbody = document.getElementById('pumma-input-body');
+            if (tbody && tbody.innerHTML.trim() === '') { window.renderPummaInputRows(); }
+            window.switchGradeTab('input'); // Default to input view
             if(window.lucide) window.lucide.createIcons();
         };
 
@@ -2542,154 +2566,170 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
         };
 
-        window.calculatePummaGrades = (rowId) => {
-            const getValEl = (term, type) => document.getElementById(`r${rowId}-${term}-${type}`);
-            const setValText = (term, type, val) => document.getElementById(`r${rowId}-${term}-${type}`).innerText = val > 0 ? val.toFixed(1) : '';
+        // Core Math & Data Extractor
+        window.getPummaData = () => {
+            const data = [];
+            for (let i = 1; i <= 20; i++) {
+                const getVal = (term, type) => {
+                    let val = parseFloat(document.getElementById(`r${i}-${term}-${type}`).value) || 0;
+                    if (val > 98) val = 98; // Cap at 98
+                    return val;
+                };
 
-            const terms = ['pre', 'mid', 'sem', 'fin'];
-            let totalFG = 0;
-            let computedTerms = 0;
+                const name = document.getElementById(`r${i}-name`).value.trim();
+                if (!name) continue; // Skip empty rows
 
-            terms.forEach(term => {
-                let csEl = getValEl(term, 'cs');
-                let ptEl = getValEl(term, 'pt');
-                
-                let cs = parseFloat(csEl.value) || 0;
-                let pt = parseFloat(ptEl.value) || 0;
+                const row = { no: i, name: name, terms: {}, sg: 0, remarks: '' };
+                let totalFG = 0;
+                let computedTerms = 0;
 
-                // MAXIMUM LIMIT RULE: Grades cannot exceed 98
-                if (cs > 98) { cs = 98; csEl.value = 98; }
-                if (pt > 98) { pt = 98; ptEl.value = 98; }
-                
-                if (cs > 0 || pt > 0) {
-                    let fg = (cs * 0.6) + (pt * 0.4);
-                    if (fg > 98) fg = 98; // Final safety cap
-                    setValText(term, 'fg', fg);
-                    totalFG += fg;
-                    computedTerms++;
-                } else {
-                    setValText(term, 'fg', 0);
+                ['pre', 'mid', 'sem', 'fin'].forEach(term => {
+                    let cs = getVal(term, 'cs');
+                    let pt = getVal(term, 'pt');
+                    let fg = 0;
+
+                    if (cs > 0 || pt > 0) {
+                        fg = (cs * 0.6) + (pt * 0.4);
+                        if (fg > 98) fg = 98;
+                        totalFG += fg;
+                        computedTerms++;
+                    }
+                    row.terms[term] = { cs: cs, pt: pt, fg: fg };
+                });
+
+                if (computedTerms > 0) {
+                    let sg = totalFG / computedTerms;
+                    if (sg > 98) sg = 98;
+                    row.sg = sg;
+                    row.remarks = sg >= 75 ? 'PASSED' : 'FAILED';
                 }
+                data.push(row);
+            }
+            return data;
+        };
+
+        // Tab Switcher & Table Generator
+        window.switchGradeTab = (tabId) => {
+            // Update Tab Styles
+            document.querySelectorAll('.grade-tab').forEach(t => {
+                t.classList.remove('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
+                t.classList.add('border-transparent', 'text-slate-600');
             });
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            activeTab.classList.add('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
+            activeTab.classList.remove('border-transparent', 'text-slate-600');
 
-            if (computedTerms > 0) {
-                let sg = totalFG / computedTerms;
-                if (sg > 98) sg = 98;
-                document.getElementById(`r${rowId}-sg`).innerText = sg.toFixed(1);
-                
-                let remEl = document.getElementById(`r${rowId}-rem`);
-                if (sg >= 75) {
-                    remEl.innerText = 'PASSED';
-                    remEl.className = 'border-r border-slate-300 text-center font-black text-emerald-600 bg-emerald-50';
-                } else {
-                    remEl.innerText = 'FAILED';
-                    remEl.className = 'border-r border-slate-300 text-center font-black text-red-600 bg-red-50';
-                }
+            // Switch Views
+            if (tabId === 'input') {
+                document.getElementById('grade-view-input').classList.remove('hidden');
+                document.getElementById('grade-view-output').classList.add('hidden');
             } else {
-                document.getElementById(`r${rowId}-sg`).innerText = '';
-                document.getElementById(`r${rowId}-rem`).innerText = '';
-                document.getElementById(`r${rowId}-rem`).className = 'border-r border-slate-300 text-center font-bold';
+                document.getElementById('grade-view-input').classList.add('hidden');
+                document.getElementById('grade-view-output').classList.remove('hidden');
+                window.generateOutputTable(tabId);
             }
         };
 
-        window.exportPummaGradesheet = () => {
-            const exportType = document.getElementById('pumma-export-type').value;
-            const termAy = document.getElementById('pumma-term').value || '';
-            const courseSecRaw = document.getElementById('pumma-course-sec').value || '';
-            const instructor = document.getElementById('pumma-instructor').value;
-            const dean = document.getElementById('pumma-dean').value;
+        window.generateOutputTable = (tabId) => {
+            const data = window.getPummaData();
+            const container = document.getElementById('output-container');
+            const title = document.getElementById('output-title');
+            
+            const courseSelect = document.getElementById('pumma-course-sec');
+            const courseText = courseSelect.options[courseSelect.selectedIndex].text;
+            const section = document.getElementById('pumma-section').value;
 
-            // Parse course details from the dropdown
-            let courseCode = "PIC 136";
-            let courseTitle = "Competency Appraisal 1";
-            if(courseSecRaw.includes("267")) { courseCode = "PIC 267"; courseTitle = "Competency Appraisal 2"; }
-
-            let csv = "";
-            let fileName = "";
-
-            const getV = (id) => {
-                let el = document.getElementById(id);
-                if (!el) return '';
-                return (el.tagName === 'INPUT') ? (el.value || '') : (el.innerText || '');
-            };
-
-            if (exportType === 'master') {
-                // EXPORT 1: MASTER GRADE SHEET
-                fileName = `PUMMA_MasterSheet_${courseCode.replace(' ', '')}.csv`;
-                csv += `,PANPACIFIC UNIVERSITY ,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,Campus ,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,GRADING SHEET,,,,,,,,,,,,,,,,,,\n`;
-                csv += `, _${termAy}____,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,Course/Year/ Sec: ${courseSecRaw},,,,,,,,Class Standing,,,,,,,(CS),0.6,,\n`;
-                csv += `,Course Code: ${courseCode},,,,,,,,Periodical Test,,,,,,,(PT),0.4,,\n`;
-                csv += `,Course Title: ${courseTitle},,,,,,,,Research Project,,,,,,,(R/P),___%,,\n`;
-                csv += `No.,,PRELIM,,,,MID-TERM,,,,SEMI-FINALS,,,,FINAL,,,,,REMARKS\n`;
-                csv += `,NAME OF STUDENT,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,SG,\n`;
-
-                for (let i = 1; i <= 20; i++) {
-                    let name = getV(`r${i}-name`);
-                    if (!name) continue;
-                    let rem = getV(`r${i}-rem`);
-                    rem = rem === 'PASSED' ? 'P' : (rem === 'FAILED' ? 'F' : '');
-                    csv += `${i},${name},`;
-                    csv += `${getV(`r${i}-pre-cs`)},${getV(`r${i}-pre-pt`)}, ,${getV(`r${i}-pre-fg`)},`;
-                    csv += `${getV(`r${i}-mid-cs`)},${getV(`r${i}-mid-pt`)}, ,${getV(`r${i}-mid-fg`)},`;
-                    csv += `${getV(`r${i}-sem-cs`)},${getV(`r${i}-sem-pt`)}, ,${getV(`r${i}-sem-fg`)},`;
-                    csv += `${getV(`r${i}-fin-cs`)},${getV(`r${i}-fin-pt`)}, ,${getV(`r${i}-fin-fg`)},`;
-                    csv += `${getV(`r${i}-sg`)},${rem}\n`;
-                }
-                csv += `\nSUBMITTED BY:,,,,,,,,,,,,,,,,REVIEWED BY:,,\n`;
-                csv += `${instructor},,,,,,,,,,,,,,,,${dean},,\n`;
-                csv += `FACULTY (PUMMA),,,,,,,,,,,,,,,,DEAN PUMMA,,\n`;
-
-            } else {
-                // EXPORT 2-5: TERM-SPECIFIC SHEETS
-                let termName = "PRELIM"; let tKey = "pre";
-                if(exportType === 'mid') { termName = "MIDTERM"; tKey = "mid"; }
-                if(exportType === 'sem') { termName = "SEMI-FINAL"; tKey = "sem"; }
-                if(exportType === 'fin') { termName = "FINALS"; tKey = "fin"; }
-                fileName = `PUMMA_${termName}_${courseCode.replace(' ', '')}.csv`;
-
-                csv += `,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `Panpacific University ,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `Campus,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `SCHOOL OF URDANETA CITY,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,,,,,,,,,,,,,,,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,\n`;
-                csv += `COURSE TITLE: ${courseTitle}_${courseCode},,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `PROGRAM & SECTION: ${courseSecRaw},,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `Student No.,NAME,LABORATORY,,,,,,,,,,,,,,,,LECTURE GRADE,${termName} GRADE ,REMARKS\n`;
-                csv += `,,CLASS STANDING,,,,,,,,,,,,,EXAMINATION,,,,,\n`;
-                csv += `,,ASSIGNMENT/QUIZZES/ACTIVITIES/ CLASS PARTICIPATION,,,,,,,,,,,,,${termName === 'FINALS' ? 'Final Exam' : termName + ' Exam'},,,,,\n`;
-                csv += `,,,,,,,,,,,,T,E,Weight %,T,E,Weight %,,,\n`;
-                csv += `,,,,,,,,,,,,0,%,0.6,,%,0.4,,,\n`;
-
-                for (let i = 1; i <= 20; i++) {
-                    let name = getV(`r${i}-name`);
-                    if (!name) continue;
-                    let cs = getV(`r${i}-${tKey}-cs`);
-                    let pt = getV(`r${i}-${tKey}-pt`);
-                    let fg = getV(`r${i}-${tKey}-fg`);
-                    let rem = getV(`r${i}-rem`);
-                    rem = rem === 'PASSED' ? 'P' : (rem === 'FAILED' ? 'F' : '');
-
-                    csv += `,,${name},,,,,,,,,,,${cs},,,${pt},,,${fg},${rem}\n`;
-                }
-                csv += `\nSubmitted by:,,,,,,,,,,,,,,,,Reviewed by:,,,,\n`;
-                csv += `${instructor},,,,,,,,,,,,,,,,${dean},,,,\n`;
-                csv += `FACULTY (PUMMA),,,,,,,,,,,,,,,,DEAN PUMMA,,,,\n`;
+            if (data.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data entered yet. Please go to DATA ENTRY.</div>`;
+                title.innerText = "NO DATA";
+                return;
             }
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.logAuditActivity('Document Exported', `PUMMA Grades: ${fileName}`, 'Grade System');
+            let html = `<div id="copyable-table-area">`;
+            html += `<div style="margin-bottom: 15px; font-family: sans-serif;">`;
+            html += `<strong>Course:</strong> ${courseText}<br>`;
+            html += `<strong>Section:</strong> ${section}`;
+            html += `</div>`;
+            
+            html += `<table style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 12px; text-align: center;">`;
+
+            if (tabId === 'master') {
+                title.innerText = "MASTER GRADING SHEET";
+                html += `<thead><tr style="background-color: #f1f5f9;">`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">No.</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: left;">NAME OF CADET</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">PRELIM (FG)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">MIDTERM (FG)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">SEMI-FINAL (FG)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">FINAL (FG)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">SUBJECT GRADE</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">REMARKS</th>`;
+                html += `</tr></thead><tbody>`;
+
+                data.forEach(d => {
+                    html += `<tr>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.no}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; text-align: left; font-weight: bold;">${d.name}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.pre.fg > 0 ? d.terms.pre.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.mid.fg > 0 ? d.terms.mid.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.sem.fg > 0 ? d.terms.sem.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.fin.fg > 0 ? d.terms.fin.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; background-color: #e2e8f0;">${d.sg > 0 ? d.sg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; color: ${d.remarks==='PASSED'?'green':'red'};">${d.remarks}</td>`;
+                    html += `</tr>`;
+                });
+            } else {
+                let tName = tabId.toUpperCase();
+                if(tabId === 'sem') tName = "SEMI-FINAL";
+                title.innerText = `${tName} GRADE SHEET`;
+                
+                html += `<thead><tr style="background-color: #f1f5f9;">`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">No.</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: left;">NAME OF CADET</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">CS (60%)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">PT (40%)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px; background-color: #e2e8f0;">${tName} GRADE (FG)</th>`;
+                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">REMARKS</th>`;
+                html += `</tr></thead><tbody>`;
+
+                data.forEach(d => {
+                    let t = d.terms[tabId];
+                    // Only show remarks if this specific term was actually computed
+                    let termRem = t.fg >= 75 ? 'PASSED' : (t.fg > 0 ? 'FAILED' : ''); 
+                    
+                    html += `<tr>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.no}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; text-align: left; font-weight: bold;">${d.name}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${t.cs > 0 ? t.cs : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${t.pt > 0 ? t.pt : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; background-color: #f8fafc;">${t.fg > 0 ? t.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; color: ${termRem==='PASSED'?'green':(termRem==='FAILED'?'red':'')};">${termRem}</td>`;
+                    html += `</tr>`;
+                });
+            }
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        };
+
+        window.copyGeneratedTable = () => {
+            const area = document.getElementById('copyable-table-area');
+            if(!area) return;
+            
+            // Modern clipboard API for rich HTML (keeps table formatting when pasting to Excel)
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(area);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            try {
+                document.execCommand('copy');
+                window.customAlert("Table copied! You can now paste (Ctrl+V) directly into Excel.");
+            } catch(e) {
+                window.customAlert("Copy failed. Please select the table manually and press Ctrl+C.");
+            }
+            selection.removeAllRanges();
         };
 
         window.savePummaGrades = async () => {
@@ -2711,33 +2751,29 @@ window.logAdminSettingsActivity = async (action, details) => {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { pummaGrades: gradesData });
                 }
             } catch (e) {}
-            window.customAlert("Grade Sheet saved successfully to the Regimental Database.");
+            window.customAlert("Grade Data saved securely.");
         };
 
-        window.renderPummaRows = () => {
+        window.renderPummaInputRows = () => {
             let html = '';
             const savedGrades = (window.appSettings && window.appSettings.pummaGrades) ? window.appSettings.pummaGrades : [];
             for(let i=1; i<=20; i++) {
                 const row = savedGrades[i-1] || { name: '', pre: {cs:'', pt:''}, mid: {cs:'', pt:''}, sem: {cs:'', pt:''}, fin: {cs:'', pt:''} };
-                const generateTermCells = (term, colorClass) => `
-                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-cs" value="${row[term]?.cs || ''}" oninput="calculatePummaGrades(${i})" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-1.5 font-medium" min="0" max="98"></td>
-                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-pt" value="${row[term]?.pt || ''}" oninput="calculatePummaGrades(${i})" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-1.5 font-medium" min="0" max="98"></td>
-                    <td class="border-r border-slate-300 text-center font-bold ${colorClass}" id="r${i}-${term}-fg"></td>
+                const generateTermCells = (term) => `
+                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-cs" value="${row[term]?.cs || ''}" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-2 font-medium" min="0" max="98"></td>
+                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-pt" value="${row[term]?.pt || ''}" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-2 font-medium" min="0" max="98"></td>
                 `;
                 html += `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-300 group">
-                    <td class="border-r border-slate-300 text-center font-bold text-slate-400 bg-slate-100 group-hover:bg-slate-200 transition">${i}</td>
-                    <td class="border-r border-slate-300 p-0"><input type="text" id="r${i}-name" value="${row.name || ''}" class="w-full h-full outline-none px-2 py-1.5 focus:bg-emerald-100 font-bold text-slate-800" placeholder="Cadet Name..."></td>
-                    ${generateTermCells('pre', 'bg-blue-50 text-blue-900')}
-                    ${generateTermCells('mid', 'bg-teal-50 text-teal-900')}
-                    ${generateTermCells('sem', 'bg-amber-50 text-amber-900')}
-                    ${generateTermCells('fin', 'bg-rose-50 text-rose-900')}
-                    <td class="border-r border-slate-300 text-center font-black bg-slate-800 text-white text-xs tracking-wider" id="r${i}-sg"></td>
-                    <td class="border-r border-slate-300 text-center font-bold tracking-wider text-[10px]" id="r${i}-rem"></td>
+                    <td class="border-r border-slate-300 text-center font-bold text-slate-400 bg-slate-100">${i}</td>
+                    <td class="border-r border-slate-300 p-0"><input type="text" id="r${i}-name" value="${row.name || ''}" class="w-full h-full outline-none px-2 py-2 focus:bg-emerald-100 font-bold text-slate-800" placeholder="Cadet Name..."></td>
+                    ${generateTermCells('pre')}
+                    ${generateTermCells('mid')}
+                    ${generateTermCells('sem')}
+                    ${generateTermCells('fin')}
                 </tr>`;
             }
-            document.getElementById('pumma-gradesheet-body').innerHTML = html;
-            for(let i=1; i<=20; i++) window.calculatePummaGrades(i);
+            document.getElementById('pumma-input-body').innerHTML = html;
         };
         // --- CADET UI LOGIC ---
         window.openUniformModal = () => {
