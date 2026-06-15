@@ -1202,62 +1202,23 @@
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Section</label>
-                    <input type="text" id="pumma-section" value="BSMT " class="w-32 border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold">
+                    <select id="pumma-section" class="w-32 border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900">
+                        <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option>
+                        <option value="Delta">Delta</option><option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option>
+                        <option value="Golf">Golf</option><option value="Hotel">Hotel</option><option value="India">India</option>
+                        <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option><option value="Lima">Lima</option>
+                        <option value="Mike">Mike</option><option value="November">November</option><option value="Oscar">Oscar</option>
+                        <option value="Papa">Papa</option><option value="Quebec">Quebec</option><option value="Romeo">Romeo</option>
+                        <option value="Sierra">Sierra</option><option value="Tango">Tango</option><option value="Uniform">Uniform</option>
+                        <option value="Victor">Victor</option><option value="Whiskey">Whiskey</option><option value="X-ray">X-ray</option>
+                        <option value="Yankee">Yankee</option><option value="Zulu">Zulu</option><option value="Irregular">Irregular</option>
+                    </select>
                 </div>
                 <div class="bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded text-emerald-900 flex items-center gap-4">
                     <span><strong>Formula:</strong> CS (60%) + PT (40%)</span>
                     <span class="text-red-600"><strong>Max Grade:</strong> 98</span>
                 </div>
             </div>
-
-            <div class="flex bg-slate-200 border-b border-slate-300 shrink-0">
-                <button onclick="switchGradeTab('input')" id="tab-input" class="grade-tab active-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">1. DATA ENTRY</button>
-                <div class="w-px bg-slate-300 my-2"></div>
-                <button onclick="switchGradeTab('pre')" id="tab-pre" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Prelim</button>
-                <button onclick="switchGradeTab('mid')" id="tab-mid" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Midterm</button>
-                <button onclick="switchGradeTab('sem')" id="tab-sem" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Semi-Final</button>
-                <button onclick="switchGradeTab('fin')" id="tab-fin" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Final</button>
-                <div class="w-px bg-slate-300 my-2"></div>
-                <button onclick="switchGradeTab('master')" id="tab-master" class="grade-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">MASTER SHEET</button>
-            </div>
-
-            <div class="flex-1 overflow-auto bg-slate-100 p-4 custom-scrollbar relative">
-                <div id="grade-view-input" class="block">
-                    <div class="mb-2 text-xs text-slate-500 italic"><i data-lucide="info" class="w-3 h-3 inline"></i> Enter raw Class Standing (CS) and Periodical Test (PT) scores here. The system will auto-cap at 98.</div>
-                    <table class="w-full bg-white border-collapse border border-slate-400 text-[11px] whitespace-nowrap">
-                        <thead class="bg-slate-200 sticky top-0 z-10 shadow-sm text-slate-700">
-                            <tr>
-                                <th rowspan="2" class="border border-slate-400 p-1 w-8">No.</th>
-                                <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left">NAME OF CADET</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
-                            </tr>
-                            <tr class="text-[10px]">
-                                <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pumma-input-body">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div id="grade-view-output" class="hidden max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 id="output-title" class="font-black text-lg text-emerald-900 uppercase">GENERATED REPORT</h4>
-                        <button onclick="copyGeneratedTable()" class="bg-emerald-100 text-emerald-700 border border-emerald-300 hover:bg-emerald-200 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copy to Clipboard</button>
-                    </div>
-                    <div class="bg-white p-6 rounded shadow border border-slate-300" id="output-container">
-                        </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
     
     <div id="pumma-gradesheet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
         <div class="bg-white rounded-xl w-full max-w-[98vw] h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-300">
@@ -2646,77 +2607,85 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
 
             let html = `<div id="copyable-table-area">`;
-            html += `<div style="margin-bottom: 15px; font-family: sans-serif;">`;
-            html += `<strong>Course:</strong> ${courseText}<br>`;
-            html += `<strong>Section:</strong> ${section}`;
-            html += `</div>`;
-            
-            html += `<table style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 12px; text-align: center;">`;
+            html += `<table style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 12px; text-align: center;" border="1">`;
 
             if (tabId === 'master') {
-                title.innerText = "MASTER GRADING SHEET";
-                html += `<thead><tr style="background-color: #f1f5f9;">`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">No.</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: left;">NAME OF CADET</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">PRELIM (FG)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">MIDTERM (FG)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">SEMI-FINAL (FG)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">FINAL (FG)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">SUBJECT GRADE</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">REMARKS</th>`;
-                html += `</tr></thead><tbody>`;
+                title.innerText = "MASTER GRADING SHEET (READY FOR EXCEL)";
+                
+                // Master Sheet 20-Column Layout
+                html += `<thead style="background-color: #e2e8f0;"><tr>
+                    <th>No.</th><th>NAME OF STUDENT</th>
+                    <th>CS</th><th>PT</th><th>T</th><th>FG</th>
+                    <th>CS</th><th>PT</th><th>T</th><th>FG</th>
+                    <th>CS</th><th>PT</th><th>T</th><th>FG</th>
+                    <th>CS</th><th>PT</th><th>T</th><th>FG</th>
+                    <th>SG</th><th>REMARKS</th>
+                </tr></thead><tbody>`;
 
                 data.forEach(d => {
+                    let rem = d.remarks === 'PASSED' ? 'P' : (d.remarks === 'FAILED' ? 'F' : '');
                     html += `<tr>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.no}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; text-align: left; font-weight: bold;">${d.name}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.pre.fg > 0 ? d.terms.pre.fg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.mid.fg > 0 ? d.terms.mid.fg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.sem.fg > 0 ? d.terms.sem.fg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.terms.fin.fg > 0 ? d.terms.fin.fg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; background-color: #e2e8f0;">${d.sg > 0 ? d.sg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; color: ${d.remarks==='PASSED'?'green':'red'};">${d.remarks}</td>`;
+                    html += `<td>${d.no}</td>`;
+                    html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`;
+                    html += `<td>${d.terms.pre.cs||''}</td><td>${d.terms.pre.pt||''}</td><td></td><td>${d.terms.pre.fg||''}</td>`;
+                    html += `<td>${d.terms.mid.cs||''}</td><td>${d.terms.mid.pt||''}</td><td></td><td>${d.terms.mid.fg||''}</td>`;
+                    html += `<td>${d.terms.sem.cs||''}</td><td>${d.terms.sem.pt||''}</td><td></td><td>${d.terms.sem.fg||''}</td>`;
+                    html += `<td>${d.terms.fin.cs||''}</td><td>${d.terms.fin.pt||''}</td><td></td><td>${d.terms.fin.fg||''}</td>`;
+                    html += `<td style="background-color: #f8fafc;">${d.sg||''}</td><td style="color:${rem==='P'?'green':'red'}; font-weight: bold;">${rem}</td>`;
                     html += `</tr>`;
                 });
             } else {
                 let tName = tabId.toUpperCase();
                 if(tabId === 'sem') tName = "SEMI-FINAL";
-                title.innerText = `${tName} GRADE SHEET`;
+                title.innerText = `${tName} GRADE SHEET (READY FOR EXCEL)`;
                 
-                html += `<thead><tr style="background-color: #f1f5f9;">`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">No.</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: left;">NAME OF CADET</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">CS (60%)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">PT (40%)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px; background-color: #e2e8f0;">${tName} GRADE (FG)</th>`;
-                html += `<th style="border: 1px solid #94a3b8; padding: 4px;">REMARKS</th>`;
-                html += `</tr></thead><tbody>`;
+                // Term Sheet 24-Column Ghost Layout (Aligns perfectly with the 11 blank columns in the PU Excel format)
+                html += `<thead style="background-color: #e2e8f0; font-size: 10px;"><tr>
+                    <th>A</th><th>B</th><th>NAME (C)</th>
+                    <th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th>
+                    <th>CS (O)</th><th>P</th><th>Q</th><th>R</th>
+                    <th>PT (S)</th><th>T</th><th>U</th><th>V</th>
+                    <th>FG (W)</th><th>REMARKS (X)</th>
+                </tr></thead><tbody>`;
 
                 data.forEach(d => {
                     let t = d.terms[tabId];
-                    // Only show remarks if this specific term was actually computed
-                    let termRem = t.fg >= 75 ? 'PASSED' : (t.fg > 0 ? 'FAILED' : ''); 
+                    let termRem = t.fg >= 75 ? 'P' : (t.fg > 0 ? 'F' : ''); 
                     
                     html += `<tr>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${d.no}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; text-align: left; font-weight: bold;">${d.name}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${t.cs > 0 ? t.cs : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px;">${t.pt > 0 ? t.pt : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; background-color: #f8fafc;">${t.fg > 0 ? t.fg.toFixed(1) : ''}</td>`;
-                    html += `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; color: ${termRem==='PASSED'?'green':(termRem==='FAILED'?'red':'')};">${termRem}</td>`;
+                    html += `<td></td><td></td>`; // Col A, B blank
+                    html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`; // Col C
+                    html += `<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`; // Col D-N (11 blanks)
+                    html += `<td>${t.cs||''}</td>`; // Col O (CS)
+                    html += `<td></td><td></td><td></td>`; // Col P-R (3 blanks)
+                    html += `<td>${t.pt||''}</td>`; // Col S (PT)
+                    html += `<td></td><td></td><td></td>`; // Col T-V (3 blanks)
+                    html += `<td style="background-color: #f8fafc;">${t.fg||''}</td>`; // Col W (FG)
+                    html += `<td style="color:${termRem==='P'?'green':'red'}; font-weight: bold;">${termRem}</td>`; // Col X (Rem)
                     html += `</tr>`;
                 });
             }
 
             html += `</tbody></table></div>`;
+            
+            // On-Screen Helper Instructions
+            html += `<div class="mt-4 bg-emerald-50 border border-emerald-200 p-3 rounded text-emerald-800 text-xs shadow-sm">`;
+            html += `<strong><i data-lucide="clipboard-paste" class="w-4 h-4 inline pb-0.5"></i> Excel Paste Instructions:</strong><br>`;
+            html += `<ol class="list-decimal ml-5 mt-1 space-y-1">`;
+            html += `<li>Click the <b>Copy to Clipboard</b> button above.</li>`;
+            html += `<li>Open your Official PU Excel file for the <b>${courseText} - Section ${section}</b>.</li>`;
+            html += `<li>Click on the very first blank data cell (For Master Sheet: Cell <b>A11</b> | For Term Sheets: Cell <b>A17</b>).</li>`;
+            html += `<li>Press <b>Ctrl + V</b> to paste. The ghost columns will instantly format your data perfectly!</li>`;
+            html += `</ol></div>`;
+
             container.innerHTML = html;
+            if (window.lucide) window.lucide.createIcons();
         };
 
         window.copyGeneratedTable = () => {
             const area = document.getElementById('copyable-table-area');
             if(!area) return;
             
-            // Modern clipboard API for rich HTML (keeps table formatting when pasting to Excel)
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(area);
@@ -2725,13 +2694,12 @@ window.logAdminSettingsActivity = async (action, details) => {
             
             try {
                 document.execCommand('copy');
-                window.customAlert("Table copied! You can now paste (Ctrl+V) directly into Excel.");
+                window.customAlert("Data Grid Copied! Switch to Excel and press Ctrl+V to paste.");
             } catch(e) {
-                window.customAlert("Copy failed. Please select the table manually and press Ctrl+C.");
+                window.customAlert("Copy failed. Please manually highlight the table and press Ctrl+C.");
             }
             selection.removeAllRanges();
         };
-
         window.savePummaGrades = async () => {
             const gradesData = [];
             for (let i = 1; i <= 20; i++) {
