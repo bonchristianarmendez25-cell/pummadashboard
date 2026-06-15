@@ -2454,13 +2454,79 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
         };
         
-        // --- PUMMA SMART GRADESHEET ENGINE (AUTO-GENERATOR) ---
+        // --- ASSESS STUDENT ENGINE (PUMMA INTEGRATED) ---
+        window.currentAssessId = null;
+
+        window.openAssessModal = (id) => {
+            window.currentAssessId = id;
+            const cadet = window.appSettings.cadets.find(c => c.id === id);
+            if (!cadet) return;
+
+            document.getElementById('assess-cadet-name').innerText = cadet.name;
+
+            // Load existing grades if they have them, otherwise blank
+            const g = cadet.pummaGrades || { pre:{cs:'', pt:''}, mid:{cs:'', pt:''}, sem:{cs:'', pt:''}, fin:{cs:'', pt:''} };
+            
+            ['pre', 'mid', 'sem', 'fin'].forEach(term => {
+                const csEl = document.getElementById(`assess-${term}-cs`);
+                const ptEl = document.getElementById(`assess-${term}-pt`);
+                if(csEl) csEl.value = g[term].cs !== undefined ? g[term].cs : '';
+                if(ptEl) ptEl.value = g[term].pt !== undefined ? g[term].pt : '';
+            });
+
+            const m = document.getElementById('assess-modal');
+            if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeAssessModal = () => {
+            window.currentAssessId = null;
+            const m = document.getElementById('assess-modal');
+            if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.saveAssessData = async () => {
+            if (!window.currentAssessId) return;
+            const cadetIndex = window.appSettings.cadets.findIndex(c => c.id === window.currentAssessId);
+            if (cadetIndex === -1) return;
+
+            // Helper to get and cap values at 98
+            const getCappedVal = (term, type) => {
+                const el = document.getElementById(`assess-${term}-${type}`);
+                if (!el || el.value === '') return '';
+                let val = parseFloat(el.value);
+                if (isNaN(val)) return '';
+                if (val > 98) return 98; // Strict 98 Cap applied at entry
+                return val;
+            };
+
+            const newGrades = {
+                pre: { cs: getCappedVal('pre', 'cs'), pt: getCappedVal('pre', 'pt') },
+                mid: { cs: getCappedVal('mid', 'cs'), pt: getCappedVal('mid', 'pt') },
+                sem: { cs: getCappedVal('sem', 'cs'), pt: getCappedVal('sem', 'pt') },
+                fin: { cs: getCappedVal('fin', 'cs'), pt: getCappedVal('fin', 'pt') }
+            };
+
+            // Inject into the Cadet's profile
+            window.appSettings.cadets[cadetIndex].pummaGrades = newGrades;
+
+            try {
+                if (typeof updateDoc !== 'undefined') {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { cadets: window.appSettings.cadets });
+                }
+                window.logAuditActivity('Cadet Graded', `Updated PUMMA Grades for: ${window.appSettings.cadets[cadetIndex].name}`, 'Assess System');
+            } catch (e) { console.error("Cloud save error", e); }
+
+            window.closeAssessModal();
+            window.customAlert("Grades saved successfully. The PU Generator has been updated.");
+        };
+
+        // --- PUMMA GRADE GENERATOR ENGINE ---
         window.openPummaGradesheet = () => {
             const m = document.getElementById('pumma-gradesheet-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            const tbody = document.getElementById('pumma-input-body');
-            if (tbody && tbody.innerHTML.trim() === '') { window.renderPummaInputRows(); }
-            window.switchGradeTab('input');
+            // Default to Prelim tab when opened
+            window.switchGradeTab('pre');
             if(window.lucide) window.lucide.createIcons();
         };
 
@@ -2471,33 +2537,33 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.getPummaData = () => {
             const data = [];
-            for (let i = 1; i <= 20; i++) {
-                const getVal = (term, type) => {
-                    let val = parseFloat(document.getElementById(`r${i}-${term}-${type}`).value) || 0;
-                    if (val > 98) val = 98; // Strict Cap at 98
-                    return val;
-                };
+            const cadets = window.appSettings.cadets || [];
 
-                const nameEl = document.getElementById(`r${i}-name`);
-                const name = nameEl ? nameEl.value.trim() : '';
-                if (!name) continue;
+            // Sort cadets alphabetically to perfectly match standard academic grade sheets
+            const sortedCadets = [...cadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-                const row = { no: i, name: name, terms: {}, sg: 0, remarks: '' };
+            sortedCadets.forEach((cadet, index) => {
+                // Pull the grades we saved via the Assess button
+                const g = cadet.pummaGrades || { pre:{cs:'',pt:''}, mid:{cs:'',pt:''}, sem:{cs:'',pt:''}, fin:{cs:'',pt:''} };
+
+                const row = { no: index + 1, name: cadet.name || 'Unknown Cadet', terms: {}, sg: 0, remarks: '' };
                 let totalFG = 0;
                 let computedTerms = 0;
 
                 ['pre', 'mid', 'sem', 'fin'].forEach(term => {
-                    let cs = getVal(term, 'cs');
-                    let pt = getVal(term, 'pt');
+                    let cs = parseFloat(g[term].cs);
+                    let pt = parseFloat(g[term].pt);
                     let fg = 0;
 
-                    if (cs > 0 || pt > 0) {
+                    if (!isNaN(cs) || !isNaN(pt)) {
+                        cs = isNaN(cs) ? 0 : cs;
+                        pt = isNaN(pt) ? 0 : pt;
                         fg = (cs * 0.6) + (pt * 0.4);
-                        if (fg > 98) fg = 98;
+                        if (fg > 98) fg = 98; // Final mathematical safety cap
                         totalFG += fg;
                         computedTerms++;
                     }
-                    row.terms[term] = { cs: cs, pt: pt, fg: fg };
+                    row.terms[term] = { cs: isNaN(cs) ? '' : cs, pt: isNaN(pt) ? '' : pt, fg: fg };
                 });
 
                 if (computedTerms > 0) {
@@ -2507,11 +2573,12 @@ window.logAdminSettingsActivity = async (action, details) => {
                     row.remarks = sg >= 75 ? 'PASSED' : 'FAILED';
                 }
                 data.push(row);
-            }
+            });
             return data;
         };
 
         window.switchGradeTab = (tabId) => {
+            // Update Tab Styles
             document.querySelectorAll('.grade-tab').forEach(t => {
                 t.classList.remove('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
                 t.classList.add('border-transparent', 'text-slate-600');
@@ -2522,14 +2589,8 @@ window.logAdminSettingsActivity = async (action, details) => {
                 activeTab.classList.remove('border-transparent', 'text-slate-600');
             }
 
-            if (tabId === 'input') {
-                document.getElementById('grade-view-input').classList.remove('hidden');
-                document.getElementById('grade-view-output').classList.add('hidden');
-            } else {
-                document.getElementById('grade-view-input').classList.add('hidden');
-                document.getElementById('grade-view-output').classList.remove('hidden');
-                window.generateOutputTable(tabId);
-            }
+            // Always generate the output table based on the active tab
+            window.generateOutputTable(tabId);
         };
 
         window.generateOutputTable = (tabId) => {
@@ -2538,11 +2599,11 @@ window.logAdminSettingsActivity = async (action, details) => {
             const title = document.getElementById('output-title');
             
             const courseSelect = document.getElementById('pumma-course-sec');
-            const courseText = courseSelect.options[courseSelect.selectedIndex].text;
-            const section = document.getElementById('pumma-section').value;
+            const courseText = courseSelect ? courseSelect.options[courseSelect.selectedIndex].text : 'Unknown Course';
+            const section = document.getElementById('pumma-section') ? document.getElementById('pumma-section').value : '';
 
             if (data.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data entered yet. Please go to 1. DATA ENTRY to begin.</div>`;
+                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data found. Please grade cadets using the 'Assess' button on their profiles first.</div>`;
                 title.innerText = "NO DATA";
                 return;
             }
@@ -2552,6 +2613,8 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             if (tabId === 'master') {
                 title.innerText = "MASTER GRADING SHEET (READY FOR EXCEL)";
+                
+                // Master Sheet Layout
                 html += `<thead style="background-color: #e2e8f0;"><tr>
                     <th>No.</th><th>NAME OF STUDENT</th>
                     <th>CS</th><th>PT</th><th>T</th><th>FG</th>
@@ -2566,11 +2629,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                     html += `<tr>`;
                     html += `<td>${d.no}</td>`;
                     html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`;
-                    html += `<td>${d.terms.pre.cs||''}</td><td>${d.terms.pre.pt||''}</td><td></td><td>${d.terms.pre.fg||''}</td>`;
-                    html += `<td>${d.terms.mid.cs||''}</td><td>${d.terms.mid.pt||''}</td><td></td><td>${d.terms.mid.fg||''}</td>`;
-                    html += `<td>${d.terms.sem.cs||''}</td><td>${d.terms.sem.pt||''}</td><td></td><td>${d.terms.sem.fg||''}</td>`;
-                    html += `<td>${d.terms.fin.cs||''}</td><td>${d.terms.fin.pt||''}</td><td></td><td>${d.terms.fin.fg||''}</td>`;
-                    html += `<td style="background-color: #f8fafc;">${d.sg||''}</td><td style="color:${rem==='P'?'green':'red'}; font-weight: bold;">${rem}</td>`;
+                    html += `<td>${d.terms.pre.cs||''}</td><td>${d.terms.pre.pt||''}</td><td></td><td>${d.terms.pre.fg > 0 ? d.terms.pre.fg.toFixed(1) : ''}</td>`;
+                    html += `<td>${d.terms.mid.cs||''}</td><td>${d.terms.mid.pt||''}</td><td></td><td>${d.terms.mid.fg > 0 ? d.terms.mid.fg.toFixed(1) : ''}</td>`;
+                    html += `<td>${d.terms.sem.cs||''}</td><td>${d.terms.sem.pt||''}</td><td></td><td>${d.terms.sem.fg > 0 ? d.terms.sem.fg.toFixed(1) : ''}</td>`;
+                    html += `<td>${d.terms.fin.cs||''}</td><td>${d.terms.fin.pt||''}</td><td></td><td>${d.terms.fin.fg > 0 ? d.terms.fin.fg.toFixed(1) : ''}</td>`;
+                    html += `<td style="background-color: #f8fafc;">${d.sg > 0 ? d.sg.toFixed(1) : ''}</td><td style="color:${rem==='P'?'green':'red'}; font-weight: bold;">${rem}</td>`;
                     html += `</tr>`;
                 });
             } else {
@@ -2578,6 +2641,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if(tabId === 'sem') tName = "SEMI-FINAL";
                 title.innerText = `${tName} GRADE SHEET (READY FOR EXCEL)`;
                 
+                // Exact Ghost Columns to map onto the PU Term Sheet Layout
                 html += `<thead style="background-color: #e2e8f0; font-size: 10px;"><tr>
                     <th>A</th><th>B</th><th>NAME (C)</th>
                     <th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th>
@@ -2589,6 +2653,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 data.forEach(d => {
                     let t = d.terms[tabId];
                     let termRem = t.fg >= 75 ? 'P' : (t.fg > 0 ? 'F' : ''); 
+                    
                     html += `<tr>`;
                     html += `<td></td><td></td>`; 
                     html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`; 
@@ -2597,7 +2662,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     html += `<td></td><td></td><td></td>`; 
                     html += `<td>${t.pt||''}</td>`; 
                     html += `<td></td><td></td><td></td>`; 
-                    html += `<td style="background-color: #f8fafc;">${t.fg||''}</td>`; 
+                    html += `<td style="background-color: #f8fafc;">${t.fg > 0 ? t.fg.toFixed(1) : ''}</td>`; 
                     html += `<td style="color:${termRem==='P'?'green':'red'}; font-weight: bold;">${termRem}</td>`; 
                     html += `</tr>`;
                 });
@@ -2605,6 +2670,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             html += `</tbody></table></div>`;
             
+            // Helper Instructions
             html += `<div class="mt-4 bg-emerald-50 border border-emerald-200 p-3 rounded text-emerald-800 text-xs shadow-sm">`;
             html += `<strong><i data-lucide="clipboard-paste" class="w-4 h-4 inline pb-0.5"></i> Excel Paste Instructions:</strong><br>`;
             html += `<ol class="list-decimal ml-5 mt-1 space-y-1">`;
@@ -2633,50 +2699,6 @@ window.logAdminSettingsActivity = async (action, details) => {
                 window.customAlert("Copy failed. Please manually highlight the table and press Ctrl+C.");
             }
             selection.removeAllRanges();
-        };
-
-        window.savePummaGrades = async () => {
-            const gradesData = [];
-            for (let i = 1; i <= 20; i++) {
-                const nameInput = document.getElementById(`r${i}-name`);
-                gradesData.push({
-                    name: nameInput ? nameInput.value.trim() : '',
-                    pre: { cs: document.getElementById(`r${i}-pre-cs`).value, pt: document.getElementById(`r${i}-pre-pt`).value },
-                    mid: { cs: document.getElementById(`r${i}-mid-cs`).value, pt: document.getElementById(`r${i}-mid-pt`).value },
-                    sem: { cs: document.getElementById(`r${i}-sem-cs`).value, pt: document.getElementById(`r${i}-sem-pt`).value },
-                    fin: { cs: document.getElementById(`r${i}-fin-cs`).value, pt: document.getElementById(`r${i}-fin-pt`).value }
-                });
-            }
-            window.appSettings = window.appSettings || {};
-            window.appSettings.pummaGrades = gradesData;
-            try {
-                if (typeof updateDoc !== 'undefined') {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { pummaGrades: gradesData });
-                }
-            } catch (e) {}
-            window.customAlert("Grade Data saved securely.");
-        };
-
-        window.renderPummaInputRows = () => {
-            let html = '';
-            const savedGrades = (window.appSettings && window.appSettings.pummaGrades) ? window.appSettings.pummaGrades : [];
-            for(let i=1; i<=20; i++) {
-                const row = savedGrades[i-1] || { name: '', pre: {cs:'', pt:''}, mid: {cs:'', pt:''}, sem: {cs:'', pt:''}, fin: {cs:'', pt:''} };
-                const generateTermCells = (term) => `
-                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-cs" value="${row[term]?.cs || ''}" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-2 font-medium" min="0" max="98"></td>
-                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-pt" value="${row[term]?.pt || ''}" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-2 font-medium" min="0" max="98"></td>
-                `;
-                html += `
-                <tr class="hover:bg-slate-50 transition border-b border-slate-300 group">
-                    <td class="border-r border-slate-300 text-center font-bold text-slate-400 bg-slate-100">${i}</td>
-                    <td class="border-r border-slate-300 p-0"><input type="text" id="r${i}-name" value="${row.name || ''}" class="w-full h-full outline-none px-2 py-2 focus:bg-emerald-100 font-bold text-slate-800" placeholder="Cadet Name..."></td>
-                    ${generateTermCells('pre')}
-                    ${generateTermCells('mid')}
-                    ${generateTermCells('sem')}
-                    ${generateTermCells('fin')}
-                </tr>`;
-            }
-            document.getElementById('pumma-input-body').innerHTML = html;
         };
         // --- CADET UI LOGIC ---
         window.openUniformModal = () => {
