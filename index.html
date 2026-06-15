@@ -790,99 +790,121 @@
     <div id="analytics-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-5xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="pie-chart" class="text-brand-green w-5 h-5"></i> Class Analytics & Trends</h3><button onclick="closeAnalyticsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Competency Ratio (3rd vs 4th Class)</h4><div class="relative h-64 w-full"><canvas id="passFailChart"></canvas></div></div><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Final Grade Distribution (All Classes)</h4><div class="relative h-64 w-full"><canvas id="distributionChart"></canvas></div></div><div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-brand-creamBorder dark:border-slate-700 shadow-sm lg:col-span-2"><h4 class="text-xs font-bold text-center text-slate-600 dark:text-slate-300 uppercase mb-4 border-b dark:border-slate-700 pb-2">Average Academic GWA by Section</h4><div class="relative h-64 w-full"><canvas id="sectionGwaChart"></canvas></div></div></div></div></div>
     
     <div id="formulas-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
-                <div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calculator" class="text-brand-green w-5 h-5"></i> Grading Computation Matrix</h3></div>
+                <div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calculator" class="text-brand-green w-5 h-5"></i> Competency Grading Matrix & Rubrics</h3></div>
                 <button onclick="closeFormulasModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-300 space-y-6">
+                
                 <div>
-                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">1. Overall Rating Equation</h4>
-                    <p class="mb-2">The final rating is derived using a weighted sum model scaled to a maximum of 5.0:</p>
-                    <div class="bg-brand-creamBg dark:bg-slate-900 p-4 rounded-lg border border-brand-creamBorder dark:border-slate-700 text-center font-mono font-bold text-[13px] md:text-sm overflow-x-auto whitespace-nowrap text-brand-blue dark:text-blue-300">R<sub>final</sub> = (CS<sub>acad</sub> &times; 0.10) + (CS<sub>lead</sub> &times; 0.25) + (CS<sub>pat</sub> &times; 0.25) + (CS<sub>soft</sub> &times; 0.25) + (CS<sub>tech</sub> &times; 0.15)</div>
-                </div>
-                <div>
-                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">2. Component Score (CS) Matrices</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 bg-brand-green text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg">UPDATED</div>
-                            <h5 class="font-bold text-brand-blue dark:text-white mb-2 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Academic (CS<sub>acad</sub>)</h5>
-                            <p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-2 border dark:border-slate-600 rounded">Evaluated dynamically based on the <strong>Mean Average GWA</strong> of the 1st, 2nd, and 3rd Semesters. Empty or 0.0 inputs are automatically excluded from the average.</p>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs font-mono mb-2">
-                                <li>Mean GWA &ge; 90.0 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li>
-                                <li>85.0 &le; Mean GWA &lt; 90.0 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li>
-                                <li>Mean GWA &lt; 85.0 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">3.0</span></li>
-                            </ul>
-                            <p class="text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-900/20 p-1.5 rounded flex items-start gap-1"><i data-lucide="star" class="w-3 h-3 shrink-0 mt-0.5"></i> Star Cadets automatically receive a perfect 5.0 Academic CS regardless of standard brackets.</p>
-                        </div>
-                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-                            <h5 class="font-bold text-brand-blue dark:text-white mb-2 flex items-center gap-2"><i data-lucide="award" class="w-4 h-4"></i> Leadership (CS<sub>lead</sub>)</h5>
-                            <p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-2 border dark:border-slate-600 rounded">Determined by the Cadet's rank and responsibilities assigned during duties.</p>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs font-mono">
-                                <li>Corps of Midshipmen Officer &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li>
-                                <li>Standard Cadet &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">3.0</span></li>
-                            </ul>
-                        </div>
-                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-                            <h5 class="font-bold text-brand-blue dark:text-white mb-2 flex items-center gap-2"><i data-lucide="flag" class="w-4 h-4"></i> Patriotism (CS<sub>pat</sub>)</h5>
-                            <p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-1 border dark:border-slate-600 rounded">Ratio (P) = Cum. Merits &divide; Benchmark Merits</p>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs font-mono">
-                                <li>P &ge; 0.75 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li>
-                                <li>0.50 &le; P &lt; 0.75 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li>
-                                <li>0.25 &le; P &lt; 0.50 &rarr; <span class="font-bold text-teal-600 dark:text-teal-400">3.0</span></li>
-                                <li>0.01 &le; P &lt; 0.25 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">2.0</span></li>
-                                <li>P &lt; 0.01 &rarr; <span class="font-bold text-red-600 dark:text-red-500">1.0</span></li>
-                            </ul>
-                        </div>
-                        <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-                            <h5 class="font-bold text-brand-blue dark:text-white mb-2 flex items-center gap-2"><i data-lucide="wrench" class="w-4 h-4"></i> Technical Core (CS<sub>tech</sub>)</h5>
-                            <p class="text-[10px] mb-2 font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 p-1 border dark:border-slate-600 rounded">Ratio (T) = Passed Tech Tasks &divide; Total Tech Tasks</p>
-                            <ul class="list-disc pl-5 space-y-1.5 text-xs font-mono">
-                                <li>T &ge; 0.90 &rarr; <span class="font-bold text-brand-green dark:text-green-400">5.0</span></li>
-                                <li>0.80 &le; T &lt; 0.90 &rarr; <span class="font-bold text-brand-blue dark:text-blue-400">4.0</span></li>
-                                <li>0.70 &le; T &lt; 0.80 &rarr; <span class="font-bold text-teal-600 dark:text-teal-400">3.0</span></li>
-                                <li>0.60 &le; T &lt; 0.70 &rarr; <span class="font-bold text-amber-600 dark:text-amber-500">2.0</span></li>
-                                <li>T &lt; 0.60 &rarr; <span class="font-bold text-red-600 dark:text-red-500">1.0</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">3. Soft Skills & Watchkeeping Integration</h4>
-                    <p class="text-xs mb-2 leading-relaxed">The Soft Skills score (CS<sub>soft</sub>) is a hybrid metric averaging the completion rate of the Soft Tasks Checklist and the Daily Logbook Submission Rate for active graded months.</p>
-                    <div class="bg-brand-creamBg dark:bg-slate-900 p-3 rounded-lg border border-brand-creamBorder dark:border-slate-700 text-center font-mono font-bold text-brand-blue dark:text-blue-300 flex items-center justify-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5"></i> CS<sub>soft</sub> = &lceil; (Soft Task Rating + Logbook Rating) &divide; 2 &rceil;</div>
-                </div>
-                <div>
-                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">4. Bonus Enhancements & Special Honors</h4>
+                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">1. Panpacific University Standard Grading Equation</h4>
+                    <p class="mb-2 text-xs">The final rating perfectly aligns the regimental dashboard with the official 60/40 university format for Competency Appraisals 1 & 2:</p>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                            <h5 class="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-2"><i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i> Star Cadet System</h5>
-                            <p class="text-[10px] text-amber-800 dark:text-amber-200 mb-2">Reserved for cadets exhibiting outstanding academic excellence.</p>
-                            <ul class="text-[10px] space-y-1 text-amber-700 dark:text-amber-300 font-medium">
-                                <li>• <strong>Condition:</strong> Must achieve a <span class="font-bold">90.0+ Mean GWA</span> across active semesters.</li>
-                                <li>• <strong>Benefit 1:</strong> Grants an automatic perfect <span class="font-bold text-brand-green">5.0</span> Academic CS.</li>
-                                <li>• <strong>Benefit 2:</strong> Grants a flat <span class="font-bold text-brand-green">+2.0% Bonus</span> to their final grade.</li>
-                            </ul>
+                        <div class="bg-brand-blue-glow dark:bg-blue-900/20 p-4 rounded-lg border border-brand-blue/30 text-center shadow-sm">
+                            <span class="block text-[10px] font-bold text-brand-blue dark:text-blue-400 uppercase tracking-widest mb-2">Class Standing (CS)</span>
+                            <div class="font-mono font-bold text-sm text-brand-black dark:text-white leading-relaxed">
+                                (Mockboat &times; 0.50)<br>+<br>(Logbooks &times; 0.25)<br>+<br>(Patriotism &times; 0.25)
+                            </div>
                         </div>
-                        <div class="bg-brand-green-glow dark:bg-green-900/20 border border-brand-green/30 rounded-lg p-4">
-                            <h5 class="font-bold text-brand-green flex items-center gap-2 mb-2"><i data-lucide="trending-up" class="w-4 h-4"></i> Excess Merits Bonus</h5>
-                            <p class="text-[10px] text-slate-600 dark:text-slate-300 mb-2">Automatically applied when a cadet's total merits exceed the max limit.</p>
-                            <ul class="text-[10px] space-y-1 text-brand-green dark:text-green-400 font-medium">
-                                <li>• <strong>Condition:</strong> Cumulative Merits exceed the Max Score Cap.</li>
-                                <li>• <strong>Conversion:</strong> Every 10 excess merits directly adds <span class="font-bold text-brand-blue">+<span id="formula-bonus-rate">0.5</span>%</span> to the final specific grade percentage.</li>
-                            </ul>
+                        <div class="bg-rose-50 dark:bg-rose-900/20 p-4 rounded-lg border border-rose-200 dark:border-rose-900 text-center shadow-sm flex flex-col justify-center">
+                            <span class="block text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-2">Periodical Test (PT)</span>
+                            <div class="font-mono font-bold text-sm text-brand-black dark:text-white leading-relaxed">
+                                ICPE / Major Practical Exam<br>(100% of PT)
+                            </div>
                         </div>
-                        <div class="bg-brand-creamAccent dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-4">
-                            <h5 class="font-bold text-brand-blue dark:text-blue-300 flex items-center gap-2 mb-2"><i data-lucide="plus-circle" class="w-4 h-4"></i> Individual Extra Merits</h5>
-                            <p class="text-[10px] text-slate-600 dark:text-slate-300 mb-2">Manual override applied by Instructors for extraordinary performance.</p>
-                            <ul class="text-[10px] space-y-1 text-slate-500 dark:text-slate-400 font-medium">
-                                <li>• <strong>Condition:</strong> Awarded at the sole discretion of the Intelligence & Security Officer or Dean.</li>
-                                <li>• <strong>Benefit:</strong> The inputted percentage is added directly on top of the calculated final grade.</li>
-                            </ul>
+                        <div class="bg-brand-green-glow dark:bg-green-900/20 p-4 rounded-lg border border-brand-green/30 text-center shadow-sm flex flex-col justify-center">
+                            <span class="block text-[10px] font-bold text-brand-green dark:text-green-400 uppercase tracking-widest mb-2">Final Grade (FG)</span>
+                            <div class="font-mono font-bold text-lg text-brand-black dark:text-white leading-relaxed">
+                                (CS &times; 0.60)<br>+<br>(PT &times; 0.40)
+                            </div>
                         </div>
                     </div>
-                    <div class="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800 text-center font-mono font-bold shadow-sm">Final Specific Grade = Base % Grade + Star Bonus (if applicable) + Individual Bonus %</div>
                 </div>
+
+                <div>
+                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">2. Performance Appraisal Rubrics</h4>
+                    <div class="overflow-x-auto rounded-lg border border-brand-creamBorder dark:border-slate-700 shadow-sm">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-brand-creamAccent dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3 border-b border-r border-brand-creamBorder dark:border-slate-700 w-1/4">Assessment Area</th>
+                                    <th class="p-3 border-b border-r border-brand-creamBorder dark:border-slate-700 text-brand-green dark:text-green-400">Excellent (90-100)</th>
+                                    <th class="p-3 border-b border-r border-brand-creamBorder dark:border-slate-700 text-brand-blue dark:text-blue-400">Satisfactory (80-89)</th>
+                                    <th class="p-3 border-b border-brand-creamBorder dark:border-slate-700 text-red-600 dark:text-red-400">Needs Improvement (&lt;80)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-creamBorder dark:divide-slate-700 bg-white dark:bg-slate-800 font-medium">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700">
+                                        <strong class="text-brand-black dark:text-white block">Mockboat Duties</strong>
+                                        <span class="text-[10px] text-slate-500 block">(50% of CS)</span>
+                                        <span class="text-[9px] text-brand-blue bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded mt-1 inline-block border border-blue-200 dark:border-blue-800">Tables A-II/5, A-II/1</span>
+                                    </td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Exceptional surface prep (chipping/painting). Masterful knot tying & mooring. Perfect 5S workspace discipline and watchkeeping (lookout/helm orders) without hesitation.</td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Good surface prep with minor flaws. Capable knot tying but requires slight correction. Maintains acceptable workspace organization and watchkeeping standards.</td>
+                                    <td class="p-3 text-slate-600 dark:text-slate-300">Poor tool handling or incomplete chipping. Fails to execute standard knots. Workspace is disorganized; hesitates frequently during helm or lookout duties.</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700">
+                                        <strong class="text-brand-black dark:text-white block">Logbook Recording</strong>
+                                        <span class="text-[10px] text-slate-500 block">(25% of CS)</span>
+                                        <span class="text-[9px] text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded mt-1 inline-block border border-emerald-200 dark:border-emerald-800">Truth Outcome / MARPOL</span>
+                                    </td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Radical transparency. Entries in Deck Log and Garbage Record Book are perfectly legible, strictly accurate, and utilize precise SMCP terminology.</td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Entries are generally accurate and legible. Uses acceptable communication but occasionally defaults to informal phrasing instead of SMCP.</td>
+                                    <td class="p-3 text-slate-600 dark:text-slate-300">Logbook is missing critical entries, illegible, or mathematically inaccurate. Fails to document simulated waste disposal per MARPOL standards.</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700">
+                                        <strong class="text-brand-black dark:text-white block">Patriotism & Merits</strong>
+                                        <span class="text-[10px] text-slate-500 block">(25% of CS)</span>
+                                        <span class="text-[9px] text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded mt-1 inline-block border border-amber-200 dark:border-amber-800">Service & Compassion</span>
+                                    </td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Zero demerits. Strict adherence to full PPE. Exemplary chain of command observance and peer leadership during drills.</td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Minor uniform or procedural infractions quickly corrected. Generally follows chain of command and actively participates in drills.</td>
+                                    <td class="p-3 text-slate-600 dark:text-slate-300">Incurs active demerits. Enters work area without proper PPE. Shows disrespect toward Student Officers or lacks urgency during signals.</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700">
+                                        <strong class="text-brand-black dark:text-white block">ICPE / Major Exam</strong>
+                                        <span class="text-[10px] text-slate-500 block">(100% of PT)</span>
+                                        <span class="text-[9px] text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.5 rounded mt-1 inline-block border border-rose-200 dark:border-rose-800">Summative Assessment</span>
+                                    </td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Flawless execution of mandatory emergency drills (Fire, Abandon Ship) within time limits. Deep understanding of theoretical standards.</td>
+                                    <td class="p-3 border-r border-brand-creamBorder dark:border-slate-700 text-slate-600 dark:text-slate-300">Passes emergency drills within acceptable margins. Understands basic theoretical concepts but requires minor prompting.</td>
+                                    <td class="p-3 text-slate-600 dark:text-slate-300">Fails to don LSA within limits. Cannot identify emergency station bill duties or fails to rig pilot ladders safely.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-brand-green border-b border-brand-creamBorder dark:border-slate-700 pb-1 mb-3">3. Major Course GWA Integration</h4>
+                    <p class="text-xs mb-3 leading-relaxed text-slate-600 dark:text-slate-400">
+                        To integrate other major academic courses without corrupting the strict STCW practical grading of the Mockboat duties, the cadet's <strong>Mean GWA</strong> across all semesters serves as an overarching modifier for Regimental Honors, separate from the Base CA1/CA2 formula.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 shadow-sm">
+                            <h5 class="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-2"><i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i> Star Cadet (GWA 90+)</h5>
+                            <p class="text-[10px] text-amber-800 dark:text-amber-200 mb-2">Applied globally to top academic achievers.</p>
+                            <ul class="text-[10px] space-y-1 text-amber-700 dark:text-amber-300 font-medium">
+                                <li>• <strong>Condition:</strong> Must achieve a Mean GWA of 90+ across all major courses.</li>
+                                <li>• <strong>Dashboard Benefit:</strong> Grants a flat <span class="font-bold text-brand-green">+2.0% Bonus</span> directly on top of the calculated Competency Appraisal Final Grade.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-4 shadow-sm flex flex-col justify-center">
+                            <h5 class="font-bold text-brand-blue dark:text-blue-400 flex items-center gap-2 mb-2"><i data-lucide="calculator" class="w-4 h-4"></i> Extracted Metric</h5>
+                            <p class="text-[10px] text-slate-600 dark:text-slate-400 mb-2">Minor subjects (PE, NSTP) are strictly excluded from this mean GWA calculation.</p>
+                            <div class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-500 bg-white dark:bg-slate-800 border dark:border-slate-700 p-2 rounded text-center shadow-sm">
+                                Overall Rank = Base CA Final Grade + GWA Modifier
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
