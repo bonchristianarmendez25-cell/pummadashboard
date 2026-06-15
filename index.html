@@ -102,6 +102,7 @@
                 <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
                 <button onclick="event.stopPropagation(); openUniformModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="shirt" class="w-3.5 h-3.5 hidden sm:block"></i> Uniform Regs</button>
                 <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
+                <button onclick="event.stopPropagation(); openColregsModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="scale" class="w-3.5 h-3.5 hidden sm:block"></i> COLREGs</button>
                 <div class="hidden lg:block w-px h-4 bg-amber-300 dark:bg-amber-700 mx-1"></div>
                 <span class="text-[10px] opacity-70 hover:opacity-100 transition hidden lg:block shrink-0 uppercase tracking-wider">View Board <i data-lucide="arrow-right" class="w-3 h-3 inline pb-0.5"></i></span>
             </div>
@@ -1096,6 +1097,29 @@
 
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <div id="colregs-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-5xl w-full h-[85vh] flex flex-col md:flex-row shadow-2xl overflow-hidden">
+            
+            <div class="w-full md:w-64 bg-slate-900 flex flex-col shrink-0 border-r border-slate-700">
+                <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+                    <h3 class="font-bold text-teal-400 text-sm flex items-center gap-2 uppercase tracking-wide">
+                        <i data-lucide="scale" class="w-5 h-5"></i> COLREGs 1972
+                    </h3>
+                    <button onclick="closeColregsModal()" class="md:hidden text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar" id="colregs-nav">
+                    </div>
+            </div>
+
+            <div class="flex-1 flex flex-col bg-brand-creamBg dark:bg-slate-950 relative">
+                <button onclick="closeColregsModal()" class="hidden md:block absolute top-4 right-4 text-slate-400 hover:text-brand-blue dark:hover:text-teal-400 transition bg-white dark:bg-slate-800 p-1 rounded-md shadow-sm border border-brand-creamBorder dark:border-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar" id="colregs-content">
+                    </div>
+            </div>
+
         </div>
     </div>
     
@@ -2108,6 +2132,66 @@ window.logAdminSettingsActivity = async (action, details) => {
             btn.innerHTML = originalText;
             if (window.lucide) window.lucide.createIcons();
         };
+        
+        // --- COLREGS DIGITAL LIBRARY ENGINE ---
+        window.colregsDatabase = [
+            { id: "intro", title: "Introduction & Scope", part: "Overview", text: "<h2 class='text-2xl font-serif font-bold text-brand-blue dark:text-teal-400 mb-4'>COLREGs 1972</h2><p class='text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4'>The International Regulations for Preventing Collisions at Sea 1972 (COLREGs) are published by the International Maritime Organization (IMO) and set out the 'rules of the road' or navigation rules to be followed by ships and other vessels at sea to prevent collisions.</p><p class='text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-bold'>Select a rule from the navigation menu on the left to review the official text.</p>" },
+            { id: "r5", title: "Rule 5: Look-out", part: "Steering & Sailing (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 5: Look-out</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'>Every vessel shall at all times maintain a proper look-out by sight and hearing as well as by all available means appropriate in the prevailing circumstances and conditions so as to make a full appraisal of the situation and of the risk of collision.</div>" },
+            { id: "r6", title: "Rule 6: Safe Speed", part: "Steering & Sailing (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 6: Safe Speed</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'>Every vessel shall at all times proceed at a safe speed so that she can take proper and effective action to avoid collision and be stopped within a distance appropriate to the prevailing circumstances and conditions.</div>" },
+            { id: "r7", title: "Rule 7: Risk of Collision", part: "Steering & Sailing (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 7: Risk of Collision</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p class='mb-3'><strong>(a)</strong> Every vessel shall use all available means appropriate to the prevailing circumstances and conditions to determine if risk of collision exists. If there is any doubt such risk shall be deemed to exist.</p><p class='mb-3'><strong>(b)</strong> Proper use shall be made of radar equipment if fitted and operational, including long-range scanning to obtain early warning of risk of collision.</p><p><strong>(d)</strong> In determining if risk of collision exists the following considerations shall be among those taken into account:<br> (i) such risk shall be deemed to exist if the compass bearing of an approaching vessel does not appreciably change.</p></div>" },
+            { id: "r8", title: "Rule 8: Action to Avoid", part: "Steering & Sailing (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 8: Action to avoid collision</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p class='mb-3'><strong>(a)</strong> Any action taken to avoid collision shall be taken in accordance with the Rules of this Part and shall, if the circumstances of the case admit, be positive, made in ample time and with due regard to the observance of good seamanship.</p><p><strong>(b)</strong> Any alteration of course and/or speed to avoid collision shall, if the circumstances of the case admit, be large enough to be readily apparent to another vessel observing visually or by radar; a succession of small alterations of course and/or speed should be avoided.</p></div>" },
+            { id: "r13", title: "Rule 13: Overtaking", part: "Vessels in Sight (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 13: Overtaking</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p class='mb-3'><strong>(a)</strong> Notwithstanding anything contained in the Rules of Part B, Sections I and II, any vessel overtaking any other shall keep out of the way of the vessel being overtaken.</p><p class='mb-3'><strong>(b)</strong> A vessel shall be deemed to be overtaking when coming up with another vessel from a direction more than 22.5 degrees abaft her beam, that is, in such a position with reference to the vessel she is overtaking, that at night she would be able to see only the sternlight of that vessel but neither of her sidelights.</p><p><strong>(d)</strong> Any subsequent alteration of the bearing between the two vessels shall not make the overtaking vessel a crossing vessel within the meaning of these Rules or relieve her of the duty of keeping clear of the overtaken vessel until she is finally past and clear.</p></div>" },
+            { id: "r14", title: "Rule 14: Head-on", part: "Vessels in Sight (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 14: Head-on Situation</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p class='mb-3'><strong>(a)</strong> When two power-driven vessels are meeting on reciprocal or nearly reciprocal courses so as to involve risk of collision each shall alter her course to starboard so that each shall pass on the port side of the other.</p><p class='mb-3'><strong>(b)</strong> Such a situation shall be deemed to exist when a vessel sees the other ahead or nearly ahead and by night she could see the masthead lights of the other in a line or nearly in a line and/or both sidelights and by day she observes the corresponding aspect of the other vessel.</p><p><strong>(c)</strong> When a vessel is in any doubt as to whether such a situation exists she shall assume that it does exist and act accordingly.</p></div>" },
+            { id: "r15", title: "Rule 15: Crossing", part: "Vessels in Sight (Part B)", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 15: Crossing Situation</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p>When two power-driven vessels are crossing so as to involve risk of collision, the vessel which has the other on her own starboard side shall keep out of the way and shall, if the circumstances of the case admit, avoid crossing ahead of the other vessel.</p></div>" },
+            { id: "r19", title: "Rule 19: Restricted Vis.", part: "Restricted Visibility", text: "<h2 class='text-xl font-bold text-brand-blue dark:text-teal-400 mb-4'>Rule 19: Conduct of Vessels in Restricted Visibility</h2><div class='p-5 bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 leading-relaxed shadow-sm font-medium'><p class='mb-3'><strong>(a)</strong> This Rule applies to vessels not in sight of one another when navigating in or near an area of restricted visibility.</p><p class='mb-3'><strong>(b)</strong> Every vessel shall proceed at a safe speed adapted to the prevailing circumstances and conditions of restricted visibility. A power-driven vessel shall have her engines ready for immediate manoeuvre.</p><p><strong>(e)</strong> Except where it has been determined that a risk of collision does not exist, every vessel which hears apparently forward of her beam the fog signal of another vessel, or which cannot avoid a close-quarters situation with another vessel forward of her beam, shall reduce her speed to the minimum at which she can be kept on her course. She shall if necessary take all her way off and in any event navigate with extreme caution until danger of collision is over.</p></div>" }
+        ];
+
+        window.openColregsModal = () => {
+            const m = document.getElementById('colregs-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            
+            const nav = document.getElementById('colregs-nav');
+            if (nav && nav.innerHTML.trim() === '') {
+                let currentPart = '';
+                let html = '';
+                window.colregsDatabase.forEach(rule => {
+                    if (rule.part !== currentPart) {
+                        html += `<div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 mt-3 mb-1">${rule.part}</div>`;
+                        currentPart = rule.part;
+                    }
+                    html += `<button onclick="loadColregRule('${rule.id}')" id="btn-colreg-${rule.id}" class="colreg-nav-btn w-full text-left px-3 py-2 rounded text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">${rule.title}</button>`;
+                });
+                nav.innerHTML = html;
+                window.loadColregRule('intro'); 
+            }
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeColregsModal = () => {
+            const m = document.getElementById('colregs-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.loadColregRule = (id) => {
+            document.querySelectorAll('.colreg-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-900/40', 'text-teal-400', 'border-l-2', 'border-teal-400');
+                btn.classList.add('text-slate-400');
+            });
+            const activeBtn = document.getElementById(`btn-colreg-${id}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-teal-900/40', 'text-teal-400', 'border-l-2', 'border-teal-400');
+                activeBtn.classList.remove('text-slate-400');
+            }
+
+            const rule = window.colregsDatabase.find(r => r.id === id);
+            const content = document.getElementById('colregs-content');
+            if (content && rule) {
+                content.innerHTML = rule.text;
+                content.scrollTo(0, 0); 
+            }
+        };
+
+        window.openUniformModal = () => {
 
         // --- CADET UI LOGIC ---
 
