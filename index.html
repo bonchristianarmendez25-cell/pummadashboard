@@ -103,6 +103,7 @@
                 <button onclick="event.stopPropagation(); openUniformModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="shirt" class="w-3.5 h-3.5 hidden sm:block"></i> Uniform Regs</button>
                 <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
                 <button onclick="event.stopPropagation(); openColregsModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="scale" class="w-3.5 h-3.5 hidden sm:block"></i> COLREGs</button>
+                <button onclick="event.stopPropagation(); openLawLibrary('SOLAS')" class="bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="library" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime Law</button>
                 <button onclick="event.stopPropagation(); openSolasModal()" class="bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="life-buoy" class="w-3.5 h-3.5 hidden sm:block"></i> SOLAS</button>
                 <div class="hidden lg:block w-px h-4 bg-amber-300 dark:bg-amber-700 mx-1"></div>
                 <span class="text-[10px] opacity-70 hover:opacity-100 transition hidden lg:block shrink-0 uppercase tracking-wider">View Board <i data-lucide="arrow-right" class="w-3 h-3 inline pb-0.5"></i></span>
@@ -1142,6 +1143,35 @@
                 <button onclick="closeSolasModal()" class="hidden md:block absolute top-4 right-4 text-slate-400 hover:text-brand-blue dark:hover:text-violet-400 transition bg-white dark:bg-slate-800 p-1 rounded-md shadow-sm border border-brand-creamBorder dark:border-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
                 <div class="p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar" id="solas-content">
                     </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div id="law-library-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-7xl w-full h-[95vh] flex flex-col md:flex-row shadow-2xl overflow-hidden">
+
+            <div class="w-full md:w-64 bg-slate-900 flex flex-col shrink-0 border-r border-slate-700">
+                <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+                    <h3 class="font-bold text-violet-400 text-sm flex items-center gap-2 uppercase tracking-wide">
+                        <i data-lucide="library" class="w-5 h-5"></i> Maritime Law
+                    </h3>
+                    <button onclick="closeLawLibrary()" class="md:hidden text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">The Big Four</div>
+                    <button onclick="loadLawPdf('SOLAS')" id="btn-law-SOLAS" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">SOLAS <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
+                    <button onclick="loadLawPdf('MARPOL')" id="btn-law-MARPOL" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">MARPOL <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
+                    <button onclick="loadLawPdf('STCW')" id="btn-law-STCW" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">STCW <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
+                    <button onclick="loadLawPdf('MLC')" id="btn-law-MLC" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">MLC 2006 <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col bg-slate-300 dark:bg-slate-950 relative">
+                <button onclick="closeLawLibrary()" class="hidden md:flex absolute top-4 right-6 text-slate-400 hover:text-rose-500 transition bg-white/10 hover:bg-white/90 p-2 rounded-full shadow-lg backdrop-blur-sm z-10"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <div class="flex-1 w-full h-full relative" id="law-pdf-container">
+                    <iframe id="law-pdf-viewer" src="" class="w-full h-full border-none shadow-inner bg-white" title="Maritime Law PDF Viewer"></iframe>
+                </div>
             </div>
 
         </div>
@@ -2387,6 +2417,48 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (content && rule) {
                 content.innerHTML = rule.text;
                 content.scrollTo(0, 0); 
+            }
+        };
+
+        // --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
+        window.lawDocuments = {
+            'SOLAS': 'SOLAS.pdf',
+            'MARPOL': 'MARPOL.pdf',
+            'STCW': 'STCW.pdf',
+            'MLC': 'MLC.pdf'
+        };
+
+        window.openLawLibrary = (defaultDoc = 'SOLAS') => {
+            const m = document.getElementById('law-library-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window.loadLawPdf(defaultDoc);
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeLawLibrary = () => {
+            const m = document.getElementById('law-library-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            // Clear memory when closed to keep the dashboard fast
+            document.getElementById('law-pdf-viewer').src = ''; 
+        };
+
+        window.loadLawPdf = (docKey) => {
+            // Update active button color in sidebar
+            document.querySelectorAll('.law-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-violet-900/40', 'text-violet-400', 'border-l-4', 'border-violet-400');
+                btn.classList.add('text-slate-400');
+            });
+            const activeBtn = document.getElementById(`btn-law-${docKey}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-violet-900/40', 'text-violet-400', 'border-l-4', 'border-violet-400');
+                activeBtn.classList.remove('text-slate-400');
+            }
+
+            const viewer = document.getElementById('law-pdf-viewer');
+            if (window.lawDocuments[docKey]) {
+                // Construct the path to the PDF inside your docs folder
+                // Adding toolbar=0 keeps the viewer clean, but users can still scroll/search natively
+                viewer.src = `docs/${window.lawDocuments[docKey]}#view=FitH&toolbar=1`;
             }
         };
 
