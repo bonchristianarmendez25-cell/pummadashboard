@@ -1177,82 +1177,82 @@
         </div>
     </div>
     
-    <div id="assess-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-[80] p-4 no-print">
-        <div class="bg-slate-50 border border-slate-300 rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+    <div id="assess-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-[80] p-4 no-print">
+        <div class="bg-white border border-slate-400 rounded-xl max-w-7xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
             
             <div class="bg-slate-900 p-4 border-b border-slate-700 flex items-center justify-between shrink-0">
                 <div>
                     <h3 class="font-black text-white text-lg flex items-center gap-2 tracking-wide uppercase">
-                        <i data-lucide="layout-dashboard" class="text-emerald-400 w-5 h-5"></i> Academic Matrix
+                        <i data-lucide="compass" class="text-amber-400 w-5 h-5"></i> Regimental Competency Auto-Converter
                     </h3>
-                    <p class="text-slate-400 text-xs mt-0.5">Cadet: <span id="assess-cadet-name" class="text-emerald-300 font-bold text-sm ml-1"></span></p>
+                    <p class="text-slate-400 text-xs mt-0.5">Cadet Profile: <span id="assess-cadet-name" class="text-amber-300 font-bold text-sm ml-1 uppercase"></span></p>
                 </div>
                 <button onclick="closeAssessModal()" class="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-md"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="p-5 overflow-y-auto custom-scrollbar flex-1">
-                <div class="mb-5 text-xs text-slate-700 bg-white p-3 rounded shadow-sm border border-slate-200 flex gap-3 items-center">
-                    <i data-lucide="info" class="w-8 h-8 shrink-0 text-emerald-600"></i>
-                    <p><strong>Dashboard Rubric Engine:</strong> Enter raw scores (Max 98) for sub-components. The engine averages Quizzes, Activities, and Participation to formulate the <strong>Class Standing (60%)</strong>. It maps the Term Exam directly to the <strong>Periodical Test (40%)</strong>. Final Grades are strictly capped at 98 per academic protocol.</p>
+            <div class="flex flex-col lg:flex-row overflow-hidden flex-1">
+                
+                <div class="lg:w-1/3 bg-slate-800 p-6 overflow-y-auto custom-scrollbar border-r border-slate-700 shrink-0">
+                    <h4 class="font-black text-amber-400 text-sm uppercase tracking-widest border-b border-slate-600 pb-2 mb-4"><i data-lucide="presentation" class="w-4 h-4 inline pb-0.5"></i> Appraisal Bulletin Board</h4>
+                    
+                    <div class="space-y-4 text-xs text-slate-300">
+                        <div class="bg-slate-900/50 p-3 rounded border border-slate-700 shadow-inner">
+                            <h5 class="font-bold text-emerald-400 mb-1">The Practical Transformation</h5>
+                            <p>Competency Appraisal (PIC 136 & 267) is measured through practical application, not theoretical exams. This engine takes real regimental data and mathematically converts it into the Panpacific University (PU) Grade Format.</p>
+                        </div>
+
+                        <div class="bg-blue-900/20 p-3 rounded border border-blue-800/50">
+                            <h5 class="font-bold text-blue-400 mb-1">Class Standing (CS) Conversion (60%)</h5>
+                            <p class="mb-1 text-[10px] italic">CS represents routine consistency & discipline.</p>
+                            <ul class="list-disc pl-4 space-y-1 text-[11px] font-medium text-blue-200">
+                                <li><strong>Daily Logbooks (30%):</strong> Consistency in recording tasks.</li>
+                                <li><strong>Events & Formations (30%):</strong> Attendance at flag ceremonies, musters.</li>
+                                <li><strong>Behavior/Merits (40%):</strong> Base 100 score modified by Merits/Demerits.</li>
+                            </ul>
+                            <div class="mt-2 bg-slate-900 p-1.5 rounded text-center text-[10px] font-mono border border-slate-700 text-blue-300">Raw CS = (Logs*.3) + (Events*.3) + (Merit*.4)</div>
+                        </div>
+
+                        <div class="bg-rose-900/20 p-3 rounded border border-rose-800/50">
+                            <h5 class="font-bold text-rose-400 mb-1">Periodical Test (PT) Conversion (40%)</h5>
+                            <p class="mb-1 text-[10px] italic">PT represents overarching competence & execution.</p>
+                            <ul class="list-disc pl-4 space-y-1 text-[11px] font-medium text-rose-200">
+                                <li><strong>Mockboat Duty (70%):</strong> Practical deck performance, leadership.</li>
+                                <li><strong>Academic GWA (30%):</strong> Overarching academic excellence translated to a 100-point competence multiplier.</li>
+                            </ul>
+                            <div class="mt-2 bg-slate-900 p-1.5 rounded text-center text-[10px] font-mono border border-slate-700 text-rose-300">Raw PT = (Duty*.7) + (GWA*.3)</div>
+                        </div>
+
+                        <div class="bg-amber-900/20 p-3 rounded border border-amber-800/50">
+                            <h5 class="font-bold text-amber-400 mb-1">Course Distinctions</h5>
+                            <ul class="space-y-2 text-[10px]">
+                                <li><strong class="text-amber-200">4th Class (PIC 136):</strong> Focus is on Foundation & Followership. High weight on Logbook accuracy and strict compliance to orders.</li>
+                                <li><strong class="text-amber-200">3rd Class (PIC 267):</strong> Focus is on Leadership & Watchkeeping. High weight on Mockboat Duty execution and directing subordinates.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-900/20 p-2 rounded border border-red-800 text-center font-bold text-red-400 uppercase tracking-widest text-[10px]">
+                            Maximum PU Grade Capped at 98
+                        </div>
+                    </div>
                 </div>
 
-                <div class="space-y-6" id="matrix-terms-container">
+                <div class="lg:w-2/3 bg-slate-100 p-4 lg:p-6 overflow-y-auto custom-scrollbar flex-1 relative">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <i data-lucide="calculator" class="w-32 h-32 text-slate-800"></i>
                     </div>
+                    
+                    <div class="space-y-6 relative z-10" id="matrix-terms-container">
+                        </div>
+                </div>
             </div>
             
-            <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div class="text-xs text-slate-500 font-medium"><i data-lucide="check-circle" class="w-3 h-3 inline text-emerald-500"></i> Auto-calculates 60/40 Split</div>
+            <div class="p-4 bg-slate-200 border-t border-slate-300 flex justify-between items-center shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div class="text-xs text-slate-600 font-bold bg-white px-3 py-1 rounded-full shadow-sm border border-slate-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Conversion Engine Active
+                </div>
                 <div class="flex gap-3">
-                    <button onclick="closeAssessModal()" class="px-5 py-2 rounded text-xs font-bold text-slate-600 bg-slate-100 border border-slate-300 hover:bg-slate-200 transition">Cancel</button>
-                    <button onclick="saveAssessData()" class="px-6 py-2 rounded text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Commit to Roster Database</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="assess-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
-            <div class="p-4 bg-emerald-800 border-b border-emerald-900 flex items-center justify-between">
-                <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                    <i data-lucide="user-check" class="text-emerald-300 w-5 h-5"></i> Assess Cadet: <span id="assess-cadet-name" class="text-emerald-100"></span>
-                </h3>
-                <button onclick="closeAssessModal()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            
-            <div class="p-6 bg-brand-creamBg dark:bg-slate-900">
-                <div class="mb-4 text-xs text-slate-500 dark:text-slate-400 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded border border-emerald-200 dark:border-emerald-800/50">
-                    <i data-lucide="info" class="w-4 h-4 inline pb-0.5 text-emerald-600"></i> Enter raw Class Standing (CS) and Periodical Test (PT). <strong>Max Grade allowed is 98.</strong>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4 bg-blue-50 dark:bg-slate-800 p-3 rounded border border-blue-100 dark:border-slate-700">
-                        <div class="col-span-2 font-bold text-xs text-blue-900 dark:text-blue-400 uppercase tracking-widest border-b border-blue-200 dark:border-slate-600 pb-1">1. Prelim</div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Class Standing (CS)</label><input type="number" id="assess-pre-cs" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Periodical Test (PT)</label><input type="number" id="assess-pre-pt" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 bg-teal-50 dark:bg-slate-800 p-3 rounded border border-teal-100 dark:border-slate-700">
-                        <div class="col-span-2 font-bold text-xs text-teal-900 dark:text-teal-400 uppercase tracking-widest border-b border-teal-200 dark:border-slate-600 pb-1">2. Midterm</div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Class Standing (CS)</label><input type="number" id="assess-mid-cs" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Periodical Test (PT)</label><input type="number" id="assess-mid-pt" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 bg-amber-50 dark:bg-slate-800 p-3 rounded border border-amber-100 dark:border-slate-700">
-                        <div class="col-span-2 font-bold text-xs text-amber-900 dark:text-amber-400 uppercase tracking-widest border-b border-amber-200 dark:border-slate-600 pb-1">3. Semi-Final</div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Class Standing (CS)</label><input type="number" id="assess-sem-cs" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Periodical Test (PT)</label><input type="number" id="assess-sem-pt" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 bg-rose-50 dark:bg-slate-800 p-3 rounded border border-rose-100 dark:border-slate-700">
-                        <div class="col-span-2 font-bold text-xs text-rose-900 dark:text-rose-400 uppercase tracking-widest border-b border-rose-200 dark:border-slate-600 pb-1">4. Final</div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Class Standing (CS)</label><input type="number" id="assess-fin-cs" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                        <div><label class="text-[10px] text-slate-500 font-bold block mb-1">Periodical Test (PT)</label><input type="number" id="assess-fin-pt" class="w-full border border-slate-300 rounded p-1.5 text-sm outline-none focus:border-emerald-500" max="98" oninput="if(this.value > 98) this.value = 98;"></div>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end gap-2">
-                    <button onclick="closeAssessModal()" class="px-4 py-2 rounded text-xs font-bold text-slate-500 bg-slate-200 hover:bg-slate-300 transition">Cancel</button>
-                    <button onclick="saveAssessData()" class="px-4 py-2 rounded text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save PUMMA Grades</button>
+                    <button onclick="closeAssessModal()" class="px-5 py-2 rounded text-xs font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition shadow-sm">Cancel</button>
+                    <button onclick="saveAssessData()" class="px-6 py-2 rounded text-xs font-bold text-white bg-slate-800 hover:bg-black transition shadow-md flex items-center gap-2 border border-slate-900"><i data-lucide="lock" class="w-4 h-4"></i> Lock Converted Grades</button>
                 </div>
             </div>
         </div>
@@ -2528,7 +2528,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
         };
         
-       // --- SUPER DETAILED ACADEMIC MATRIX ENGINE ---
+       // --- REGIMENTAL APPRAISAL CONVERSION ENGINE ---
         window.currentAssessId = null;
 
         window.openAssessModal = (id) => {
@@ -2538,59 +2538,68 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             document.getElementById('assess-cadet-name').innerText = cadet.name;
 
-            // Render the complex UI dynamically
             const container = document.getElementById('matrix-terms-container');
-            const g = cadet.detailedGrades || {};
+            // We now store data under 'appraisalData' to differentiate from the old quizzes format
+            const g = cadet.appraisalData || {};
             
             const terms = [
-                { id: 'pre', title: '1. Prelim Term', color: 'blue' },
-                { id: 'mid', title: '2. Midterm Term', color: 'teal' },
-                { id: 'sem', title: '3. Semi-Final Term', color: 'amber' },
-                { id: 'fin', title: '4. Final Term', color: 'rose' }
+                { id: 'pre', title: '1. Prelim Evaluation', color: 'blue' },
+                { id: 'mid', title: '2. Midterm Evaluation', color: 'teal' },
+                { id: 'sem', title: '3. Semi-Final Evaluation', color: 'amber' },
+                { id: 'fin', title: '4. Final Evaluation', color: 'rose' }
             ];
 
             let html = '';
             terms.forEach(t => {
-                const d = g[t.id] || { qz:'', act:'', part:'', exam:'' };
+                const d = g[t.id] || { logs:'', events:'', merits:'', duty:'', gwa:'' };
                 html += `
-                <div class="bg-white border border-${t.color}-200 rounded-lg overflow-hidden shadow-sm">
-                    <div class="bg-${t.color}-50 px-4 py-2 border-b border-${t.color}-200 flex justify-between items-center">
-                        <h4 class="font-black text-${t.color}-900 uppercase tracking-wider text-xs">${t.title}</h4>
-                        <div class="bg-white px-3 py-1 rounded-full border border-${t.color}-200 text-${t.color}-800 text-[10px] font-bold shadow-inner">
-                            FINAL GRADE: <span id="matrix-${t.id}-fg" class="text-sm ml-1 font-black">0.0</span>
+                <div class="bg-white border border-${t.color}-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-${t.color}-50 px-4 py-3 border-b border-${t.color}-200 flex justify-between items-center">
+                        <h4 class="font-black text-${t.color}-900 uppercase tracking-widest text-xs flex items-center gap-2"><i data-lucide="calendar-check" class="w-4 h-4"></i> ${t.title}</h4>
+                        <div class="flex items-center gap-3">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider text-right leading-tight">Converted<br>PU Final</div>
+                            <div class="bg-white px-4 py-1.5 rounded border-2 border-${t.color}-300 text-${t.color}-900 text-sm font-black shadow-inner" id="appraisal-${t.id}-fg">0.0</div>
                         </div>
                     </div>
                     
                     <div class="p-4 flex flex-col md:flex-row gap-6">
-                        <div class="flex-1 bg-slate-50 p-3 rounded border border-slate-200 relative">
-                            <div class="absolute -top-2.5 left-3 bg-slate-200 px-2 text-[9px] font-bold text-slate-600 rounded">CLASS STANDING (60%)</div>
-                            <div class="grid grid-cols-3 gap-3 mt-2">
+                        <div class="flex-1 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
+                            <div class="absolute -top-3 left-4 bg-blue-100 px-3 py-0.5 text-[9px] font-black text-blue-800 rounded border border-blue-200 tracking-wider">CS CONVERSION (60%)</div>
+                            <div class="grid grid-cols-3 gap-3 mt-1">
                                 <div>
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Quizzes (Avg)</label>
-                                    <input type="number" id="matrix-${t.id}-qz" value="${d.qz}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Logbooks (0-100)</label>
+                                    <input type="number" id="appr-${t.id}-logs" value="${d.logs}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Activities (Avg)</label>
-                                    <input type="number" id="matrix-${t.id}-act" value="${d.act}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Events/Forms (0-100)</label>
+                                    <input type="number" id="appr-${t.id}-events" value="${d.events}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Participation</label>
-                                    <input type="number" id="matrix-${t.id}-part" value="${d.part}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Merit Score (0-100)</label>
+                                    <input type="number" id="appr-${t.id}-merits" value="${d.merits}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
                                 </div>
                             </div>
-                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-medium text-slate-500">
-                                Derived CS Score: <strong id="matrix-${t.id}-cs" class="text-slate-800 text-xs ml-1">0.0</strong>
+                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-bold text-slate-500 flex justify-between items-center">
+                                <span class="text-[9px] text-blue-500 italic">Formula: L(30%) + E(30%) + M(40%)</span>
+                                <span>Converted CS: <strong id="appraisal-${t.id}-cs" class="text-slate-800 text-sm ml-1 px-2 py-0.5 bg-slate-200 rounded">0.0</strong></span>
                             </div>
                         </div>
 
-                        <div class="w-full md:w-48 bg-slate-50 p-3 rounded border border-slate-200 relative flex flex-col justify-between">
-                            <div class="absolute -top-2.5 left-3 bg-slate-200 px-2 text-[9px] font-bold text-slate-600 rounded">PERIODICAL TEST (40%)</div>
-                            <div class="mt-2">
-                                <label class="block text-[10px] text-slate-500 font-bold mb-1">Term Exam Score</label>
-                                <input type="number" id="matrix-${t.id}-exam" value="${d.exam}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-base text-center font-black text-slate-700 outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                        <div class="flex-1 bg-slate-50 p-4 rounded-lg border border-slate-200 relative">
+                            <div class="absolute -top-3 left-4 bg-rose-100 px-3 py-0.5 text-[9px] font-black text-rose-800 rounded border border-rose-200 tracking-wider">PT CONVERSION (40%)</div>
+                            <div class="grid grid-cols-2 gap-3 mt-1">
+                                <div>
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Mockboat Duty (0-100)</label>
+                                    <input type="number" id="appr-${t.id}-duty" value="${d.duty}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Academic Multiplier (0-100)</label>
+                                    <input type="number" id="appr-${t.id}-gwa" value="${d.gwa}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                </div>
                             </div>
-                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-medium text-slate-500">
-                                Derived PT Score: <strong id="matrix-${t.id}-pt" class="text-slate-800 text-xs ml-1">0.0</strong>
+                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-bold text-slate-500 flex justify-between items-center">
+                                <span class="text-[9px] text-rose-500 italic">Formula: Duty(70%) + Acad(30%)</span>
+                                <span>Converted PT: <strong id="appraisal-${t.id}-pt" class="text-slate-800 text-sm ml-1 px-2 py-0.5 bg-slate-200 rounded">0.0</strong></span>
                             </div>
                         </div>
                     </div>
@@ -2602,48 +2611,66 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             if(window.lucide) window.lucide.createIcons();
             
-            // Run initial calculations on load
-            terms.forEach(t => window.calcMatrix(t.id));
+            terms.forEach(t => window.calcAppraisal(t.id));
         };
 
-        window.calcMatrix = (term) => {
-            // Helper to get value and strictly cap at 98 instantly
-            const getVal = (type) => {
-                let el = document.getElementById(`matrix-${term}-${type}`);
+        window.calcAppraisal = (term) => {
+            const getV = (type) => {
+                let el = document.getElementById(`appr-${term}-${type}`);
                 if (!el || el.value === '') return null;
                 let v = parseFloat(el.value);
-                if (v > 98) { v = 98; el.value = 98; }
+                if (v > 100) { v = 100; el.value = 100; } // Inputs can be 100, capping to 98 happens at conversion
                 return v;
             };
 
-            let qz = getVal('qz');
-            let act = getVal('act');
-            let part = getVal('part');
-            let exam = getVal('exam');
+            let logs = getV('logs'); let events = getV('events'); let merits = getV('merits');
+            let duty = getV('duty'); let gwa = getV('gwa');
 
-            // 1. Calculate CS (Average of available CS fields)
-            let cs = 0; let csCount = 0; let csTotal = 0;
-            if (qz !== null) { csTotal += qz; csCount++; }
-            if (act !== null) { csTotal += act; csCount++; }
-            if (part !== null) { csTotal += part; csCount++; }
-            if (csCount > 0) cs = csTotal / csCount;
-            if (cs > 98) cs = 98;
+            // 1. Calculate Converted CS
+            let cs = 0; let csParts = 0;
+            if (logs !== null || events !== null || merits !== null) {
+                let l_val = logs !== null ? logs : 0;
+                let e_val = events !== null ? events : 0;
+                let m_val = merits !== null ? merits : 0;
+                
+                // Dynamic weighting based on what is inputted to not punish empty fields while typing
+                let w_l = logs !== null ? 0.3 : 0;
+                let w_e = events !== null ? 0.3 : 0;
+                let w_m = merits !== null ? 0.4 : 0;
+                let totalWeight = w_l + w_e + w_m;
 
-            // 2. Calculate PT
-            let pt = exam !== null ? exam : 0;
-            if (pt > 98) pt = 98;
+                if(totalWeight > 0) {
+                    cs = ((l_val * w_l) + (e_val * w_e) + (m_val * w_m)) / totalWeight;
+                }
+            }
+            if (cs > 98) cs = 98; // PU CAP applied to final CS component
 
-            // 3. Calculate FG (60/40 Split)
+            // 2. Calculate Converted PT
+            let pt = 0;
+            if (duty !== null || gwa !== null) {
+                let d_val = duty !== null ? duty : 0;
+                let g_val = gwa !== null ? gwa : 0;
+                
+                let w_d = duty !== null ? 0.7 : 0;
+                let w_g = gwa !== null ? 0.3 : 0;
+                let totalWeight = w_d + w_g;
+
+                if(totalWeight > 0) {
+                    pt = ((d_val * w_d) + (g_val * w_g)) / totalWeight;
+                }
+            }
+            if (pt > 98) pt = 98; // PU CAP applied to final PT component
+
+            // 3. Final 60/40 PU Math
             let fg = 0;
-            if (csCount > 0 || exam !== null) {
+            if (cs > 0 || pt > 0) {
                 fg = (cs * 0.6) + (pt * 0.4);
-                if (fg > 98) fg = 98;
+                if (fg > 98) fg = 98; // Absolute Final Security Cap
             }
 
-            // Update DOM Visuals
-            document.getElementById(`matrix-${term}-cs`).innerText = cs > 0 ? cs.toFixed(1) : '0.0';
-            document.getElementById(`matrix-${term}-pt`).innerText = pt > 0 ? pt.toFixed(1) : '0.0';
-            document.getElementById(`matrix-${term}-fg`).innerText = fg > 0 ? fg.toFixed(1) : '0.0';
+            document.getElementById(`appraisal-${term}-cs`).innerText = cs > 0 ? cs.toFixed(1) : '0.0';
+            document.getElementById(`appraisal-${term}-pt`).innerText = pt > 0 ? pt.toFixed(1) : '0.0';
+            document.getElementById(`appraisal-${term}-fg`).innerText = fg > 0 ? fg.toFixed(1) : '0.0';
         };
 
         window.closeAssessModal = () => {
@@ -2658,70 +2685,68 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (cadetIndex === -1) return;
 
             const getRaw = (term, type) => {
-                const el = document.getElementById(`matrix-${term}-${type}`);
+                const el = document.getElementById(`appr-${term}-${type}`);
                 return el && el.value !== '' ? parseFloat(el.value) : '';
             };
 
-            const detailedGrades = {
-                pre: { qz: getRaw('pre','qz'), act: getRaw('pre','act'), part: getRaw('pre','part'), exam: getRaw('pre','exam') },
-                mid: { qz: getRaw('mid','qz'), act: getRaw('mid','act'), part: getRaw('mid','part'), exam: getRaw('mid','exam') },
-                sem: { qz: getRaw('sem','qz'), act: getRaw('sem','act'), part: getRaw('sem','part'), exam: getRaw('sem','exam') },
-                fin: { qz: getRaw('fin','qz'), act: getRaw('fin','act'), part: getRaw('fin','part'), exam: getRaw('fin','exam') }
+            const appraisalData = {
+                pre: { logs: getRaw('pre','logs'), events: getRaw('pre','events'), merits: getRaw('pre','merits'), duty: getRaw('pre','duty'), gwa: getRaw('pre','gwa') },
+                mid: { logs: getRaw('mid','logs'), events: getRaw('mid','events'), merits: getRaw('mid','merits'), duty: getRaw('mid','duty'), gwa: getRaw('mid','gwa') },
+                sem: { logs: getRaw('sem','logs'), events: getRaw('sem','events'), merits: getRaw('sem','merits'), duty: getRaw('sem','duty'), gwa: getRaw('sem','gwa') },
+                fin: { logs: getRaw('fin','logs'), events: getRaw('fin','events'), merits: getRaw('fin','merits'), duty: getRaw('fin','duty'), gwa: getRaw('fin','gwa') }
             };
 
-            window.cadets[cadetIndex].detailedGrades = detailedGrades;
+            window.cadets[cadetIndex].appraisalData = appraisalData;
 
             try {
                 if (typeof updateDoc !== 'undefined') {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { detailedGrades: detailedGrades });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { appraisalData: appraisalData });
                 }
                 if (window.logAuditActivity) {
-                    window.logAuditActivity('Cadet Assessed', `Updated Academic Matrix for: ${window.cadets[cadetIndex].name}`, 'Grading System');
+                    window.logAuditActivity('Appraisal Locked', `Converted Regimental Metrics for: ${window.cadets[cadetIndex].name}`, 'Grading System');
                 }
             } catch (e) { console.error("Cloud save error", e); }
 
             window.closeAssessModal();
-            if (window.customAlert) { window.customAlert("Academic Matrix secured to database."); }
-        };
-        // --- PUMMA CSV EXPORT ENGINE ---
-        window.openPummaGradesheet = () => {
-            const m = document.getElementById('pumma-gradesheet-modal');
-            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            if(window.lucide) window.lucide.createIcons();
-        };
-        window.closePummaGradesheet = () => {
-            const m = document.getElementById('pumma-gradesheet-modal');
-            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            if (window.customAlert) { window.customAlert("Regimental Appraisals Locked! PU Excel Converter is updated."); }
         };
 
+        // This connects the new Appraisal Math perfectly to the Excel Downloader!
         window.getPummaData = () => {
             const data = [];
             const courseSelect = document.getElementById('pumma-course-sec');
             const targetClass = courseSelect && courseSelect.value.includes("267") ? 3 : 4; 
-            const targetSec = document.getElementById('pumma-section').value;
+            const targetSec = document.getElementById('pumma-section') ? document.getElementById('pumma-section').value : 'Alpha';
 
             const filteredCadets = (window.cadets || []).filter(c => parseInt(c.classNum) === targetClass && String(c.section).toUpperCase() === String(targetSec).toUpperCase());
             const sortedCadets = [...filteredCadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
             sortedCadets.forEach((cadet, index) => {
-                const g = cadet.pummaGrades || {};
+                const g = cadet.appraisalData || {};
                 const row = { no: index + 1, name: cadet.name || 'Unknown', terms: {}, sg: 0, remarks: '' };
                 let totalFG = 0; let computedTerms = 0;
 
                 ['pre', 'mid', 'sem', 'fin'].forEach(term => {
-                    let td = g[term] || {};
+                    let d = g[term] || { logs:'', events:'', merits:'', duty:'', gwa:'' };
                     let cs = 0; let pt = 0; let fg = 0; let isData = false;
 
-                    if(td.qz !== '' || td.part !== '') {
-                        let total=0; let count=0;
-                        if(td.qz !== '') { total+=parseFloat(td.qz); count++; }
-                        if(td.part !== '') { total+=parseFloat(td.part); count++; }
-                        cs = total/count;
+                    // Re-calculate the exact math for the Excel Engine export
+                    if (d.logs !== '' || d.events !== '' || d.merits !== '') {
+                        let l_val = d.logs !== '' ? parseFloat(d.logs) : 0;
+                        let e_val = d.events !== '' ? parseFloat(d.events) : 0;
+                        let m_val = d.merits !== '' ? parseFloat(d.merits) : 0;
+                        let w_l = d.logs !== '' ? 0.3 : 0; let w_e = d.events !== '' ? 0.3 : 0; let w_m = d.merits !== '' ? 0.4 : 0;
+                        let tWeight = w_l + w_e + w_m;
+                        if(tWeight > 0) cs = ((l_val * w_l) + (e_val * w_e) + (m_val * w_m)) / tWeight;
                         if(cs > 98) cs = 98;
                         isData = true;
                     }
-                    if(td.exam !== '') {
-                        pt = parseFloat(td.exam);
+                    if (d.duty !== '' || d.gwa !== '') {
+                        let d_val = d.duty !== '' ? parseFloat(d.duty) : 0;
+                        let g_val = d.gwa !== '' ? parseFloat(d.gwa) : 0;
+                        let w_d = d.duty !== '' ? 0.7 : 0; let w_g = d.gwa !== '' ? 0.3 : 0;
+                        let tWeight = w_d + w_g;
+                        if(tWeight > 0) pt = ((d_val * w_d) + (g_val * w_g)) / tWeight;
                         if(pt > 98) pt = 98;
                         isData = true;
                     }
@@ -2731,7 +2756,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                         if (fg > 98) fg = 98; 
                         totalFG += fg; computedTerms++;
                     }
-                    row.terms[term] = { cs: isData?cs:'', pt: td.exam!==''?pt:'', fg: isData?fg:'' };
+                    row.terms[term] = { cs: isData?cs:'', pt: isData?pt:'', fg: isData?fg:'' };
                 });
 
                 if (computedTerms > 0) {
@@ -2743,82 +2768,6 @@ window.logAdminSettingsActivity = async (action, details) => {
                 data.push(row);
             });
             return data;
-        };
-
-        window.exportPummaGradesheet = (type) => {
-            const data = window.getPummaData();
-            if (data.length === 0) {
-                if(window.customAlert) window.customAlert("No cadets found for this Course/Section. Please add/assess cadets first.");
-                return;
-            }
-
-            const termAy = document.getElementById('pumma-term').value;
-            const courseSelect = document.getElementById('pumma-course-sec');
-            const courseCode = courseSelect.value;
-            const courseTitle = courseSelect.options[courseSelect.selectedIndex].text.split('(')[0].trim();
-            const courseSecRaw = document.getElementById('pumma-section').value;
-            
-            let csv = "";
-            let fileName = "";
-
-            if (type === 'master') {
-                fileName = `PUMMA_MasterSheet_${courseCode.replace(' ', '')}_${courseSecRaw}.csv`;
-                csv += `,PANPACIFIC UNIVERSITY ,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,Campus ,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,GRADING SHEET,,,,,,,,,,,,,,,,,,\n`;
-                csv += `, _${termAy}____,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,Course/Year/ Sec: ${courseSecRaw},,,,,,,,Class Standing,,,,,,,(CS),0.6,,\n`;
-                csv += `,Course Code: ${courseCode},,,,,,,,Periodical Test,,,,,,,(PT),0.4,,\n`;
-                csv += `,Course Title: ${courseTitle},,,,,,,,Research Project,,,,,,,(R/P),___%,,\n`;
-                csv += `No.,,PRELIM,,,,MID-TERM,,,,SEMI-FINALS,,,,FINAL,,,,,REMARKS\n`;
-                csv += `,NAME OF STUDENT,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,SG,\n`;
-
-                data.forEach(d => {
-                    const t = d.terms;
-                    const format = (v) => v !== '' ? Number(v).toFixed(1) : '';
-                    csv += `${d.no},${d.name},${format(t.pre.cs)},${format(t.pre.pt)}, ,${format(t.pre.fg)},`;
-                    csv += `${format(t.mid.cs)},${format(t.mid.pt)}, ,${format(t.mid.fg)},`;
-                    csv += `${format(t.sem.cs)},${format(t.sem.pt)}, ,${format(t.sem.fg)},`;
-                    csv += `${format(t.fin.cs)},${format(t.fin.pt)}, ,${format(t.fin.fg)},`;
-                    csv += `${format(d.sg)},${d.remarks}\n`;
-                });
-            } else {
-                let termName = "PRELIM";
-                if(type==='mid') termName = "MIDTERM";
-                if(type==='sem') termName = "SEMI-FINAL";
-                if(type==='fin') termName = "FINAL";
-                fileName = `PUMMA_${termName}_${courseCode.replace(' ', '')}_${courseSecRaw}.csv`;
-
-                csv += `,,,,,,,,,,,,,,,,,,,,\n`.repeat(5);
-                csv += `Panpacific University ,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `Campus,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `SCHOOL OF URDANETA CITY,,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `,,,,,,,,,,,,,,,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,\n`;
-                csv += `COURSE TITLE: ${courseTitle}_${courseCode},,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `PROGRAM & SECTION: ${courseSecRaw},,,,,,,,,,,,,,,,,,,,\n`;
-                csv += `Student No.,NAME,LABORATORY,,,,,,,,,,,,,,,,LECTURE GRADE,${termName} GRADE ,REMARKS\n`;
-                csv += `,,CLASS STANDING,,,,,,,,,,,,,EXAMINATION,,,,,\n`;
-                csv += `,,ASSIGNMENT/QUIZZES/ACTIVITIES/ CLASS PARTICIPATION,,,,,,,,,,,,,${termName} Exam,,,,,\n`;
-                csv += `,,,,,,,,,,,,T,E,Weight %,T,E,Weight %,,,\n`;
-                csv += `,,,,,,,,,,,,0,%,0.6,,%,0.4,,,\n`;
-
-                data.forEach(d => {
-                    const t = d.terms[type];
-                    const format = (v) => v !== '' ? Number(v).toFixed(1) : '';
-                    // The exact spacing layout requested by the PU excel mapping:
-                    csv += `,${d.name},,,,,,,,,,,${format(t.cs)},,,${format(t.pt)},,,${format(t.fg)},${t.fg >= 75 ? 'P' : (t.fg !== '' ? 'F':'')}\n`;
-                });
-            }
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         };
         // --- CADET UI LOGIC ---
         window.openUniformModal = () => {
