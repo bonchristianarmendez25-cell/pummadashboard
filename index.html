@@ -1177,27 +1177,35 @@
         </div>
     </div>
     
-    <div id="assess-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-4 bg-emerald-800 border-b border-emerald-900 flex items-center justify-between shrink-0">
-                <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                    <i data-lucide="calculator" class="text-emerald-300 w-5 h-5"></i> Academic Matrix: <span id="assess-cadet-name" class="text-emerald-100 font-black"></span>
-                </h3>
-                <button onclick="closeAssessModal()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div id="assess-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-[80] p-4 no-print">
+        <div class="bg-slate-50 border border-slate-300 rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="font-black text-white text-lg flex items-center gap-2 tracking-wide uppercase">
+                        <i data-lucide="layout-dashboard" class="text-emerald-400 w-5 h-5"></i> Academic Matrix
+                    </h3>
+                    <p class="text-slate-400 text-xs mt-0.5">Cadet: <span id="assess-cadet-name" class="text-emerald-300 font-bold text-sm ml-1"></span></p>
+                </div>
+                <button onclick="closeAssessModal()" class="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-md"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="p-4 bg-brand-creamBg dark:bg-slate-900 overflow-y-auto custom-scrollbar flex-1">
-                <div class="mb-4 text-xs text-slate-600 dark:text-slate-300 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded border border-emerald-200 dark:border-emerald-800/50 shadow-sm">
-                    <i data-lucide="info" class="w-4 h-4 inline pb-0.5 text-emerald-600"></i> <strong>Dashboard Grading System:</strong> Enter the raw scores (0-100). The dashboard automatically averages Quizzes and Participation to create the <strong>Class Standing (CS)</strong>. It maps the Exam to the <strong>Periodical Test (PT)</strong>. All final calculations are strictly capped at <strong>98</strong> per PU protocols.
+            <div class="p-5 overflow-y-auto custom-scrollbar flex-1">
+                <div class="mb-5 text-xs text-slate-700 bg-white p-3 rounded shadow-sm border border-slate-200 flex gap-3 items-center">
+                    <i data-lucide="info" class="w-8 h-8 shrink-0 text-emerald-600"></i>
+                    <p><strong>Dashboard Rubric Engine:</strong> Enter raw scores (Max 98) for sub-components. The engine averages Quizzes, Activities, and Participation to formulate the <strong>Class Standing (60%)</strong>. It maps the Term Exam directly to the <strong>Periodical Test (40%)</strong>. Final Grades are strictly capped at 98 per academic protocol.</p>
                 </div>
 
-                <div class="space-y-6" id="rubric-forms">
+                <div class="space-y-6" id="matrix-terms-container">
                     </div>
             </div>
             
-            <div class="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 shrink-0">
-                <button onclick="closeAssessModal()" class="px-4 py-2 rounded text-xs font-bold text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 transition shadow-sm">Cancel</button>
-                <button onclick="saveAssessData()" class="px-5 py-2 rounded text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Lock Grades to Database</button>
+            <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div class="text-xs text-slate-500 font-medium"><i data-lucide="check-circle" class="w-3 h-3 inline text-emerald-500"></i> Auto-calculates 60/40 Split</div>
+                <div class="flex gap-3">
+                    <button onclick="closeAssessModal()" class="px-5 py-2 rounded text-xs font-bold text-slate-600 bg-slate-100 border border-slate-300 hover:bg-slate-200 transition">Cancel</button>
+                    <button onclick="saveAssessData()" class="px-6 py-2 rounded text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Commit to Roster Database</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2520,52 +2528,71 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
         };
         
-       // --- ASSESS STUDENT ENGINE (DASHBOARD RUBRIC) ---
+       // --- SUPER DETAILED ACADEMIC MATRIX ENGINE ---
         window.currentAssessId = null;
 
         window.openAssessModal = (id) => {
             window.currentAssessId = id;
             const cadet = window.cadets.find(c => String(c.id) === String(id));
-            if (!cadet) return;
+            if (!cadet) { console.error("Cadet not found"); return; }
 
             document.getElementById('assess-cadet-name').innerText = cadet.name;
 
-            // Build the dynamic Rubric Matrix UI
-            const container = document.getElementById('rubric-forms');
-            const g = cadet.pummaGrades || {};
+            // Render the complex UI dynamically
+            const container = document.getElementById('matrix-terms-container');
+            const g = cadet.detailedGrades || {};
+            
             const terms = [
-                {id: 'pre', name: '1. Prelim', color: 'blue'},
-                {id: 'mid', name: '2. Midterm', color: 'teal'},
-                {id: 'sem', name: '3. Semi-Final', color: 'amber'},
-                {id: 'fin', name: '4. Final', color: 'rose'}
+                { id: 'pre', title: '1. Prelim Term', color: 'blue' },
+                { id: 'mid', title: '2. Midterm Term', color: 'teal' },
+                { id: 'sem', title: '3. Semi-Final Term', color: 'amber' },
+                { id: 'fin', title: '4. Final Term', color: 'rose' }
             ];
 
             let html = '';
             terms.forEach(t => {
-                const termData = g[t.id] || { qz:'', part:'', exam:'' };
+                const d = g[t.id] || { qz:'', act:'', part:'', exam:'' };
                 html += `
-                <div class="bg-white dark:bg-slate-800 border border-${t.color}-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
-                    <div class="bg-${t.color}-100 dark:bg-slate-700/50 px-3 py-2 font-black text-${t.color}-900 dark:text-${t.color}-300 uppercase tracking-widest text-[10px] border-b border-${t.color}-200 dark:border-slate-700">
-                        ${t.name}
-                    </div>
-                    <div class="p-3 grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Quizzes/Activities</label>
-                            <input type="number" id="rubric-${t.id}-qz" value="${termData.qz||''}" class="w-full border border-slate-300 rounded p-1.5 text-sm font-bold text-center outline-none focus:border-emerald-500 bg-slate-50" max="100" oninput="if(this.value>100)this.value=100; window.updateRubricCalc('${t.id}')">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Class Participation</label>
-                            <input type="number" id="rubric-${t.id}-part" value="${termData.part||''}" class="w-full border border-slate-300 rounded p-1.5 text-sm font-bold text-center outline-none focus:border-emerald-500 bg-slate-50" max="100" oninput="if(this.value>100)this.value=100; window.updateRubricCalc('${t.id}')">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Term Exam</label>
-                            <input type="number" id="rubric-${t.id}-exam" value="${termData.exam||''}" class="w-full border border-slate-300 rounded p-1.5 text-sm font-bold text-center outline-none focus:border-emerald-500 bg-slate-50" max="100" oninput="if(this.value>100)this.value=100; window.updateRubricCalc('${t.id}')">
+                <div class="bg-white border border-${t.color}-200 rounded-lg overflow-hidden shadow-sm">
+                    <div class="bg-${t.color}-50 px-4 py-2 border-b border-${t.color}-200 flex justify-between items-center">
+                        <h4 class="font-black text-${t.color}-900 uppercase tracking-wider text-xs">${t.title}</h4>
+                        <div class="bg-white px-3 py-1 rounded-full border border-${t.color}-200 text-${t.color}-800 text-[10px] font-bold shadow-inner">
+                            FINAL GRADE: <span id="matrix-${t.id}-fg" class="text-sm ml-1 font-black">0.0</span>
                         </div>
                     </div>
-                    <div class="bg-slate-50 dark:bg-slate-900 p-2 border-t border-slate-200 dark:border-slate-700 flex justify-around text-xs font-medium text-slate-600">
-                        <div>Derived CS (60%): <span id="rubric-${t.id}-cs" class="font-black text-slate-900 dark:text-white">0</span></div>
-                        <div>Derived PT (40%): <span id="rubric-${t.id}-pt" class="font-black text-slate-900 dark:text-white">0</span></div>
-                        <div class="text-emerald-700 dark:text-emerald-400 font-bold">Term FG: <span id="rubric-${t.id}-fg" class="font-black">0</span></div>
+                    
+                    <div class="p-4 flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 bg-slate-50 p-3 rounded border border-slate-200 relative">
+                            <div class="absolute -top-2.5 left-3 bg-slate-200 px-2 text-[9px] font-bold text-slate-600 rounded">CLASS STANDING (60%)</div>
+                            <div class="grid grid-cols-3 gap-3 mt-2">
+                                <div>
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Quizzes (Avg)</label>
+                                    <input type="number" id="matrix-${t.id}-qz" value="${d.qz}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Activities (Avg)</label>
+                                    <input type="number" id="matrix-${t.id}-act" value="${d.act}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Participation</label>
+                                    <input type="number" id="matrix-${t.id}-part" value="${d.part}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-1.5 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-medium text-slate-500">
+                                Derived CS Score: <strong id="matrix-${t.id}-cs" class="text-slate-800 text-xs ml-1">0.0</strong>
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-48 bg-slate-50 p-3 rounded border border-slate-200 relative flex flex-col justify-between">
+                            <div class="absolute -top-2.5 left-3 bg-slate-200 px-2 text-[9px] font-bold text-slate-600 rounded">PERIODICAL TEST (40%)</div>
+                            <div class="mt-2">
+                                <label class="block text-[10px] text-slate-500 font-bold mb-1">Term Exam Score</label>
+                                <input type="number" id="matrix-${t.id}-exam" value="${d.exam}" oninput="calcMatrix('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-base text-center font-black text-slate-700 outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 transition" max="98">
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-medium text-slate-500">
+                                Derived PT Score: <strong id="matrix-${t.id}-pt" class="text-slate-800 text-xs ml-1">0.0</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>`;
             });
@@ -2575,34 +2602,48 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             if(window.lucide) window.lucide.createIcons();
             
-            // Run initial calcs
-            ['pre','mid','sem','fin'].forEach(t => window.updateRubricCalc(t));
+            // Run initial calculations on load
+            terms.forEach(t => window.calcMatrix(t.id));
         };
 
-        window.updateRubricCalc = (term) => {
-            let qz = parseFloat(document.getElementById(`rubric-${term}-qz`).value);
-            let part = parseFloat(document.getElementById(`rubric-${term}-part`).value);
-            let exam = parseFloat(document.getElementById(`rubric-${term}-exam`).value);
-            
-            // Math Logic
-            let cs = 0;
-            if (!isNaN(qz) || !isNaN(part)) {
-                let validInputs = 0; let total = 0;
-                if(!isNaN(qz)) { total += qz; validInputs++; }
-                if(!isNaN(part)) { total += part; validInputs++; }
-                cs = total / validInputs;
-            }
-            let pt = isNaN(exam) ? 0 : exam;
+        window.calcMatrix = (term) => {
+            // Helper to get value and strictly cap at 98 instantly
+            const getVal = (type) => {
+                let el = document.getElementById(`matrix-${term}-${type}`);
+                if (!el || el.value === '') return null;
+                let v = parseFloat(el.value);
+                if (v > 98) { v = 98; el.value = 98; }
+                return v;
+            };
 
-            // Apply 98 Caps
+            let qz = getVal('qz');
+            let act = getVal('act');
+            let part = getVal('part');
+            let exam = getVal('exam');
+
+            // 1. Calculate CS (Average of available CS fields)
+            let cs = 0; let csCount = 0; let csTotal = 0;
+            if (qz !== null) { csTotal += qz; csCount++; }
+            if (act !== null) { csTotal += act; csCount++; }
+            if (part !== null) { csTotal += part; csCount++; }
+            if (csCount > 0) cs = csTotal / csCount;
             if (cs > 98) cs = 98;
-            if (pt > 98) pt = 98;
-            let fg = (cs * 0.6) + (pt * 0.4);
-            if (fg > 98) fg = 98;
 
-            document.getElementById(`rubric-${term}-cs`).innerText = cs > 0 ? cs.toFixed(1) : '0';
-            document.getElementById(`rubric-${term}-pt`).innerText = pt > 0 ? pt.toFixed(1) : '0';
-            document.getElementById(`rubric-${term}-fg`).innerText = fg > 0 ? fg.toFixed(1) : '0';
+            // 2. Calculate PT
+            let pt = exam !== null ? exam : 0;
+            if (pt > 98) pt = 98;
+
+            // 3. Calculate FG (60/40 Split)
+            let fg = 0;
+            if (csCount > 0 || exam !== null) {
+                fg = (cs * 0.6) + (pt * 0.4);
+                if (fg > 98) fg = 98;
+            }
+
+            // Update DOM Visuals
+            document.getElementById(`matrix-${term}-cs`).innerText = cs > 0 ? cs.toFixed(1) : '0.0';
+            document.getElementById(`matrix-${term}-pt`).innerText = pt > 0 ? pt.toFixed(1) : '0.0';
+            document.getElementById(`matrix-${term}-fg`).innerText = fg > 0 ? fg.toFixed(1) : '0.0';
         };
 
         window.closeAssessModal = () => {
@@ -2617,27 +2658,31 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (cadetIndex === -1) return;
 
             const getRaw = (term, type) => {
-                const el = document.getElementById(`rubric-${term}-${type}`);
+                const el = document.getElementById(`matrix-${term}-${type}`);
                 return el && el.value !== '' ? parseFloat(el.value) : '';
             };
 
-            const newGrades = {
-                pre: { qz: getRaw('pre','qz'), part: getRaw('pre','part'), exam: getRaw('pre','exam') },
-                mid: { qz: getRaw('mid','qz'), part: getRaw('mid','part'), exam: getRaw('mid','exam') },
-                sem: { qz: getRaw('sem','qz'), part: getRaw('sem','part'), exam: getRaw('sem','exam') },
-                fin: { qz: getRaw('fin','qz'), part: getRaw('fin','part'), exam: getRaw('fin','exam') }
+            const detailedGrades = {
+                pre: { qz: getRaw('pre','qz'), act: getRaw('pre','act'), part: getRaw('pre','part'), exam: getRaw('pre','exam') },
+                mid: { qz: getRaw('mid','qz'), act: getRaw('mid','act'), part: getRaw('mid','part'), exam: getRaw('mid','exam') },
+                sem: { qz: getRaw('sem','qz'), act: getRaw('sem','act'), part: getRaw('sem','part'), exam: getRaw('sem','exam') },
+                fin: { qz: getRaw('fin','qz'), act: getRaw('fin','act'), part: getRaw('fin','part'), exam: getRaw('fin','exam') }
             };
 
-            window.cadets[cadetIndex].pummaGrades = newGrades;
+            window.cadets[cadetIndex].detailedGrades = detailedGrades;
+
             try {
                 if (typeof updateDoc !== 'undefined') {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { pummaGrades: newGrades });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { detailedGrades: detailedGrades });
                 }
-            } catch (e) { console.error("Save error", e); }
-            window.closeAssessModal();
-            if(window.customAlert) window.customAlert("Rubric Matrix saved. Final grades have been auto-calculated for the PU Exporter.");
-        };
+                if (window.logAuditActivity) {
+                    window.logAuditActivity('Cadet Assessed', `Updated Academic Matrix for: ${window.cadets[cadetIndex].name}`, 'Grading System');
+                }
+            } catch (e) { console.error("Cloud save error", e); }
 
+            window.closeAssessModal();
+            if (window.customAlert) { window.customAlert("Academic Matrix secured to database."); }
+        };
         // --- PUMMA CSV EXPORT ENGINE ---
         window.openPummaGradesheet = () => {
             const m = document.getElementById('pumma-gradesheet-modal');
