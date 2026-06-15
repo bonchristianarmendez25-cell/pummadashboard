@@ -1177,28 +1177,28 @@
         </div>
     </div>
     
-    <div id="assess-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-[80] p-4 no-print">
-        <div class="bg-white border border-slate-400 rounded-xl max-w-7xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+    <div id="assess-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden items-center justify-center z-[80] p-4 no-print transition-all duration-300">
+        <div class="bg-white border border-slate-500 rounded-2xl max-w-6xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
             
-            <div class="bg-slate-900 p-4 border-b border-slate-700 flex items-center justify-between shrink-0">
+            <div class="bg-slate-900 p-5 border-b border-slate-700 flex items-center justify-between shrink-0">
                 <div>
-                    <h3 class="font-black text-white text-lg flex items-center gap-2 tracking-wide uppercase">
-                        <i data-lucide="compass" class="text-amber-400 w-5 h-5"></i> Regimental Competency Auto-Converter
+                    <h3 class="font-black text-white text-xl flex items-center gap-3 tracking-wider uppercase">
+                        <i data-lucide="cpu" class="text-amber-400 w-6 h-6"></i> Regimental Auto-Converter Engine
                     </h3>
-                    <p class="text-slate-400 text-xs mt-0.5">Cadet Profile: <span id="assess-cadet-name" class="text-amber-300 font-bold text-sm ml-1 uppercase"></span></p>
+                    <p class="text-slate-400 text-xs mt-1">Live Cadet Data Feed: <span id="assess-cadet-name" class="text-amber-300 font-bold text-sm ml-1 uppercase"></span></p>
                 </div>
-                <button onclick="closeAssessModal()" class="text-slate-400 hover:text-white transition bg-slate-800 p-1.5 rounded-md"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeAssessModal()" class="text-slate-400 hover:text-white transition bg-slate-800 p-2 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <div class="flex flex-col lg:flex-row overflow-hidden flex-1">
+            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-100">
                 
                 <div class="lg:w-1/3 bg-slate-800 p-6 overflow-y-auto custom-scrollbar border-r border-slate-700 shrink-0">
-                    <h4 class="font-black text-amber-400 text-sm uppercase tracking-widest border-b border-slate-600 pb-2 mb-4"><i data-lucide="presentation" class="w-4 h-4 inline pb-0.5"></i> Appraisal Bulletin Board</h4>
+                    <h4 class="font-black text-amber-400 text-sm uppercase tracking-widest border-b border-slate-600 pb-2 mb-4 flex items-center gap-2"><i data-lucide="presentation" class="w-4 h-4"></i> Appraisal Bulletin Board</h4>
                     
                     <div class="space-y-4 text-xs text-slate-300">
                         <div class="bg-slate-900/50 p-3 rounded border border-slate-700 shadow-inner">
                             <h5 class="font-bold text-emerald-400 mb-1">The Practical Transformation</h5>
-                            <p>Competency Appraisal (PIC 136 & 267) is measured through practical application, not theoretical exams. This engine takes real regimental data and mathematically converts it into the Panpacific University (PU) Grade Format.</p>
+                            <p>Competency Appraisals (PIC 136 & 267) are measured through practical application. This engine takes real regimental data and mathematically converts it into the Panpacific University (PU) Grade Format.</p>
                         </div>
 
                         <div class="bg-blue-900/20 p-3 rounded border border-blue-800/50">
@@ -1207,9 +1207,8 @@
                             <ul class="list-disc pl-4 space-y-1 text-[11px] font-medium text-blue-200">
                                 <li><strong>Daily Logbooks (30%):</strong> Consistency in recording tasks.</li>
                                 <li><strong>Events & Formations (30%):</strong> Attendance at flag ceremonies, musters.</li>
-                                <li><strong>Behavior/Merits (40%):</strong> Base 100 score modified by Merits/Demerits.</li>
+                                <li><strong>Behavior/Merits (40%):</strong> Base 100 score modified by Merits.</li>
                             </ul>
-                            <div class="mt-2 bg-slate-900 p-1.5 rounded text-center text-[10px] font-mono border border-slate-700 text-blue-300">Raw CS = (Logs*.3) + (Events*.3) + (Merit*.4)</div>
                         </div>
 
                         <div class="bg-rose-900/20 p-3 rounded border border-rose-800/50">
@@ -1217,16 +1216,7 @@
                             <p class="mb-1 text-[10px] italic">PT represents overarching competence & execution.</p>
                             <ul class="list-disc pl-4 space-y-1 text-[11px] font-medium text-rose-200">
                                 <li><strong>Mockboat Duty (70%):</strong> Practical deck performance, leadership.</li>
-                                <li><strong>Academic GWA (30%):</strong> Overarching academic excellence translated to a 100-point competence multiplier.</li>
-                            </ul>
-                            <div class="mt-2 bg-slate-900 p-1.5 rounded text-center text-[10px] font-mono border border-slate-700 text-rose-300">Raw PT = (Duty*.7) + (GWA*.3)</div>
-                        </div>
-
-                        <div class="bg-amber-900/20 p-3 rounded border border-amber-800/50">
-                            <h5 class="font-bold text-amber-400 mb-1">Course Distinctions</h5>
-                            <ul class="space-y-2 text-[10px]">
-                                <li><strong class="text-amber-200">4th Class (PIC 136):</strong> Focus is on Foundation & Followership. High weight on Logbook accuracy and strict compliance to orders.</li>
-                                <li><strong class="text-amber-200">3rd Class (PIC 267):</strong> Focus is on Leadership & Watchkeeping. High weight on Mockboat Duty execution and directing subordinates.</li>
+                                <li><strong>Academic Translation (30%):</strong> Overall academic excellence.</li>
                             </ul>
                         </div>
                         
@@ -1236,23 +1226,54 @@
                     </div>
                 </div>
 
-                <div class="lg:w-2/3 bg-slate-100 p-4 lg:p-6 overflow-y-auto custom-scrollbar flex-1 relative">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                        <i data-lucide="calculator" class="w-32 h-32 text-slate-800"></i>
-                    </div>
+                <div class="lg:w-2/3 p-6 overflow-y-auto custom-scrollbar flex-1 relative flex flex-col gap-6">
                     
-                    <div class="space-y-6 relative z-10" id="matrix-terms-container">
+                    <div class="flex gap-4 flex-col sm:flex-row">
+                        <div class="flex-1 bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-blue-100 text-blue-800 text-[9px] font-bold px-3 py-1 rounded-bl-lg">LIVE CS DATA</div>
+                            <h5 class="text-xs font-bold text-slate-700 mb-3">Extracted Regimental standing</h5>
+                            <div class="space-y-3">
+                                <div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Daily Logbooks</span> <span id="auto-logs-val" class="text-blue-600">0%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div id="auto-logs-bar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                                <div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Events & Formations</span> <span id="auto-events-val" class="text-blue-600">0%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div id="auto-events-bar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                                <div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Discipline & Merits</span> <span id="auto-merits-val" class="text-blue-600">0%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div id="auto-merits-bar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                            </div>
                         </div>
-                </div>
-            </div>
-            
-            <div class="p-4 bg-slate-200 border-t border-slate-300 flex justify-between items-center shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div class="text-xs text-slate-600 font-bold bg-white px-3 py-1 rounded-full shadow-sm border border-slate-300 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Conversion Engine Active
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="closeAssessModal()" class="px-5 py-2 rounded text-xs font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition shadow-sm">Cancel</button>
-                    <button onclick="saveAssessData()" class="px-6 py-2 rounded text-xs font-bold text-white bg-slate-800 hover:bg-black transition shadow-md flex items-center gap-2 border border-slate-900"><i data-lucide="lock" class="w-4 h-4"></i> Lock Converted Grades</button>
+
+                        <div class="flex-1 bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-rose-100 text-rose-800 text-[9px] font-bold px-3 py-1 rounded-bl-lg">LIVE PT DATA</div>
+                            <h5 class="text-xs font-bold text-slate-700 mb-3">Extracted Competency Test</h5>
+                            <div class="space-y-3">
+                                <div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Mockboat Duty Execution</span> <span id="auto-duty-val" class="text-rose-600">0%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div id="auto-duty-bar" class="bg-rose-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                                <div><div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>Academic Translation</span> <span id="auto-gwa-val" class="text-rose-600">0%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div id="auto-gwa-bar" class="bg-rose-500 h-1.5 rounded-full transition-all duration-1000" style="width: 0%"></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-900 text-white p-6 rounded-xl shadow-lg relative overflow-hidden flex-1 flex flex-col justify-center border border-emerald-700">
+                        <i data-lucide="arrow-right-left" class="absolute -right-6 -bottom-6 w-48 h-48 opacity-10"></i>
+                        <div class="grid grid-cols-2 gap-6 mb-6 relative z-10">
+                            <div class="text-center"><span class="block text-[10px] font-bold text-emerald-300 uppercase tracking-widest mb-1">Generated CS (60%)</span><div class="text-3xl font-black font-mono" id="auto-cs-final">0.0</div></div>
+                            <div class="text-center border-l border-emerald-700"><span class="block text-[10px] font-bold text-emerald-300 uppercase tracking-widest mb-1">Generated PT (40%)</span><div class="text-3xl font-black font-mono" id="auto-pt-final">0.0</div></div>
+                        </div>
+                        <div class="text-center border-t border-emerald-700 pt-6 relative z-10">
+                            <span class="block text-xs font-bold text-emerald-300 uppercase tracking-widest mb-1">Panpacific Univ. Final Grade</span>
+                            <div class="text-6xl font-black font-serif text-white tracking-tighter" id="auto-fg-final">0.0</div>
+                            <span class="inline-block mt-2 text-[9px] bg-red-500/20 text-red-200 border border-red-500/50 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Strictly Capped at 98</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-300 shadow-sm flex items-center gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Select Grading Period</label>
+                            <select id="auto-lock-term" class="w-full bg-slate-50 border border-slate-300 p-2 rounded text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 shadow-inner">
+                                <option value="pre">1. Prelim Evaluation</option>
+                                <option value="mid">2. Midterm Evaluation</option>
+                                <option value="sem">3. Semi-Final Evaluation</option>
+                                <option value="fin">4. Final Evaluation</option>
+                            </select>
+                        </div>
+                        <button onclick="lockAutoGrades()" class="bg-brand-blue hover:bg-blue-800 text-white px-5 py-3 rounded-lg font-bold shadow-md transition flex items-center gap-2 mt-3"><i data-lucide="lock" class="w-4 h-4"></i> Lock to Term</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1261,46 +1282,24 @@
     <div id="pumma-gradesheet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
         <div class="bg-white rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-300">
             <div class="bg-emerald-800 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide">
-                    <i data-lucide="download-cloud" class="w-5 h-5"></i> PU Excel Exporter
-                </h3>
+                <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide"><i data-lucide="download-cloud" class="w-5 h-5"></i> PU Excel Exporter</h3>
                 <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-
             <div class="p-6 bg-slate-50">
-                <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded mb-6 flex gap-3">
-                    <i data-lucide="file-spreadsheet" class="w-8 h-8 shrink-0"></i>
-                    <p>Select your course parameters below. Clicking download will instantly generate a `.csv` file coded with the exact hidden columns and row spacings required by the Panpacific University <strong>Form-03 Grade Sheets</strong>.</p>
-                </div>
-
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 text-xs p-3 rounded mb-6 flex gap-3"><i data-lucide="file-spreadsheet" class="w-8 h-8 shrink-0"></i><p>Select your course parameters below. Clicking download will instantly generate a `.csv` file coded with the exact columns and row spacings required by the Panpacific University <strong>Form-03 Grade Sheets</strong>.</p></div>
                 <div class="grid grid-cols-2 gap-4 text-xs font-medium text-slate-700 mb-8">
-                    <div class="col-span-2">
-                        <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Course & Class</label>
-                        <select id="pumma-course-sec" class="w-full border border-slate-300 p-2 rounded outline-none focus:border-emerald-500 bg-white shadow-sm font-bold text-emerald-900">
-                            <option value="PIC 136">Competency Appraisal 1 (PIC 136) - 4th Class</option>
-                            <option value="PIC 267">Competency Appraisal 2 (PIC 267) - 3rd Class</option>
-                        </select>
+                    <div class="col-span-2"><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Course & Class</label>
+                        <select id="pumma-course-sec" class="w-full border border-slate-300 p-2 rounded outline-none focus:border-emerald-500 bg-white shadow-sm font-bold text-emerald-900"><option value="PIC 136">Competency Appraisal 1 (PIC 136) - 4th Class</option><option value="PIC 267">Competency Appraisal 2 (PIC 267) - 3rd Class</option></select>
                     </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Section</label>
+                    <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Section</label>
                         <select id="pumma-section" class="w-full border border-slate-300 p-2 rounded outline-none focus:border-emerald-500 bg-white shadow-sm font-bold text-emerald-900">
-                            <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option>
-                            <option value="Delta">Delta</option><option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option>
-                            <option value="Golf">Golf</option><option value="Hotel">Hotel</option><option value="India">India</option>
-                            <option value="Juliet">Juliet</option><option value="Kilo">Kilo</option><option value="Lima">Lima</option>
-                            <option value="Mike">Mike</option><option value="November">November</option><option value="Oscar">Oscar</option>
-                            <option value="Papa">Papa</option><option value="Quebec">Quebec</option><option value="Romeo">Romeo</option>
-                            <option value="Sierra">Sierra</option><option value="Tango">Tango</option><option value="Uniform">Uniform</option>
-                            <option value="Victor">Victor</option><option value="Whiskey">Whiskey</option><option value="X-ray">X-ray</option>
-                            <option value="Yankee">Yankee</option><option value="Zulu">Zulu</option><option value="Irregular">Irregular</option>
+                            <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option><option value="Delta">Delta</option><option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option><option value="Golf">Golf</option><option value="Irregular">Irregular</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Academic Term / A.Y.</label>
+                    <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Academic Term / A.Y.</label>
                         <input type="text" id="pumma-term" value="1ST / 2526" class="w-full border border-slate-300 p-2 rounded outline-none focus:border-emerald-500 bg-white shadow-sm font-bold">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="exportPummaGradesheet('pre')" class="bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-3 rounded font-bold shadow-sm transition flex justify-center items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> PRELIM</button>
                     <button onclick="exportPummaGradesheet('mid')" class="bg-white border border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-3 rounded font-bold shadow-sm transition flex justify-center items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> MIDTERM</button>
@@ -5242,6 +5241,207 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 window.recalculateMetrics();
             });
         });
+        
+        <script>
+        // --- 1. PREVENT DUPLICATE MODALS FROM OLD CODE ---
+        document.querySelectorAll('#assess-modal, #pumma-gradesheet-modal').forEach((el, idx, arr) => {
+            if (idx < arr.length - 1) el.remove(); // Only keep the brand new ones we just pasted
+        });
+
+        // --- 2. THE AUTONOMOUS CONVERSION ENGINE ---
+        window.currentAssessId = null;
+        window.autoConvertedData = { cs: 0, pt: 0, fg: 0 };
+
+        window.openAssessModal = (id) => {
+            window.currentAssessId = id;
+            const cadet = window.cadets.find(c => String(c.id) === String(id));
+            if (!cadet) return;
+
+            document.getElementById('assess-cadet-name').innerText = cadet.name;
+
+            // Extract Live Dashboard Metrics (Safely default to 0 if new)
+            let logsRatio = cadet.logbookCompletion || 0;
+            let eventsRatio = cadet.softCompletion || 0;
+            let dutyRatio = cadet.techCompletion || 0;
+            let meritScore = cadet.totalMeritsSum || 0;
+            let maxMerit = window.appSettings.maxMeritCap || 450;
+            let acadCs = cadet.academicCS || 0; 
+            
+            // Scale everything to 100%
+            let logs = Math.min(100, Math.max(0, logsRatio * 100));
+            let events = Math.min(100, Math.max(0, eventsRatio * 100));
+            let merits = Math.min(100, Math.max(0, (meritScore / maxMerit) * 100));
+            let duty = Math.min(100, Math.max(0, dutyRatio * 100));
+            let gwaPercent = Math.min(100, Math.max(0, (acadCs / 5.0) * 100));
+
+            // Animate Progress Bars
+            setTimeout(() => {
+                document.getElementById('auto-logs-bar').style.width = logs + '%';
+                document.getElementById('auto-events-bar').style.width = events + '%';
+                document.getElementById('auto-merits-bar').style.width = merits + '%';
+                document.getElementById('auto-duty-bar').style.width = duty + '%';
+                document.getElementById('auto-gwa-bar').style.width = gwaPercent + '%';
+            }, 100);
+
+            // Update Text Values
+            document.getElementById('auto-logs-val').innerText = logs.toFixed(1) + '%';
+            document.getElementById('auto-events-val').innerText = events.toFixed(1) + '%';
+            document.getElementById('auto-merits-val').innerText = merits.toFixed(1) + '%';
+            document.getElementById('auto-duty-val').innerText = duty.toFixed(1) + '%';
+            document.getElementById('auto-gwa-val').innerText = gwaPercent.toFixed(1) + '%';
+
+            // THE MATHEMATICAL CONVERSION (Capped at 98)
+            let cs = (logs * 0.3) + (events * 0.3) + (merits * 0.4);
+            if(cs > 98) cs = 98;
+            
+            let pt = (duty * 0.7) + (gwaPercent * 0.3);
+            if(pt > 98) pt = 98;
+            
+            let fg = (cs * 0.6) + (pt * 0.4);
+            
+            // Apply Manual or Star Bonuses to the final grade!
+            fg += (cadet.individualBonus || 0);
+            if (cadet.starCadet) fg += 2;
+            if(fg > 98) fg = 98; // Final Security Cap
+
+            window.autoConvertedData = { cs, pt, fg };
+
+            document.getElementById('auto-cs-final').innerText = cs.toFixed(1);
+            document.getElementById('auto-pt-final').innerText = pt.toFixed(1);
+            document.getElementById('auto-fg-final').innerText = fg.toFixed(1);
+
+            const m = document.getElementById('assess-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeAssessModal = () => {
+            const m = document.getElementById('assess-modal');
+            if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            // Reset bars for next opening
+            ['logs','events','merits','duty','gwa'].forEach(t => document.getElementById(`auto-${t}-bar`).style.width = '0%');
+        };
+
+        window.lockAutoGrades = async () => {
+            if (!window.currentAssessId) return;
+            const term = document.getElementById('auto-lock-term').value;
+            const cadetIndex = window.cadets.findIndex(c => String(c.id) === String(window.currentAssessId));
+            if (cadetIndex === -1) return;
+
+            if (!window.cadets[cadetIndex].pummaGrades) {
+                window.cadets[cadetIndex].pummaGrades = { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
+            }
+
+            window.cadets[cadetIndex].pummaGrades[term] = window.autoConvertedData;
+
+            try {
+                if (typeof updateDoc !== 'undefined') {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { pummaGrades: window.cadets[cadetIndex].pummaGrades });
+                }
+                if (window.logAuditActivity) {
+                    window.logAuditActivity('Grades Locked', `Auto-converted regimental data locked to Term: ${term.toUpperCase()}`, window.cadets[cadetIndex].name);
+                }
+                if (window.customAlert) window.customAlert(`Success! Live Regimental data locked into ${term.toUpperCase()} Term.`);
+                window.closeAssessModal();
+            } catch(e) { console.error(e); }
+        };
+
+        // --- 3. THE PU EXPORTER HUB ---
+        window.openPummaGradesheet = () => {
+            const m = document.getElementById('pumma-gradesheet-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            if(window.lucide) window.lucide.createIcons();
+        };
+        
+        window.closePummaGradesheet = () => {
+            const m = document.getElementById('pumma-gradesheet-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.exportPummaGradesheet = (type) => {
+            const courseSelect = document.getElementById('pumma-course-sec');
+            const targetClass = courseSelect && courseSelect.value.includes("267") ? 3 : 4; 
+            const targetSec = document.getElementById('pumma-section').value;
+
+            // Safely retrieve the exact cadets
+            const filteredCadets = (window.cadets || []).filter(c => parseInt(c.classNum) === targetClass && String(c.section).toUpperCase() === String(targetSec).toUpperCase());
+            const sortedCadets = [...filteredCadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            if (sortedCadets.length === 0) {
+                if(window.customAlert) window.customAlert("No cadets found in the database for this Course/Section.");
+                return;
+            }
+
+            const termAy = document.getElementById('pumma-term').value;
+            const courseCode = courseSelect.value;
+            const courseTitle = courseSelect.options[courseSelect.selectedIndex].text.split('(')[0].trim();
+            let csv = ""; let fileName = "";
+
+            if (type === 'master') {
+                fileName = `PUMMA_MasterSheet_${courseCode.replace(' ', '')}_${targetSec}.csv`;
+                csv += `,PANPACIFIC UNIVERSITY ,,,,,,,,,,,,,,,,,,\n`;
+                csv += `,Campus ,,,,,,,,,,,,,,,,,,\n`;
+                csv += `,GRADING SHEET,,,,,,,,,,,,,,,,,,\n`;
+                csv += `, _${termAy}____,,,,,,,,,,,,,,,,,,\n`;
+                csv += `,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,,,,,,,,,,,,,,\n`;
+                csv += `,Course/Year/ Sec: ${targetSec},,,,,,,,Class Standing,,,,,,,(CS),0.6,,\n`;
+                csv += `,Course Code: ${courseCode},,,,,,,,Periodical Test,,,,,,,(PT),0.4,,\n`;
+                csv += `,Course Title: ${courseTitle},,,,,,,,Research Project,,,,,,,(R/P),___%,,\n`;
+                csv += `No.,,PRELIM,,,,MID-TERM,,,,SEMI-FINALS,,,,FINAL,,,,,REMARKS\n`;
+                csv += `,NAME OF STUDENT,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,SG,\n`;
+
+                sortedCadets.forEach((c, index) => {
+                    const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
+                    
+                    let totalFG = 0; let count = 0;
+                    ['pre', 'mid', 'sem', 'fin'].forEach(t => { if(g[t].fg > 0) { totalFG += parseFloat(g[t].fg); count++; } });
+                    let sg = count > 0 ? (totalFG / count).toFixed(1) : '';
+                    let rem = sg !== '' ? (parseFloat(sg) >= 75 ? 'P' : 'F') : '';
+
+                    const format = (v) => v !== '' && v !== undefined ? Number(v).toFixed(1) : '';
+                    csv += `${index+1},${c.name},${format(g.pre.cs)},${format(g.pre.pt)}, ,${format(g.pre.fg)},`;
+                    csv += `${format(g.mid.cs)},${format(g.mid.pt)}, ,${format(g.mid.fg)},`;
+                    csv += `${format(g.sem.cs)},${format(g.sem.pt)}, ,${format(g.sem.fg)},`;
+                    csv += `${format(g.fin.cs)},${format(g.fin.pt)}, ,${format(g.fin.fg)},`;
+                    csv += `${sg},${rem}\n`;
+                });
+            } else {
+                let termName = "PRELIM";
+                if(type==='mid') termName = "MIDTERM";
+                if(type==='sem') termName = "SEMI-FINAL";
+                if(type==='fin') termName = "FINAL";
+                fileName = `PUMMA_${termName}_${courseCode.replace(' ', '')}_${targetSec}.csv`;
+
+                csv += `,,,,,,,,,,,,,,,,,,,,\n`.repeat(5);
+                csv += `Panpacific University ,,,,,,,,,,,,,,,,,,,,\n`;
+                csv += `Campus,,,,,,,,,,,,,,,,,,,,\n`;
+                csv += `SCHOOL OF URDANETA CITY,,,,,,,,,,,,,,,,,,,,\n`;
+                csv += `,,,,,,,,,,,,,,,PanpacificU-AO-Form-03-RevisionStatus/Date:01/20January2025,,,,,\n`;
+                csv += `COURSE TITLE: ${courseTitle}_${courseCode},,,,,,,,,,,,,,,,,,,,\n`;
+                csv += `PROGRAM & SECTION: ${targetSec},,,,,,,,,,,,,,,,,,,,\n`;
+                csv += `Student No.,NAME,LABORATORY,,,,,,,,,,,,,,,,LECTURE GRADE,${termName} GRADE ,REMARKS\n`;
+                csv += `,,CLASS STANDING,,,,,,,,,,,,,EXAMINATION,,,,,\n`;
+                csv += `,,ASSIGNMENT/QUIZZES/ACTIVITIES/ CLASS PARTICIPATION,,,,,,,,,,,,,${termName} Exam,,,,,\n`;
+                csv += `,,,,,,,,,,,,T,E,Weight %,T,E,Weight %,,,\n`;
+                csv += `,,,,,,,,,,,,0,%,0.6,,%,0.4,,,\n`;
+
+                sortedCadets.forEach(c => {
+                    const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
+                    const t = g[type];
+                    const format = (v) => v !== '' && v !== undefined ? Number(v).toFixed(1) : '';
+                    csv += `,${c.name},,,,,,,,,,,${format(t.cs)},,,${format(t.pt)},,,${format(t.fg)},${t.fg >= 75 ? 'P' : (t.fg !== '' && t.fg !== undefined ? 'F':'')}\n`;
+                });
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
     </script>
 </body>
 </html>
