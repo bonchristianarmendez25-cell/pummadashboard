@@ -103,6 +103,7 @@
                 <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
                 <button onclick="event.stopPropagation(); openColregsModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="scale" class="w-3.5 h-3.5 hidden sm:block"></i> COLREGs</button>
                 <button onclick="event.stopPropagation(); openLawLibrary('SOLAS')" class="bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="library" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime Law</button>
+                <button onclick="event.stopPropagation(); openPummaGradesheet()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="sheet" class="w-3.5 h-3.5 hidden sm:block"></i> PUMMA Grades</button>
                 <button onclick="event.stopPropagation(); openUniformModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="shirt" class="w-3.5 h-3.5 hidden sm:block"></i> Uniform Regs</button>
                 <div class="hidden lg:block w-px h-4 bg-amber-300 dark:bg-amber-700 mx-1"></div>
                 <span class="text-[10px] opacity-70 hover:opacity-100 transition hidden lg:block shrink-0 uppercase tracking-wider">View Board <i data-lucide="arrow-right" class="w-3 h-3 inline pb-0.5"></i></span>
@@ -1173,6 +1174,64 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+    
+    <div id="pumma-gradesheet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
+        <div class="bg-white rounded-xl w-full max-w-[98vw] h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-300">
+            
+            <div class="bg-emerald-800 p-3 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide">
+                    <i data-lucide="sheet" class="w-5 h-5"></i> PUMMA Grading System (Smart Sheet)
+                </h3>
+                <div class="flex items-center gap-4">
+                    <button class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save Sheet</button>
+                    <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div class="p-4 border-b border-slate-300 bg-slate-50 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-700 font-medium">
+                <div>
+                    <h2 class="font-black text-sm text-emerald-900 mb-1">PANPACIFIC UNIVERSITY</h2>
+                    <div>GRADING SHEET</div>
+                    <div class="flex items-center gap-2 mt-1">Term / A.Y.: <input type="text" value="1ST / 2526" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner w-32"></div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1">Course/Year/Sec: <input type="text" value="BSMT 2B" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
+                    <div class="flex items-center gap-2 mb-1">Course Code: <input type="text" value="Nav 254" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
+                    <div class="flex items-center gap-2">Course Title: <input type="text" value="Celestial Navigation" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1"></div>
+                </div>
+                <div class="bg-emerald-100 border border-emerald-300 p-2 rounded text-emerald-900 flex flex-col justify-center">
+                    <div class="font-bold mb-1"><i data-lucide="calculator" class="w-3 h-3 inline"></i> Active Formula Engine:</div>
+                    <div>Class Standing (CS): <strong>60%</strong> (0.6 Weight)</div>
+                    <div>Periodical Test (PT): <strong>40%</strong> (0.4 Weight)</div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-auto bg-slate-200 p-2 custom-scrollbar relative">
+                <table class="w-full bg-white border-collapse border border-slate-400 text-[11px]">
+                    <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm text-slate-700">
+                        <tr>
+                            <th rowspan="2" class="border border-slate-400 p-1 w-8 bg-slate-200">No.</th>
+                            <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left bg-slate-200">NAME OF STUDENT</th>
+                            <th colspan="3" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
+                            <th colspan="3" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
+                            <th colspan="3" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
+                            <th colspan="3" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
+                            <th rowspan="2" class="border border-slate-400 p-1 w-16 bg-slate-800 text-white">S.G.</th>
+                            <th rowspan="2" class="border border-slate-400 p-1 w-20 bg-slate-200">REMARKS</th>
+                        </tr>
+                        <tr class="text-[10px]">
+                            <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-blue-200 font-bold">FG</th>
+                            <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-teal-200 font-bold">FG</th>
+                            <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-amber-200 font-bold">FG</th>
+                            <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-rose-200 font-bold">FG</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pumma-gradesheet-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
     
@@ -2390,6 +2449,98 @@ window.logAdminSettingsActivity = async (action, details) => {
                 // Removed the "docs/" folder requirement. It now looks directly in your main folder!
                 viewer.src = `${window.lawDocuments[docKey]}#view=FitH&toolbar=1`;
             }
+        };
+        
+        // --- PUMMA SMART GRADESHEET ENGINE ---
+        window.openPummaGradesheet = () => {
+            const m = document.getElementById('pumma-gradesheet-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            
+            const tbody = document.getElementById('pumma-gradesheet-body');
+            // Only generate rows if the sheet is empty
+            if (tbody && tbody.innerHTML.trim() === '') {
+                window.renderPummaRows();
+            }
+            if(window.lucide) window.lucide.createIcons();
+        };
+
+        window.closePummaGradesheet = () => {
+            const m = document.getElementById('pumma-gradesheet-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.calculatePummaGrades = (rowId) => {
+            // Helper to get raw cell value
+            const getVal = (term, type) => parseFloat(document.getElementById(`r${rowId}-${term}-${type}`).value) || 0;
+            // Helper to set calculated cell text
+            const setVal = (term, type, val) => document.getElementById(`r${rowId}-${term}-${type}`).innerText = val > 0 ? val.toFixed(1) : '';
+
+            const terms = ['pre', 'mid', 'sem', 'fin'];
+            let totalFG = 0;
+            let computedTerms = 0;
+
+            terms.forEach(term => {
+                let cs = getVal(term, 'cs');
+                let pt = getVal(term, 'pt');
+                
+                // If the instructor entered grades for this term, calculate it!
+                if (cs > 0 || pt > 0) {
+                    // OFFICIAL PUMMA FORMULA: (CS * 0.6) + (PT * 0.4)
+                    let fg = (cs * 0.6) + (pt * 0.4);
+                    setVal(term, 'fg', fg);
+                    totalFG += fg;
+                    computedTerms++;
+                } else {
+                    setVal(term, 'fg', 0);
+                }
+            });
+
+            // Calculate Subject Grade (SG) Average and Remarks
+            if (computedTerms > 0) {
+                let sg = totalFG / computedTerms;
+                document.getElementById(`r${rowId}-sg`).innerText = sg.toFixed(1);
+                
+                let remEl = document.getElementById(`r${rowId}-rem`);
+                if (sg >= 75) {
+                    remEl.innerText = 'PASSED';
+                    remEl.className = 'border-r border-slate-300 text-center font-black text-emerald-600 bg-emerald-50';
+                } else {
+                    remEl.innerText = 'FAILED';
+                    remEl.className = 'border-r border-slate-300 text-center font-black text-red-600 bg-red-50';
+                }
+            } else {
+                document.getElementById(`r${rowId}-sg`).innerText = '';
+                document.getElementById(`r${rowId}-rem`).innerText = '';
+                document.getElementById(`r${rowId}-rem`).className = 'border-r border-slate-300 text-center font-bold';
+            }
+        };
+
+        window.renderPummaRows = () => {
+            let html = '';
+            // Generate 20 blank rows for cadets
+            for(let i=1; i<=20; i++) {
+                // Generates the identical inputs for Prelim, Midterm, Semi, and Final
+                const generateTermCells = (term, colorClass, highlightClass) => `
+                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-cs" oninput="calculatePummaGrades(${i})" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-1.5" min="0" max="100"></td>
+                    <td class="border-r border-slate-300 p-0"><input type="number" id="r${i}-${term}-pt" oninput="calculatePummaGrades(${i})" class="w-full h-full text-center outline-none focus:bg-emerald-100 text-xs py-1.5" min="0" max="100"></td>
+                    <td class="border-r border-slate-300 text-center font-bold ${colorClass}" id="r${i}-${term}-fg"></td>
+                `;
+
+                html += `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-300 group">
+                    <td class="border-r border-slate-300 text-center font-bold text-slate-400 bg-slate-100 group-hover:bg-slate-200 transition">${i}</td>
+                    <td class="border-r border-slate-300 p-0"><input type="text" class="w-full h-full outline-none px-2 py-1.5 focus:bg-emerald-100 font-medium text-slate-800" placeholder="Enter Cadet Name..."></td>
+                    
+                    ${generateTermCells('pre', 'bg-blue-50 text-blue-900')}
+                    ${generateTermCells('mid', 'bg-teal-50 text-teal-900')}
+                    ${generateTermCells('sem', 'bg-amber-50 text-amber-900')}
+                    ${generateTermCells('fin', 'bg-rose-50 text-rose-900')}
+                    
+                    <td class="border-r border-slate-300 text-center font-black bg-slate-800 text-white text-xs" id="r${i}-sg"></td>
+                    <td class="border-r border-slate-300 text-center font-bold tracking-wider text-[10px]" id="r${i}-rem"></td>
+                </tr>`;
+            }
+            document.getElementById('pumma-gradesheet-body').innerHTML = html;
         };
 
         // --- CADET UI LOGIC ---
