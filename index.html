@@ -1995,6 +1995,54 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.customAlert = (msg) => window.showSysDialog('alert', 'SYSTEM NOTIFICATION', msg);
         window.customConfirm = (msg) => window.showSysDialog('confirm', 'CONFIRMATION REQUIRED', msg);
+        // --- CUSTOM SYSTEM DIALOG ENGINE ---
+        window.sysDialogTimer = null;
+        window.showSysDialog = (type, title, msg, defaultInput = '') => {
+            return new Promise((resolve) => {
+                // Instantly stops the fade-out animation if a new box needs to open!
+                if (window.sysDialogTimer) clearTimeout(window.sysDialogTimer);
+                
+                const modal = document.getElementById('sys-dialog-modal');
+                const box = document.getElementById('sys-dialog-box');
+                const titleEl = document.getElementById('sys-dialog-title');
+                const msgEl = document.getElementById('sys-dialog-msg');
+                const inputEl = document.getElementById('sys-dialog-input');
+                const btnCancel = document.getElementById('sys-btn-cancel');
+                const btnOk = document.getElementById('sys-btn-ok');
+
+                modal.classList.remove('hidden'); modal.classList.add('flex');
+                setTimeout(() => box.classList.remove('scale-95', 'opacity-0'), 10);
+
+                titleEl.innerText = title;
+                msgEl.innerText = msg;
+                
+                let icon = 'bell';
+                if(type === 'prompt') icon = 'edit-3';
+                if(type === 'confirm') icon = 'help-circle';
+                document.getElementById('sys-dialog-icon').setAttribute('data-lucide', icon);
+
+                if (type === 'prompt') { inputEl.classList.remove('hidden'); inputEl.value = defaultInput; setTimeout(() => inputEl.focus(), 100); } 
+                else { inputEl.classList.add('hidden'); }
+
+                if (type === 'alert') { btnCancel.classList.add('hidden'); } 
+                else { btnCancel.classList.remove('hidden'); }
+
+                if (window.lucide) window.lucide.createIcons();
+
+                const closeDialog = (result) => {
+                    box.classList.add('scale-95', 'opacity-0');
+                    window.sysDialogTimer = setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
+                    btnOk.onclick = null; btnCancel.onclick = null;
+                    resolve(result);
+                };
+
+                btnOk.onclick = () => closeDialog(type === 'prompt' ? inputEl.value : true);
+                btnCancel.onclick = () => closeDialog(type === 'prompt' ? null : false);
+            });
+        };
+
+        window.customAlert = (msg) => window.showSysDialog('alert', 'SYSTEM NOTIFICATION', msg);
+        window.customConfirm = (msg) => window.showSysDialog('confirm', 'CONFIRMATION REQUIRED', msg);
         window.customPrompt = (msg, defaultText) => window.showSysDialog('prompt', 'INPUT REQUIRED', msg, defaultText);
 
         // --- FULLY DYNAMIC PUMMA REVIEW DECK & CMS ---
