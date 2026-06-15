@@ -2555,9 +2555,10 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.openAssessModal = (id) => {
             window.currentAssessId = id;
-            // FIXED: Using String() prevents ID type mismatch bugs that break the button
-            const cadet = window.appSettings.cadets.find(c => String(c.id) === String(id));
-            if (!cadet) { console.error("Cadet not found"); return; }
+            
+            // DATABASE FIX: Connect directly to the live cadets array
+            const cadet = window.cadets.find(c => String(c.id) === String(id));
+            if (!cadet) { console.error("Cadet not found in live database"); return; }
 
             document.getElementById('assess-cadet-name').innerText = cadet.name;
 
@@ -2566,8 +2567,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             ['pre', 'mid', 'sem', 'fin'].forEach(term => {
                 const csEl = document.getElementById(`assess-${term}-cs`);
                 const ptEl = document.getElementById(`assess-${term}-pt`);
-                if(csEl) csEl.value = g[term].cs !== undefined ? g[term].cs : '';
-                if(ptEl) ptEl.value = g[term].pt !== undefined ? g[term].pt : '';
+                if(csEl) csEl.value = g[term] && g[term].cs !== undefined && g[term].cs !== '' ? g[term].cs : '';
+                if(ptEl) ptEl.value = g[term] && g[term].pt !== undefined && g[term].pt !== '' ? g[term].pt : '';
             });
 
             const m = document.getElementById('assess-modal');
@@ -2583,7 +2584,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.saveAssessData = async () => {
             if (!window.currentAssessId) return;
-            const cadetIndex = window.appSettings.cadets.findIndex(c => String(c.id) === String(window.currentAssessId));
+            const cadetIndex = window.cadets.findIndex(c => String(c.id) === String(window.currentAssessId));
             if (cadetIndex === -1) return;
 
             const getCappedVal = (term, type) => {
@@ -2591,7 +2592,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if (!el || el.value === '') return '';
                 let val = parseFloat(el.value);
                 if (isNaN(val)) return '';
-                if (val > 98) return 98; 
+                if (val > 98) return 98; // Strict 98 Cap
                 return val;
             };
 
@@ -2602,19 +2603,21 @@ window.logAdminSettingsActivity = async (action, details) => {
                 fin: { cs: getCappedVal('fin', 'cs'), pt: getCappedVal('fin', 'pt') }
             };
 
-            window.appSettings.cadets[cadetIndex].pummaGrades = newGrades;
+            // DATABASE FIX: Update the live cadet in memory
+            window.cadets[cadetIndex].pummaGrades = newGrades;
 
             try {
                 if (typeof updateDoc !== 'undefined') {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { cadets: window.appSettings.cadets });
+                    // DATABASE FIX: Save directly to the individual cadet's document!
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { pummaGrades: newGrades });
                 }
                 if (window.logAuditActivity) {
-                    window.logAuditActivity('Cadet Graded', `Updated PUMMA Grades for: ${window.appSettings.cadets[cadetIndex].name}`, 'Assess System');
+                    window.logAuditActivity('Cadet Graded', `Updated PUMMA Grades for: ${window.cadets[cadetIndex].name}`, 'Assess System');
                 }
             } catch (e) { console.error("Cloud save error", e); }
 
             window.closeAssessModal();
-            if (window.customAlert) { window.customAlert("Grades saved successfully. The PU Generator has been updated."); }
+            if (window.customAlert) { window.customAlert("Grades saved securely to Cadet Profile."); }
         };
 
         // --- PUMMA GRADE GENERATOR ENGINE ---
@@ -2632,9 +2635,16 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.getPummaData = () => {
             const data = [];
-            const cadets = window.appSettings.cadets || [];
+            // DATABASE FIX: Pull from live cadets, not appSettings
+            const cadets = window.cadets || [];
 
-            const sortedCadets = [...cadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            // FILTER FIX: Only get cadets for the selected Course/Class and Section
+            const courseSelect = document.getElementById('pumma-course-sec');
+            const targetClass = courseSelect && courseSelect.value.includes("267") ? 3 : 4; 
+            const targetSec = document.getElementById('pumma-section') ? document.getElementById('pumma-section').value : 'Alpha';
+
+            const filteredCadets = cadets.filter(c => parseInt(c.classNum) === targetClass && String(c.section).toUpperCase() === String(targetSec).toUpperCase());
+            const sortedCadets = [...filteredCadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
             sortedCadets.forEach((cadet, index) => {
                 const g = cadet.pummaGrades || { pre:{cs:'',pt:''}, mid:{cs:'',pt:''}, sem:{cs:'',pt:''}, fin:{cs:'',pt:''} };
@@ -2644,15 +2654,14 @@ window.logAdminSettingsActivity = async (action, details) => {
                 let computedTerms = 0;
 
                 ['pre', 'mid', 'sem', 'fin'].forEach(term => {
-                    let cs = parseFloat(g[term].cs);
-                    let pt = parseFloat(g[term].pt);
+                    let cs = parseFloat(g[term] ? g[term].cs : '');
+                    let pt = parseFloat(g[term] ? g[term].pt : '');
                     let fg = 0;
 
                     if (!isNaN(cs) || !isNaN(pt)) {
                         cs = isNaN(cs) ? 0 : cs;
                         pt = isNaN(pt) ? 0 : pt;
                         
-                        // FIXED: Strict 98 Cap for old data
                         if (cs > 98) cs = 98;
                         if (pt > 98) pt = 98;
 
@@ -2698,7 +2707,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             const section = document.getElementById('pumma-section') ? document.getElementById('pumma-section').value : '';
 
             if (data.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data found. Please grade cadets using the 'Assess' button on their profiles first.</div>`;
+                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data found for <strong>${courseText} - Section ${section}</strong>.<br>Please ensure cadets exist in this class/section and grade them using the 'Assess' button.</div>`;
                 title.innerText = "NO DATA";
                 return;
             }
