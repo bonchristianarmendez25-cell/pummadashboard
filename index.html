@@ -1219,79 +1219,52 @@
                     <span class="text-red-600"><strong>Max Grade:</strong> 98</span>
                 </div>
             </div>
-    
-    <div id="pumma-gradesheet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
-        <div class="bg-white rounded-xl w-full max-w-[98vw] h-[95vh] flex flex-col overflow-hidden shadow-2xl border border-slate-300">
-            
-            <div class="bg-emerald-800 p-3 flex justify-between items-center text-white shrink-0">
-                <div class="flex items-center gap-3">
-                    <img src="MOCKBOAT LOGO.png" alt="PUMMA Logo" class="h-8 w-8 object-contain bg-white rounded-full p-0.5 hidden sm:block">
-                    <h3 class="font-bold flex items-center gap-2 text-sm tracking-wide">
-                        <i data-lucide="sheet" class="w-4 h-4"></i> PUMMA Official Grading System
-                    </h3>
-                </div>
-                <div class="flex items-center gap-3">
-                    <select id="pumma-export-type" class="bg-emerald-900 border border-emerald-700 text-white text-xs rounded px-2 py-1 outline-none">
-                        <option value="master">Export: Master Grade Sheet</option>
-                        <option value="pre">Export: Prelim Sheet</option>
-                        <option value="mid">Export: Midterm Sheet</option>
-                        <option value="sem">Export: Semi-Final Sheet</option>
-                        <option value="fin">Export: Finals Sheet</option>
-                    </select>
-                    <button onclick="exportPummaGradesheet()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1 shadow-sm"><i data-lucide="download" class="w-3 h-3"></i> Download CSV</button>
-                    <button onclick="savePummaGrades()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save</button>
-                    <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white ml-2"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
+
+            <div class="flex bg-slate-200 border-b border-slate-300 shrink-0">
+                <button onclick="switchGradeTab('input')" id="tab-input" class="grade-tab active-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">1. DATA ENTRY</button>
+                <div class="w-px bg-slate-300 my-2"></div>
+                <button onclick="switchGradeTab('pre')" id="tab-pre" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Prelim</button>
+                <button onclick="switchGradeTab('mid')" id="tab-mid" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Midterm</button>
+                <button onclick="switchGradeTab('sem')" id="tab-sem" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Semi-Final</button>
+                <button onclick="switchGradeTab('fin')" id="tab-fin" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Final</button>
+                <div class="w-px bg-slate-300 my-2"></div>
+                <button onclick="switchGradeTab('master')" id="tab-master" class="grade-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">MASTER SHEET</button>
             </div>
 
-            <div class="p-4 border-b border-slate-300 bg-slate-50 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-700 font-medium">
-                <div>
-                    <h2 class="font-black text-sm text-emerald-900 mb-1">PANPACIFIC UNIVERSITY</h2>
-                    <div class="text-emerald-700 font-bold">SCHOOL OF URDANETA CITY</div>
-                    <div class="flex items-center gap-2 mt-2">Term / A.Y.: <input type="text" id="pumma-term" value="1ST / 2526" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner w-32"></div>
+            <div class="flex-1 overflow-auto bg-slate-100 p-4 custom-scrollbar relative">
+                <div id="grade-view-input" class="block">
+                    <div class="mb-2 text-xs text-slate-500 italic"><i data-lucide="info" class="w-3 h-3 inline"></i> Enter raw Class Standing (CS) and Periodical Test (PT) scores here. The system will auto-cap at 98.</div>
+                    <table class="w-full bg-white border-collapse border border-slate-400 text-[11px] whitespace-nowrap">
+                        <thead class="bg-slate-200 sticky top-0 z-10 shadow-sm text-slate-700">
+                            <tr>
+                                <th rowspan="2" class="border border-slate-400 p-1 w-8">No.</th>
+                                <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left">NAME OF CADET</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
+                                <th colspan="2" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
+                            </tr>
+                            <tr class="text-[10px]">
+                                <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th>
+                                <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pumma-input-body">
+                            </tbody>
+                    </table>
                 </div>
-                <div>
-                    <div class="flex items-center gap-2 mb-1.5">
-                        Program/Class: 
-                        <select id="pumma-course-sec" class="border border-slate-300 px-2 py-0.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner flex-1">
-                            <option value="PIC 136 - 4th Class">Competency Appraisal 1 (PIC 136) - 4th Class</option>
-                            <option value="PIC 267 - 3rd Class">Competency Appraisal 2 (PIC 267) - 3rd Class</option>
-                        </select>
+
+                <div id="grade-view-output" class="hidden max-w-5xl mx-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 id="output-title" class="font-black text-lg text-emerald-900 uppercase">GENERATED REPORT</h4>
+                        <button onclick="copyGeneratedTable()" class="bg-emerald-100 text-emerald-700 border border-emerald-300 hover:bg-emerald-200 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1 shadow-sm"><i data-lucide="copy" class="w-3 h-3"></i> Copy to Clipboard</button>
                     </div>
-                    <div class="flex items-center gap-2 mb-1">Instructor: <input type="text" id="pumma-instructor" value="Jumer D. Pascua, MM" class="border border-slate-300 px-2 py-0.5 rounded outline-none bg-slate-200 shadow-inner flex-1 font-bold" readonly></div>
-                    <div class="flex items-center gap-2">Dean: <input type="text" id="pumma-dean" value="Jumer D. Pascua, MM" class="border border-slate-300 px-2 py-0.5 rounded outline-none bg-slate-200 shadow-inner flex-1 font-bold" readonly></div>
+                    <div class="bg-white p-6 rounded shadow border border-slate-300 overflow-auto" id="output-container">
+                        </div>
                 </div>
-                <div class="bg-emerald-100 border border-emerald-300 p-2 rounded text-emerald-900 flex flex-col justify-center relative overflow-hidden">
-                    <div class="font-bold mb-1"><i data-lucide="calculator" class="w-3 h-3 inline"></i> Official Formula & Limits:</div>
-                    <div>Class Standing (CS): <strong>60%</strong> | Periodical Test (PT): <strong>40%</strong></div>
-                    <div class="text-red-600 font-black mt-1">MAXIMUM ALLOWABLE GRADE: 98</div>
-                    <i data-lucide="shield-alert" class="w-16 h-16 absolute -right-2 -bottom-2 opacity-10 text-emerald-800"></i>
-                </div>
-            </div>
 
-            <div class="flex-1 overflow-auto bg-slate-200 p-2 custom-scrollbar relative">
-                <table class="w-full bg-white border-collapse border border-slate-400 text-[11px] whitespace-nowrap">
-                    <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm text-slate-700">
-                        <tr>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-8 bg-slate-200">No.</th>
-                            <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left bg-slate-200">NAME OF CADET</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
-                            <th colspan="3" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-16 bg-slate-800 text-white">S.G.</th>
-                            <th rowspan="2" class="border border-slate-400 p-1 w-20 bg-slate-200">REMARKS</th>
-                        </tr>
-                        <tr class="text-[10px]">
-                            <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-blue-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-teal-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-amber-200 font-bold">FG</th>
-                            <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th><th class="border border-slate-400 p-1 w-12 bg-rose-200 font-bold">FG</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pumma-gradesheet-body">
-                        </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -2518,7 +2491,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             const tbody = document.getElementById('pumma-input-body');
             if (tbody && tbody.innerHTML.trim() === '') { window.renderPummaInputRows(); }
-            window.switchGradeTab('input'); // Default to input view
+            window.switchGradeTab('input');
             if(window.lucide) window.lucide.createIcons();
         };
 
@@ -2527,18 +2500,18 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
         };
 
-        // Core Math & Data Extractor
         window.getPummaData = () => {
             const data = [];
             for (let i = 1; i <= 20; i++) {
                 const getVal = (term, type) => {
                     let val = parseFloat(document.getElementById(`r${i}-${term}-${type}`).value) || 0;
-                    if (val > 98) val = 98; // Cap at 98
+                    if (val > 98) val = 98; // Strict Cap at 98
                     return val;
                 };
 
-                const name = document.getElementById(`r${i}-name`).value.trim();
-                if (!name) continue; // Skip empty rows
+                const nameEl = document.getElementById(`r${i}-name`);
+                const name = nameEl ? nameEl.value.trim() : '';
+                if (!name) continue;
 
                 const row = { no: i, name: name, terms: {}, sg: 0, remarks: '' };
                 let totalFG = 0;
@@ -2569,18 +2542,17 @@ window.logAdminSettingsActivity = async (action, details) => {
             return data;
         };
 
-        // Tab Switcher & Table Generator
         window.switchGradeTab = (tabId) => {
-            // Update Tab Styles
             document.querySelectorAll('.grade-tab').forEach(t => {
                 t.classList.remove('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
                 t.classList.add('border-transparent', 'text-slate-600');
             });
             const activeTab = document.getElementById(`tab-${tabId}`);
-            activeTab.classList.add('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
-            activeTab.classList.remove('border-transparent', 'text-slate-600');
+            if (activeTab) {
+                activeTab.classList.add('text-emerald-700', 'border-emerald-600', 'bg-emerald-50');
+                activeTab.classList.remove('border-transparent', 'text-slate-600');
+            }
 
-            // Switch Views
             if (tabId === 'input') {
                 document.getElementById('grade-view-input').classList.remove('hidden');
                 document.getElementById('grade-view-output').classList.add('hidden');
@@ -2601,7 +2573,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             const section = document.getElementById('pumma-section').value;
 
             if (data.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data entered yet. Please go to DATA ENTRY.</div>`;
+                container.innerHTML = `<div class="text-center text-slate-400 py-10">No cadet data entered yet. Please go to 1. DATA ENTRY to begin.</div>`;
                 title.innerText = "NO DATA";
                 return;
             }
@@ -2611,8 +2583,6 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             if (tabId === 'master') {
                 title.innerText = "MASTER GRADING SHEET (READY FOR EXCEL)";
-                
-                // Master Sheet 20-Column Layout
                 html += `<thead style="background-color: #e2e8f0;"><tr>
                     <th>No.</th><th>NAME OF STUDENT</th>
                     <th>CS</th><th>PT</th><th>T</th><th>FG</th>
@@ -2639,7 +2609,6 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if(tabId === 'sem') tName = "SEMI-FINAL";
                 title.innerText = `${tName} GRADE SHEET (READY FOR EXCEL)`;
                 
-                // Term Sheet 24-Column Ghost Layout (Aligns perfectly with the 11 blank columns in the PU Excel format)
                 html += `<thead style="background-color: #e2e8f0; font-size: 10px;"><tr>
                     <th>A</th><th>B</th><th>NAME (C)</th>
                     <th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th>
@@ -2651,31 +2620,29 @@ window.logAdminSettingsActivity = async (action, details) => {
                 data.forEach(d => {
                     let t = d.terms[tabId];
                     let termRem = t.fg >= 75 ? 'P' : (t.fg > 0 ? 'F' : ''); 
-                    
                     html += `<tr>`;
-                    html += `<td></td><td></td>`; // Col A, B blank
-                    html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`; // Col C
-                    html += `<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`; // Col D-N (11 blanks)
-                    html += `<td>${t.cs||''}</td>`; // Col O (CS)
-                    html += `<td></td><td></td><td></td>`; // Col P-R (3 blanks)
-                    html += `<td>${t.pt||''}</td>`; // Col S (PT)
-                    html += `<td></td><td></td><td></td>`; // Col T-V (3 blanks)
-                    html += `<td style="background-color: #f8fafc;">${t.fg||''}</td>`; // Col W (FG)
-                    html += `<td style="color:${termRem==='P'?'green':'red'}; font-weight: bold;">${termRem}</td>`; // Col X (Rem)
+                    html += `<td></td><td></td>`; 
+                    html += `<td style="text-align: left; font-weight: bold;">${d.name}</td>`; 
+                    html += `<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>`; 
+                    html += `<td>${t.cs||''}</td>`; 
+                    html += `<td></td><td></td><td></td>`; 
+                    html += `<td>${t.pt||''}</td>`; 
+                    html += `<td></td><td></td><td></td>`; 
+                    html += `<td style="background-color: #f8fafc;">${t.fg||''}</td>`; 
+                    html += `<td style="color:${termRem==='P'?'green':'red'}; font-weight: bold;">${termRem}</td>`; 
                     html += `</tr>`;
                 });
             }
 
             html += `</tbody></table></div>`;
             
-            // On-Screen Helper Instructions
             html += `<div class="mt-4 bg-emerald-50 border border-emerald-200 p-3 rounded text-emerald-800 text-xs shadow-sm">`;
             html += `<strong><i data-lucide="clipboard-paste" class="w-4 h-4 inline pb-0.5"></i> Excel Paste Instructions:</strong><br>`;
             html += `<ol class="list-decimal ml-5 mt-1 space-y-1">`;
-            html += `<li>Click the <b>Copy to Clipboard</b> button above.</li>`;
-            html += `<li>Open your Official PU Excel file for the <b>${courseText} - Section ${section}</b>.</li>`;
-            html += `<li>Click on the very first blank data cell (For Master Sheet: Cell <b>A11</b> | For Term Sheets: Cell <b>A17</b>).</li>`;
-            html += `<li>Press <b>Ctrl + V</b> to paste. The ghost columns will instantly format your data perfectly!</li>`;
+            html += `<li>Click <b>Copy to Clipboard</b>.</li>`;
+            html += `<li>Open official PU Excel file for <b>${courseText} - Section ${section}</b>.</li>`;
+            html += `<li>Click on the first blank data cell (Master Sheet: <b>A11</b> | Term Sheets: <b>A17</b>).</li>`;
+            html += `<li>Press <b>Ctrl + V</b> to paste.</li>`;
             html += `</ol></div>`;
 
             container.innerHTML = html;
@@ -2685,13 +2652,11 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.copyGeneratedTable = () => {
             const area = document.getElementById('copyable-table-area');
             if(!area) return;
-            
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(area);
             selection.removeAllRanges();
             selection.addRange(range);
-            
             try {
                 document.execCommand('copy');
                 window.customAlert("Data Grid Copied! Switch to Excel and press Ctrl+V to paste.");
@@ -2700,6 +2665,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
             selection.removeAllRanges();
         };
+
         window.savePummaGrades = async () => {
             const gradesData = [];
             for (let i = 1; i <= 20; i++) {
