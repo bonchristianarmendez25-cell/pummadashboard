@@ -5245,7 +5245,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         <script>
         // --- 1. PREVENT DUPLICATE MODALS FROM OLD CODE ---
         document.querySelectorAll('#assess-modal, #pumma-gradesheet-modal').forEach((el, idx, arr) => {
-            if (idx < arr.length - 1) el.remove(); // Only keep the brand new ones we just pasted
+            if (idx < arr.length - 1) el.remove(); 
         });
 
         // --- 2. THE AUTONOMOUS CONVERSION ENGINE ---
@@ -5257,14 +5257,15 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const cadet = window.cadets.find(c => String(c.id) === String(id));
             if (!cadet) return;
 
-            document.getElementById('assess-cadet-name').innerText = cadet.name;
+            const nameEl = document.getElementById('assess-cadet-name');
+            if (nameEl) nameEl.innerText = cadet.name;
 
             // Extract Live Dashboard Metrics (Safely default to 0 if new)
             let logsRatio = cadet.logbookCompletion || 0;
             let eventsRatio = cadet.softCompletion || 0;
             let dutyRatio = cadet.techCompletion || 0;
             let meritScore = cadet.totalMeritsSum || 0;
-            let maxMerit = window.appSettings.maxMeritCap || 450;
+            let maxMerit = (window.appSettings && window.appSettings.maxMeritCap) ? window.appSettings.maxMeritCap : 450;
             let acadCs = cadet.academicCS || 0; 
             
             // Scale everything to 100%
@@ -5276,19 +5277,19 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
 
             // Animate Progress Bars
             setTimeout(() => {
-                document.getElementById('auto-logs-bar').style.width = logs + '%';
-                document.getElementById('auto-events-bar').style.width = events + '%';
-                document.getElementById('auto-merits-bar').style.width = merits + '%';
-                document.getElementById('auto-duty-bar').style.width = duty + '%';
-                document.getElementById('auto-gwa-bar').style.width = gwaPercent + '%';
+                const b1 = document.getElementById('auto-logs-bar'); if(b1) b1.style.width = logs + '%';
+                const b2 = document.getElementById('auto-events-bar'); if(b2) b2.style.width = events + '%';
+                const b3 = document.getElementById('auto-merits-bar'); if(b3) b3.style.width = merits + '%';
+                const b4 = document.getElementById('auto-duty-bar'); if(b4) b4.style.width = duty + '%';
+                const b5 = document.getElementById('auto-gwa-bar'); if(b5) b5.style.width = gwaPercent + '%';
             }, 100);
 
             // Update Text Values
-            document.getElementById('auto-logs-val').innerText = logs.toFixed(1) + '%';
-            document.getElementById('auto-events-val').innerText = events.toFixed(1) + '%';
-            document.getElementById('auto-merits-val').innerText = merits.toFixed(1) + '%';
-            document.getElementById('auto-duty-val').innerText = duty.toFixed(1) + '%';
-            document.getElementById('auto-gwa-val').innerText = gwaPercent.toFixed(1) + '%';
+            const v1 = document.getElementById('auto-logs-val'); if(v1) v1.innerText = logs.toFixed(1) + '%';
+            const v2 = document.getElementById('auto-events-val'); if(v2) v2.innerText = events.toFixed(1) + '%';
+            const v3 = document.getElementById('auto-merits-val'); if(v3) v3.innerText = merits.toFixed(1) + '%';
+            const v4 = document.getElementById('auto-duty-val'); if(v4) v4.innerText = duty.toFixed(1) + '%';
+            const v5 = document.getElementById('auto-gwa-val'); if(v5) v5.innerText = gwaPercent.toFixed(1) + '%';
 
             // THE MATHEMATICAL CONVERSION (Capped at 98)
             let cs = (logs * 0.3) + (events * 0.3) + (merits * 0.4);
@@ -5306,12 +5307,12 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
 
             window.autoConvertedData = { cs, pt, fg };
 
-            document.getElementById('auto-cs-final').innerText = cs.toFixed(1);
-            document.getElementById('auto-pt-final').innerText = pt.toFixed(1);
-            document.getElementById('auto-fg-final').innerText = fg.toFixed(1);
+            const cF = document.getElementById('auto-cs-final'); if(cF) cF.innerText = cs.toFixed(1);
+            const pF = document.getElementById('auto-pt-final'); if(pF) pF.innerText = pt.toFixed(1);
+            const fF = document.getElementById('auto-fg-final'); if(fF) fF.innerText = fg.toFixed(1);
 
             const m = document.getElementById('assess-modal');
-            m.classList.remove('hidden'); m.classList.add('flex');
+            if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
             if(window.lucide) window.lucide.createIcons();
         };
 
@@ -5319,12 +5320,17 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const m = document.getElementById('assess-modal');
             if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
             // Reset bars for next opening
-            ['logs','events','merits','duty','gwa'].forEach(t => document.getElementById(`auto-${t}-bar`).style.width = '0%');
+            ['logs','events','merits','duty','gwa'].forEach(t => {
+                const bar = document.getElementById(`auto-${t}-bar`);
+                if(bar) bar.style.width = '0%';
+            });
         };
 
         window.lockAutoGrades = async () => {
             if (!window.currentAssessId) return;
-            const term = document.getElementById('auto-lock-term').value;
+            const termEl = document.getElementById('auto-lock-term');
+            if (!termEl) return;
+            const term = termEl.value;
             const cadetIndex = window.cadets.findIndex(c => String(c.id) === String(window.currentAssessId));
             if (cadetIndex === -1) return;
 
@@ -5335,7 +5341,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             window.cadets[cadetIndex].pummaGrades[term] = window.autoConvertedData;
 
             try {
-                if (typeof updateDoc !== 'undefined') {
+                if (typeof updateDoc !== 'undefined' && typeof doc !== 'undefined' && typeof db !== 'undefined' && typeof appId !== 'undefined') {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { pummaGrades: window.cadets[cadetIndex].pummaGrades });
                 }
                 if (window.logAuditActivity) {
@@ -5361,7 +5367,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         window.exportPummaGradesheet = (type) => {
             const courseSelect = document.getElementById('pumma-course-sec');
             const targetClass = courseSelect && courseSelect.value.includes("267") ? 3 : 4; 
-            const targetSec = document.getElementById('pumma-section').value;
+            const secEl = document.getElementById('pumma-section');
+            const targetSec = secEl ? secEl.value : '';
 
             // Safely retrieve the exact cadets
             const filteredCadets = (window.cadets || []).filter(c => parseInt(c.classNum) === targetClass && String(c.section).toUpperCase() === String(targetSec).toUpperCase());
@@ -5372,7 +5379,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 return;
             }
 
-            const termAy = document.getElementById('pumma-term').value;
+            const termEl = document.getElementById('pumma-term');
+            const termAy = termEl ? termEl.value : '1ST / 2526';
             const courseCode = courseSelect.value;
             const courseTitle = courseSelect.options[courseSelect.selectedIndex].text.split('(')[0].trim();
             let csv = ""; let fileName = "";
@@ -5394,11 +5402,11 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
                     
                     let totalFG = 0; let count = 0;
-                    ['pre', 'mid', 'sem', 'fin'].forEach(t => { if(g[t].fg > 0) { totalFG += parseFloat(g[t].fg); count++; } });
+                    ['pre', 'mid', 'sem', 'fin'].forEach(t => { if(g[t] && g[t].fg > 0) { totalFG += parseFloat(g[t].fg); count++; } });
                     let sg = count > 0 ? (totalFG / count).toFixed(1) : '';
                     let rem = sg !== '' ? (parseFloat(sg) >= 75 ? 'P' : 'F') : '';
 
-                    const format = (v) => v !== '' && v !== undefined ? Number(v).toFixed(1) : '';
+                    const format = (v) => v !== '' && v !== undefined && !isNaN(v) ? Number(v).toFixed(1) : '';
                     csv += `${index+1},${c.name},${format(g.pre.cs)},${format(g.pre.pt)}, ,${format(g.pre.fg)},`;
                     csv += `${format(g.mid.cs)},${format(g.mid.pt)}, ,${format(g.mid.fg)},`;
                     csv += `${format(g.sem.cs)},${format(g.sem.pt)}, ,${format(g.sem.fg)},`;
@@ -5427,8 +5435,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
 
                 sortedCadets.forEach(c => {
                     const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
-                    const t = g[type];
-                    const format = (v) => v !== '' && v !== undefined ? Number(v).toFixed(1) : '';
+                    const t = g[type] || {cs:'',pt:'',fg:''};
+                    const format = (v) => v !== '' && v !== undefined && !isNaN(v) ? Number(v).toFixed(1) : '';
                     csv += `,${c.name},,,,,,,,,,,${format(t.cs)},,,${format(t.pt)},,,${format(t.fg)},${t.fg >= 75 ? 'P' : (t.fg !== '' && t.fg !== undefined ? 'F':'')}\n`;
                 });
             }
