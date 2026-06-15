@@ -2350,12 +2350,13 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
         };
 
-        // --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
+// --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
+        // Updated to perfectly match your exact GitHub file names
         window.lawDocuments = {
-            'SOLAS': 'SOLAS.pdf',
-            'MARPOL': 'MARPOL.pdf',
-            'STCW': 'STCW.pdf',
-            'MLC': 'MLC.pdf'
+            'SOLAS': 'SOLAS-Consolidated-Edition-2018.docx.pdf',
+            'MARPOL': 'marpol.pdf',
+            'STCW': 'stcw code 2017 edition.pdf',
+            'MLC': 'wcms_090250.pdf'
         };
 
         window.openLawLibrary = (defaultDoc = 'SOLAS') => {
@@ -2386,9 +2387,8 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             const viewer = document.getElementById('law-pdf-viewer');
             if (window.lawDocuments[docKey]) {
-                // Construct the path to the PDF inside your docs folder
-                // Adding toolbar=0 keeps the viewer clean, but users can still scroll/search natively
-                viewer.src = `docs/${window.lawDocuments[docKey]}#view=FitH&toolbar=1`;
+                // Removed the "docs/" folder requirement. It now looks directly in your main folder!
+                viewer.src = `${window.lawDocuments[docKey]}#view=FitH&toolbar=1`;
             }
         };
 
