@@ -28,6 +28,26 @@
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 1. Annihilate Right-Click (Context Menu)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // 2. Intercept and Destroy Keyboard Shortcuts
+        document.onkeydown = function(e) {
+            // Block F12 (DevTools)
+            if (e.keyCode == 123) { return false; }
+            // Block Ctrl+Shift+I (Inspect)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) { return false; }
+            // Block Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 74) { return false; }
+            // Block Ctrl+Shift+C (Element Selector)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 67) { return false; }
+            // Block Ctrl+U (View Source)
+            if (e.ctrlKey && e.keyCode == 85) { return false; }
+            // Block Ctrl+P (Print - forces cadets to use your custom PDF buttons)
+            if (e.ctrlKey && e.keyCode == 80) { return false; }
+        };
+    </script>
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1083,31 +1103,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- REGIMENTAL OPSEC: ANTI-SNOOP SHIELD ---
-        document.addEventListener('contextmenu', event => {
-            event.preventDefault(); // Blocks Right-Click
-        });
-
-        document.addEventListener('keydown', (e) => {
-            // Blocks F12 (DevTools)
-            if (e.key === 'F12' || e.keyCode === 123) {
-                e.preventDefault();
-            }
-            // Blocks Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (Inspectors)
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-                e.preventDefault();
-            }
-            // Blocks Ctrl+U (View Source)
-            if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
-                e.preventDefault();
-            }
-            // Blocks Ctrl+P (Print - forces them to use your official print buttons)
-            if (e.ctrlKey && (e.key === 'P' || e.key === 'p')) {
-                e.preventDefault();
-            }
-        });
-        
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         
