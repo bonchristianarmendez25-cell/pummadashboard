@@ -1186,23 +1186,20 @@
                         <i data-lucide="calculator" class="w-4 h-4"></i> PU Grade Auto-Generator
                     </h3>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="savePummaGrades()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Save Data</button>
-                    <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white ml-2"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
+                <button onclick="closePummaGradesheet()" class="text-white/70 hover:text-white ml-2"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <div class="p-3 border-b border-slate-300 bg-slate-50 shrink-0 flex flex-wrap gap-4 items-end text-xs text-slate-700 font-medium">
                 <div class="flex-1 min-w-[300px]">
                     <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Course & Class</label>
-                    <select id="pumma-course-sec" class="w-full border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900">
+                    <select id="pumma-course-sec" class="w-full border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900" onchange="if(typeof generateOutputTable === 'function') { const active = document.querySelector('.grade-tab.text-emerald-700'); if(active) generateOutputTable(active.id.replace('tab-','')); }">
                         <option value="PIC 136">Competency Appraisal 1 (PIC 136) - 4th Class</option>
                         <option value="PIC 267">Competency Appraisal 2 (PIC 267) - 3rd Class</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Section</label>
-                    <select id="pumma-section" class="w-32 border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900">
+                    <select id="pumma-section" class="w-32 border border-slate-300 p-1.5 rounded outline-none focus:border-emerald-500 bg-white shadow-inner font-bold text-emerald-900" onchange="if(typeof generateOutputTable === 'function') { const active = document.querySelector('.grade-tab.text-emerald-700'); if(active) generateOutputTable(active.id.replace('tab-','')); }">
                         <option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Charlie">Charlie</option>
                         <option value="Delta">Delta</option><option value="Echo">Echo</option><option value="Foxtrot">Foxtrot</option>
                         <option value="Golf">Golf</option><option value="Hotel">Hotel</option><option value="India">India</option>
@@ -1215,15 +1212,12 @@
                     </select>
                 </div>
                 <div class="bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded text-emerald-900 flex items-center gap-4">
-                    <span><strong>Formula:</strong> CS (60%) + PT (40%)</span>
-                    <span class="text-red-600"><strong>Max Grade:</strong> 98</span>
+                    <span><i data-lucide="link" class="w-3 h-3 inline pb-0.5"></i> <strong>Source:</strong> Auto-synced from Cadet Assess Tool</span>
                 </div>
             </div>
 
             <div class="flex bg-slate-200 border-b border-slate-300 shrink-0">
-                <button onclick="switchGradeTab('input')" id="tab-input" class="grade-tab active-tab px-6 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">1. DATA ENTRY</button>
-                <div class="w-px bg-slate-300 my-2"></div>
-                <button onclick="switchGradeTab('pre')" id="tab-pre" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Prelim</button>
+                <button onclick="switchGradeTab('pre')" id="tab-pre" class="grade-tab active-tab text-emerald-700 border-emerald-600 bg-emerald-50 px-4 py-2 text-xs font-bold border-b-2 hover:text-emerald-700 transition">Prelim</button>
                 <button onclick="switchGradeTab('mid')" id="tab-mid" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Midterm</button>
                 <button onclick="switchGradeTab('sem')" id="tab-sem" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Semi-Final</button>
                 <button onclick="switchGradeTab('fin')" id="tab-fin" class="grade-tab px-4 py-2 text-xs font-bold text-slate-600 border-b-2 border-transparent hover:text-emerald-700 transition">Final</button>
@@ -1232,31 +1226,7 @@
             </div>
 
             <div class="flex-1 overflow-auto bg-slate-100 p-4 custom-scrollbar relative">
-                <div id="grade-view-input" class="block">
-                    <div class="mb-2 text-xs text-slate-500 italic"><i data-lucide="info" class="w-3 h-3 inline"></i> Enter raw Class Standing (CS) and Periodical Test (PT) scores here. The system will auto-cap at 98.</div>
-                    <table class="w-full bg-white border-collapse border border-slate-400 text-[11px] whitespace-nowrap">
-                        <thead class="bg-slate-200 sticky top-0 z-10 shadow-sm text-slate-700">
-                            <tr>
-                                <th rowspan="2" class="border border-slate-400 p-1 w-8">No.</th>
-                                <th rowspan="2" class="border border-slate-400 p-2 w-64 text-left">NAME OF CADET</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-blue-100">PRELIM</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-teal-100">MID-TERM</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-amber-100">SEMI-FINALS</th>
-                                <th colspan="2" class="border border-slate-400 p-1 bg-rose-100">FINAL</th>
-                            </tr>
-                            <tr class="text-[10px]">
-                                <th class="border border-slate-400 p-1 w-12 bg-blue-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-blue-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-teal-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-teal-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-amber-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-amber-50">PT</th>
-                                <th class="border border-slate-400 p-1 w-12 bg-rose-50">CS</th><th class="border border-slate-400 p-1 w-12 bg-rose-50">PT</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pumma-input-body">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div id="grade-view-output" class="hidden max-w-5xl mx-auto">
+                <div id="grade-view-output" class="block max-w-5xl mx-auto">
                     <div class="flex justify-between items-center mb-3">
                         <h4 id="output-title" class="font-black text-lg text-emerald-900 uppercase">GENERATED REPORT</h4>
                         <button onclick="copyGeneratedTable()" class="bg-emerald-100 text-emerald-700 border border-emerald-300 hover:bg-emerald-200 px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1 shadow-sm"><i data-lucide="copy" class="w-3 h-3"></i> Copy to Clipboard</button>
@@ -1264,7 +1234,6 @@
                     <div class="bg-white p-6 rounded shadow border border-slate-300 overflow-auto" id="output-container">
                         </div>
                 </div>
-
             </div>
         </div>
     </div>
