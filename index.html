@@ -2614,7 +2614,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             };
 
             if (exportType === 'master') {
-                // EXPORT 1: MASTER GRADE SHEET (Matches "Grade Sheet.csv")
+                // EXPORT 1: MASTER GRADE SHEET
                 fileName = `PUMMA_MasterSheet_${courseCode.replace(' ', '')}.csv`;
                 csv += `,PANPACIFIC UNIVERSITY ,,,,,,,,,,,,,,,,,,\n`;
                 csv += `,Campus ,,,,,,,,,,,,,,,,,,\n`;
@@ -2644,7 +2644,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 csv += `FACULTY (PUMMA),,,,,,,,,,,,,,,,DEAN PUMMA,,\n`;
 
             } else {
-                // EXPORT 2-5: TERM-SPECIFIC SHEETS (Matches prelim.csv, midterm.csv, etc.)
+                // EXPORT 2-5: TERM-SPECIFIC SHEETS
                 let termName = "PRELIM"; let tKey = "pre";
                 if(exportType === 'mid') { termName = "MIDTERM"; tKey = "mid"; }
                 if(exportType === 'sem') { termName = "SEMI-FINAL"; tKey = "sem"; }
@@ -2661,7 +2661,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 csv += `PROGRAM & SECTION: ${courseSecRaw},,,,,,,,,,,,,,,,,,,,\n`;
                 csv += `Student No.,NAME,LABORATORY,,,,,,,,,,,,,,,,LECTURE GRADE,${termName} GRADE ,REMARKS\n`;
                 csv += `,,CLASS STANDING,,,,,,,,,,,,,EXAMINATION,,,,,\n`;
-                csv += `,,ASSIGNMENT/QUIZZES/ACTIVITIES/ CLASS PARTICIPATION,,,,,,,,,,,,,${termName} Exam,,,,,\n`;
+                csv += `,,ASSIGNMENT/QUIZZES/ACTIVITIES/ CLASS PARTICIPATION,,,,,,,,,,,,,${termName === 'FINALS' ? 'Final Exam' : termName + ' Exam'},,,,,\n`;
                 csv += `,,,,,,,,,,,,T,E,Weight %,T,E,Weight %,,,\n`;
                 csv += `,,,,,,,,,,,,0,%,0.6,,%,0.4,,,\n`;
 
@@ -2674,7 +2674,6 @@ window.logAdminSettingsActivity = async (action, details) => {
                     let rem = getV(`r${i}-rem`);
                     rem = rem === 'PASSED' ? 'P' : (rem === 'FAILED' ? 'F' : '');
 
-                    // Matches exact spacing from your PDF/CSV: Name, 11 blanks, CS, 3 blanks, PT, 3 blanks, FG, Rem
                     csv += `,,${name},,,,,,,,,,,${cs},,,${pt},,,${fg},${rem}\n`;
                 }
                 csv += `\nSubmitted by:,,,,,,,,,,,,,,,,Reviewed by:,,,,\n`;
