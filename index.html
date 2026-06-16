@@ -1004,7 +1004,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div class="flex flex-col"><label class="text-[10px] font-bold mb-1 text-rose-600 dark:text-rose-400">Mockboat Duties <span class="text-slate-400 font-normal">(50% of CS)</span></label><input type="number" id="conv-mockboat" min="0" max="100" placeholder="0-100" oninput="converterLiveCalc()" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-xs outline-none focus:border-rose-500 text-center font-bold transition dark:text-white"></div>
                                 <div class="flex flex-col"><label class="text-[10px] font-bold mb-1 text-blue-600 dark:text-blue-400">Logbook Recording <span class="text-slate-400 font-normal">(25% of CS)</span></label><input type="number" id="conv-logbook" min="0" max="100" placeholder="0-100" oninput="converterLiveCalc()" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-xs outline-none focus:border-blue-500 text-center font-bold transition dark:text-white"></div>
-                                <div class="flex flex-col"><label class="text-[10px] font-bold mb-1 text-amber-600 dark:text-amber-400">Patriotism / Merits <span class="text-slate-400 font-normal">(25% of CS)</span></label><input type="number" id="conv-patriotism" min="0" max="100" placeholder="0-100" oninput="converterLiveCalc()" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-xs outline-none focus:border-amber-500 text-center font-bold transition dark:text-white"></div>
+                                <div class="flex flex-col"><label class="text-[10px] font-bold mb-1 text-amber-600 dark:text-amber-400">Patriotism / Merits <span class="text-slate-400 font-normal">(Raw Balance)</span></label><input type="number" id="conv-patriotism" placeholder="e.g. 0, -10, 150" oninput="converterLiveCalc()" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-xs outline-none focus:border-amber-500 text-center font-bold transition dark:text-white"></div>
                                 <div class="flex flex-col"><label class="text-[10px] font-bold mb-1 text-emerald-700 dark:text-emerald-400">ICPE Exam Score <span class="text-slate-400 font-normal">(100% of PT)</span></label><input type="number" id="conv-icpe" min="0" max="100" placeholder="0-100" oninput="converterLiveCalc()" class="p-2 border border-emerald-400 dark:border-emerald-800 rounded-lg bg-white dark:bg-slate-900 text-xs outline-none focus:border-emerald-600 text-center font-bold transition dark:text-white"></div>
                             </div>
                         </div>
@@ -1191,13 +1191,51 @@
         };
 
         window.converterLiveCalc = () => {
-            const mockboat   = parseFloat(document.getElementById('conv-mockboat').value)   || 0;
-            const logbook    = parseFloat(document.getElementById('conv-logbook').value)    || 0;
-            const patriotism = parseFloat(document.getElementById('conv-patriotism').value) || 0;
-            const icpe       = parseFloat(document.getElementById('conv-icpe').value)       || 0;
-            const cs = (mockboat * 0.50) + (logbook * 0.25) + (patriotism * 0.25);
-            const pt = icpe;
-            const fg = Math.min(98, (cs * 0.60) + (pt * 0.40));
+            const mockboat   = parseFloat(document.getElementById('conv-mockboat').value);
+            const logbook    = parseFloat(document.getElementById('conv-logbook').value);
+            const rawMerits  = parseFloat(document.getElementById('conv-patriotism').value);
+            const icpe       = parseFloat(document.getElementById('conv-icpe').value);
+            
+            const m_val_raw = isNaN(mockboat) ? null : mockboat;
+            const l_val_raw = isNaN(logbook) ? null : logbook;
+            const pat_val_raw = isNaN(rawMerits) ? null : rawMerits;
+            const pt_val_raw = isNaN(icpe) ? null : icpe;
+
+            // Converter Logic for Raw Merits -> Grade
+            let p_val = 0;
+            if (pat_val_raw !== null) {
+                let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
+                if (pat_val_raw >= 0) {
+                    p_val = 85 + (pat_val_raw / cap) * 13;
+                    if (p_val > 98) p_val = 98;
+                } else {
+                    p_val = 85 + (pat_val_raw / 10);
+                    if (p_val < 0) p_val = 0;
+                }
+            }
+
+            let cs = 0;
+            if (m_val_raw !== null || l_val_raw !== null || pat_val_raw !== null) {
+                let m = m_val_raw || 0;
+                let l = l_val_raw || 0;
+                let p = p_val;
+                
+                let w_m = m_val_raw !== null ? 0.50 : 0; 
+                let w_l = l_val_raw !== null ? 0.25 : 0;
+                let w_p = pat_val_raw !== null ? 0.25 : 0;
+                let totalWeight = w_m + w_l + w_p;
+                if(totalWeight > 0) cs = ((m * w_m) + (l * w_l) + (p * w_p)) / totalWeight;
+                if(cs > 98) cs = 98;
+            }
+
+            let pt = pt_val_raw || 0;
+            if(pt > 98) pt = 98;
+
+            let fg = 0;
+            if (cs > 0 || pt > 0) {
+                fg = Math.min(98, (cs * 0.60) + (pt * 0.40));
+            }
+
             const result = document.getElementById('conv-live-result');
             if (result) result.classList.remove('hidden');
             const csEl = document.getElementById('conv-live-cs'); if(csEl) csEl.innerText = cs.toFixed(2);
@@ -1211,16 +1249,41 @@
             const studentNo  = document.getElementById('conv-studentNo').value.trim();
             const name       = document.getElementById('conv-cadetName').value.toUpperCase().trim();
             const term       = document.getElementById('conv-term').value;
-            const mockboat   = parseFloat(document.getElementById('conv-mockboat').value)   || 0;
-            const logbook    = parseFloat(document.getElementById('conv-logbook').value)    || 0;
-            const patriotism = parseFloat(document.getElementById('conv-patriotism').value) || 0;
-            const icpe       = parseFloat(document.getElementById('conv-icpe').value)       || 0;
+            const mockboat   = parseFloat(document.getElementById('conv-mockboat').value);
+            const logbook    = parseFloat(document.getElementById('conv-logbook').value);
+            const rawMerits  = parseFloat(document.getElementById('conv-patriotism').value);
+            const icpe       = parseFloat(document.getElementById('conv-icpe').value);
+            
             if (!studentNo || !name) { alert('Please enter Student No. and Cadet Name.'); return; }
-            const cs = (mockboat * 0.50) + (logbook * 0.25) + (patriotism * 0.25);
-            const pt = icpe;
-            const fg = Math.min(98, (cs * 0.60) + (pt * 0.40));
+
+            const m_val_raw = isNaN(mockboat) ? null : mockboat;
+            const l_val_raw = isNaN(logbook) ? null : logbook;
+            const pat_val_raw = isNaN(rawMerits) ? null : rawMerits;
+            const pt_val_raw = isNaN(icpe) ? null : icpe;
+
+            let p_val = 0;
+            if (pat_val_raw !== null) {
+                let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
+                if (pat_val_raw >= 0) { p_val = 85 + (pat_val_raw / cap) * 13; if (p_val > 98) p_val = 98; } 
+                else { p_val = 85 + (pat_val_raw / 10); if (p_val < 0) p_val = 0; }
+            }
+
+            let cs = 0;
+            if (m_val_raw !== null || l_val_raw !== null || pat_val_raw !== null) {
+                let m = m_val_raw || 0; let l = l_val_raw || 0; let p = p_val;
+                let w_m = m_val_raw !== null ? 0.50 : 0; let w_l = l_val_raw !== null ? 0.25 : 0; let w_p = pat_val_raw !== null ? 0.25 : 0;
+                let totalWeight = w_m + w_l + w_p;
+                if(totalWeight > 0) cs = ((m * w_m) + (l * w_l) + (p * w_p)) / totalWeight;
+                if(cs > 98) cs = 98;
+            }
+
+            let pt = pt_val_raw || 0;
+            if(pt > 98) pt = 98;
+            let fg = Math.min(98, (cs * 0.60) + (pt * 0.40));
+
             if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',fg:''}, MIDTERM:{cs:'',pt:'',fg:''}, SEMI:{cs:'',pt:'',fg:''}, FINAL:{cs:'',pt:'',fg:''} }; }
             convRecords[studentNo][term] = { cs: cs.toFixed(2), pt: pt.toFixed(2), fg: fg.toFixed(2) };
+            
             converterRenderTable();
             ['conv-mockboat','conv-logbook','conv-patriotism','conv-icpe'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
             const liveEl = document.getElementById('conv-live-result'); if(liveEl) liveEl.classList.add('hidden');
@@ -3096,7 +3159,6 @@ window.logAdminSettingsActivity = async (action, details) => {
             document.getElementById('assess-cadet-name').innerText = cadet.name;
 
             const container = document.getElementById('matrix-terms-container');
-            // We now store data under 'appraisalData' to differentiate from the old quizzes format
             const g = cadet.appraisalData || {};
             
             const terms = [
@@ -3125,15 +3187,15 @@ window.logAdminSettingsActivity = async (action, details) => {
                             <div class="grid grid-cols-3 gap-3 mt-1">
                                 <div>
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1">Logbooks (0-100)</label>
-                                    <input type="number" id="appr-${t.id}-logs" value="${d.logs}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                    <input type="number" id="appr-${t.id}-logs" value="${d.logs}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1">Events/Forms (0-100)</label>
-                                    <input type="number" id="appr-${t.id}-events" value="${d.events}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                    <input type="number" id="appr-${t.id}-events" value="${d.events}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] text-slate-500 font-bold mb-1">Merit Score (0-100)</label>
-                                    <input type="number" id="appr-${t.id}-merits" value="${d.merits}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                    <label class="block text-[10px] text-slate-500 font-bold mb-1" title="Enter raw merits">Merit Balance</label>
+                                    <input type="number" id="appr-${t.id}-merits" value="${d.merits}" oninput="calcAppraisal('${t.id}')" placeholder="e.g. 0, -20" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                             </div>
                             <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-bold text-slate-500 flex justify-between items-center">
@@ -3147,11 +3209,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                             <div class="grid grid-cols-2 gap-3 mt-1">
                                 <div>
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1">Mockboat Duty (0-100)</label>
-                                    <input type="number" id="appr-${t.id}-duty" value="${d.duty}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                    <input type="number" id="appr-${t.id}-duty" value="${d.duty}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1">Academic Multiplier (0-100)</label>
-                                    <input type="number" id="appr-${t.id}-gwa" value="${d.gwa}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner" max="100">
+                                    <input type="number" id="appr-${t.id}-gwa" value="${d.gwa}" oninput="calcAppraisal('${t.id}')" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                             </div>
                             <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-bold text-slate-500 flex justify-between items-center">
@@ -3176,7 +3238,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 let el = document.getElementById(`appr-${term}-${type}`);
                 if (!el || el.value === '') return null;
                 let v = parseFloat(el.value);
-                if (v > 100) { v = 100; el.value = 100; } // Inputs can be 100, capping to 98 happens at conversion
+                if (type !== 'merits' && v > 100) { v = 100; el.value = 100; } 
                 return v;
             };
 
@@ -3184,13 +3246,24 @@ window.logAdminSettingsActivity = async (action, details) => {
             let duty = getV('duty'); let gwa = getV('gwa');
 
             // 1. Calculate Converted CS
-            let cs = 0; let csParts = 0;
+            let cs = 0;
             if (logs !== null || events !== null || merits !== null) {
                 let l_val = logs !== null ? logs : 0;
                 let e_val = events !== null ? events : 0;
-                let m_val = merits !== null ? merits : 0;
                 
-                // Dynamic weighting based on what is inputted to not punish empty fields while typing
+                // --- NEW MERIT CONVERSION LOGIC ---
+                let m_val = 0;
+                if (merits !== null) {
+                    let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
+                    if (merits >= 0) {
+                        m_val = 85 + (merits / cap) * 13; // 0 merits = 85, Max Cap = 98
+                        if (m_val > 98) m_val = 98;
+                    } else {
+                        m_val = 85 + (merits / 10); // e.g. -10 merits = 84, -100 = 75
+                        if (m_val < 0) m_val = 0;
+                    }
+                }
+                
                 let w_l = logs !== null ? 0.3 : 0;
                 let w_e = events !== null ? 0.3 : 0;
                 let w_m = merits !== null ? 0.4 : 0;
@@ -3200,7 +3273,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     cs = ((l_val * w_l) + (e_val * w_e) + (m_val * w_m)) / totalWeight;
                 }
             }
-            if (cs > 98) cs = 98; // PU CAP applied to final CS component
+            if (cs > 98) cs = 98; 
 
             // 2. Calculate Converted PT
             let pt = 0;
@@ -3216,13 +3289,13 @@ window.logAdminSettingsActivity = async (action, details) => {
                     pt = ((d_val * w_d) + (g_val * w_g)) / totalWeight;
                 }
             }
-            if (pt > 98) pt = 98; // PU CAP applied to final PT component
+            if (pt > 98) pt = 98;
 
             // 3. Final 60/40 PU Math
             let fg = 0;
             if (cs > 0 || pt > 0) {
                 fg = (cs * 0.6) + (pt * 0.4);
-                if (fg > 98) fg = 98; // Absolute Final Security Cap
+                if (fg > 98) fg = 98; 
             }
 
             document.getElementById(`appraisal-${term}-cs`).innerText = cs > 0 ? cs.toFixed(1) : '0.0';
@@ -3272,7 +3345,6 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (window.customAlert) { window.customAlert("Regimental Appraisals Locked! PU Excel Converter is updated."); }
         };
 
-        // This connects the new Appraisal Math perfectly to the Excel Downloader!
         window.getPummaData = () => {
             const data = [];
             const courseSelect = document.getElementById('pumma-course-sec');
@@ -3291,11 +3363,19 @@ window.logAdminSettingsActivity = async (action, details) => {
                     let d = g[term] || { logs:'', events:'', merits:'', duty:'', gwa:'' };
                     let cs = 0; let pt = 0; let fg = 0; let isData = false;
 
-                    // Re-calculate the exact math for the Excel Engine export
                     if (d.logs !== '' || d.events !== '' || d.merits !== '') {
                         let l_val = d.logs !== '' ? parseFloat(d.logs) : 0;
                         let e_val = d.events !== '' ? parseFloat(d.events) : 0;
-                        let m_val = d.merits !== '' ? parseFloat(d.merits) : 0;
+                        
+                        // NEW MERIT LOGIC APPLIED TO EXCEL EXPORT
+                        let m_val = 0;
+                        if (d.merits !== '') {
+                            let raw_m = parseFloat(d.merits);
+                            let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
+                            if (raw_m >= 0) { m_val = 85 + (raw_m / cap) * 13; if (m_val > 98) m_val = 98; } 
+                            else { m_val = 85 + (raw_m / 10); if (m_val < 0) m_val = 0; }
+                        }
+
                         let w_l = d.logs !== '' ? 0.3 : 0; let w_e = d.events !== '' ? 0.3 : 0; let w_m = d.merits !== '' ? 0.4 : 0;
                         let tWeight = w_l + w_e + w_m;
                         if(tWeight > 0) cs = ((l_val * w_l) + (e_val * w_e) + (m_val * w_m)) / tWeight;
