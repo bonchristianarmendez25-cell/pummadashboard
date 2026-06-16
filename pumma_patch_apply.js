@@ -206,17 +206,41 @@
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Boot — wait for main app functions to be available
+    // FIX 3: Prevent false "Cadet Not Found" by waiting for cloud sync
     // ─────────────────────────────────────────────────────────────────
+    function patchCadetLogin() {
+        const originalLogin = window.loginAsCadet;
+        if (!originalLogin) { setTimeout(patchCadetLogin, 500); return; }
+
+        window.loginAsCadet = function (event) {
+            // Block login if the cadets array hasn't populated yet
+            if (!window.cadets || window.cadets.length === 0) {
+                const msg = "📡 Database is still syncing from the cloud. Please wait 3-5 seconds and try again.";
+                if (window.customAlert) {
+                    window.customAlert(msg);
+                } else {
+                    alert(msg);
+                }
+                return; // Stop the execution here
+            }
+            // If data is ready, proceed normally
+            originalLogin.apply(this, arguments);
+        };
+    }
+
+    // -----------------------------------------------------------------
+    // Boot - wait for main app functions to be available
+    // -----------------------------------------------------------------
     function boot() {
         if (
             typeof window.recalculateMetrics === 'function' &&
-            typeof window.openFormulasModal   === 'function' &&
-            typeof window.switchMatrixTab     === 'function'
+            typeof window.openFormulasModal  === 'function' &&
+            typeof window.switchMatrixTab    === 'function'
         ) {
             patchRecalculate();
             patchOpenFormulas();
             patchSwitchTab();
+            patchCadetLogin(); // <--- This is the new trigger
         } else {
             setTimeout(boot, 300);
         }
