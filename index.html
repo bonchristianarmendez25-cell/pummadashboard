@@ -1201,11 +1201,12 @@
             const pat_val_raw = isNaN(rawMerits) ? null : rawMerits;
             const pt_val_raw = isNaN(icpe) ? null : icpe;
 
-            // Converter Logic for Raw Merits -> Grade
             let p_val = 0;
             if (pat_val_raw !== null) {
                 let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
-                if (pat_val_raw >= 0) {
+                if (pat_val_raw <= -999) {
+                    p_val = 0; // SYSTEM AWOL CODE
+                } else if (pat_val_raw >= 0) {
                     p_val = 85 + (pat_val_raw / cap) * 13;
                     if (p_val > 98) p_val = 98;
                 } else {
@@ -1264,7 +1265,8 @@
             let p_val = 0;
             if (pat_val_raw !== null) {
                 let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
-                if (pat_val_raw >= 0) { p_val = 85 + (pat_val_raw / cap) * 13; if (p_val > 98) p_val = 98; } 
+                if (pat_val_raw <= -999) { p_val = 0; } // SYSTEM AWOL CODE
+                else if (pat_val_raw >= 0) { p_val = 85 + (pat_val_raw / cap) * 13; if (p_val > 98) p_val = 98; } 
                 else { p_val = 85 + (pat_val_raw / 10); if (p_val < 0) p_val = 0; }
             }
 
@@ -3151,6 +3153,8 @@ window.logAdminSettingsActivity = async (action, details) => {
        // --- REGIMENTAL APPRAISAL CONVERSION ENGINE ---
         window.currentAssessId = null;
 
+        window.currentAssessId = null;
+
         window.openAssessModal = (id) => {
             window.currentAssessId = id;
             const cadet = window.cadets.find(c => String(c.id) === String(id));
@@ -3195,7 +3199,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                                 </div>
                                 <div>
                                     <label class="block text-[10px] text-slate-500 font-bold mb-1" title="Enter raw merits">Merit Balance</label>
-                                    <input type="number" id="appr-${t.id}-merits" value="${d.merits}" oninput="calcAppraisal('${t.id}')" placeholder="e.g. 0, -20" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
+                                    <input type="number" id="appr-${t.id}-merits" value="${d.merits}" oninput="calcAppraisal('${t.id}')" placeholder="0, or -999 (AWOL)" class="w-full border border-slate-300 p-2 rounded text-sm text-center font-bold outline-none focus:border-${t.color}-500 focus:bg-${t.color}-50 shadow-inner">
                                 </div>
                             </div>
                             <div class="mt-3 pt-2 border-t border-slate-200 text-right text-[10px] font-bold text-slate-500 flex justify-between items-center">
@@ -3251,15 +3255,16 @@ window.logAdminSettingsActivity = async (action, details) => {
                 let l_val = logs !== null ? logs : 0;
                 let e_val = events !== null ? events : 0;
                 
-                // --- NEW MERIT CONVERSION LOGIC ---
                 let m_val = 0;
                 if (merits !== null) {
                     let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
-                    if (merits >= 0) {
-                        m_val = 85 + (merits / cap) * 13; // 0 merits = 85, Max Cap = 98
+                    if (merits <= -999) {
+                        m_val = 0; // SYSTEM AWOL CODE
+                    } else if (merits >= 0) {
+                        m_val = 85 + (merits / cap) * 13;
                         if (m_val > 98) m_val = 98;
                     } else {
-                        m_val = 85 + (merits / 10); // e.g. -10 merits = 84, -100 = 75
+                        m_val = 85 + (merits / 10);
                         if (m_val < 0) m_val = 0;
                     }
                 }
@@ -3367,12 +3372,12 @@ window.logAdminSettingsActivity = async (action, details) => {
                         let l_val = d.logs !== '' ? parseFloat(d.logs) : 0;
                         let e_val = d.events !== '' ? parseFloat(d.events) : 0;
                         
-                        // NEW MERIT LOGIC APPLIED TO EXCEL EXPORT
                         let m_val = 0;
                         if (d.merits !== '') {
                             let raw_m = parseFloat(d.merits);
                             let cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
-                            if (raw_m >= 0) { m_val = 85 + (raw_m / cap) * 13; if (m_val > 98) m_val = 98; } 
+                            if (raw_m <= -999) { m_val = 0; } // SYSTEM AWOL CODE
+                            else if (raw_m >= 0) { m_val = 85 + (raw_m / cap) * 13; if (m_val > 98) m_val = 98; } 
                             else { m_val = 85 + (raw_m / 10); if (m_val < 0) m_val = 0; }
                         }
 
