@@ -67,7 +67,7 @@
         .dark .bg-login-decor { background-color: #0f172a; }
     </style>
 </head>
-<body class="bg-brand-creamBg dark:bg-slate-900 text-brand-black dark:text-slate-200 min-h-screen font-sans antialiased flex flex-col overflow-hidden transition-colors duration-200">
+<body class="bg-brand-creamBg dark:bg-slate-900 text-brand-black dark:text-slate-200 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
     <div id="auth-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 transition-colors bg-login-decor">
         <div class="absolute inset-0 bg-brand-blue/30 dark:bg-slate-950/50 backdrop-blur-[1px]"></div>
@@ -313,7 +313,7 @@
                             <button onclick="openAddCadetModal()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow"><i data-lucide="user-plus" class="w-4 h-4"></i> Add Cadet</button>
                         </div>
                     </div>
-                    <div class="overflow-x-auto flex-1 max-h-[600px]">
+                    <div class="overflow-auto flex-1 max-h-[600px]">
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead class="bg-brand-creamAccent dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-brand-creamBorder dark:border-slate-700">
                                 <tr>
@@ -1092,7 +1092,7 @@
                             <button onclick="converterClearRecords()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-1.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Sheet</button>
                         </div>
                         <!-- Grading Sheet Table -->
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 max-h-72 shadow-sm">
+                        <div class="overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 max-h-72 shadow-sm">
                             <table class="w-full text-center text-[11px] whitespace-nowrap">
                                 <thead class="bg-[#003366] text-white sticky top-0">
                                     <tr>
