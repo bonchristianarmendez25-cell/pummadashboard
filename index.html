@@ -1873,6 +1873,10 @@
             setVal('eval-input-email', c.email || '');
             setVal('eval-input-bonus', c.individualBonus || 0);
             
+            // Track when this admin opened the record
+            if (!window._cadetLoadedAt) window._cadetLoadedAt = {};
+            window._cadetLoadedAt[c.id] = c.lastEditedAt || 0;
+            
             setVal('eval-gwa-sem1', c.gwaSem1 || (c.gwa ? c.gwa : ''));
             setVal('eval-gwa-sem2', c.gwaSem2 || '');
             setVal('eval-gwa-sem3', c.gwaSem3 || '');
@@ -3060,7 +3064,11 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             try {
                 if (typeof updateDoc !== 'undefined') {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { appraisalData: appraisalData });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', window.currentAssessId), { 
+                        appraisalData: appraisalData,
+                        lastEditedAt: Date.now(),
+                        lastEditedBy: window.currentAdminName || 'Admin'
+                    });
                 }
                 if (window.logAuditActivity) {
                     window.logAuditActivity('Appraisal Locked', `Converted Regimental Metrics for: ${window.cadets[cadetIndex].name}`, 'Grading System');
@@ -4057,13 +4065,35 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(c.officer !== nOff) changes.push(`Officer ${c.officer}->${nOff}`);
             if(c.starCadet !== nStar) changes.push(`Star ${c.starCadet}->${nStar}`);
 
+            // --- CONCURRENCY GUARD: check if another admin edited this record while you had it open ---
+            const { getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const freshSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id));
+            const freshData = freshSnap.data();
+            const freshEditedAt = freshData?.lastEditedAt || 0;
+            const myLoadedAt = window._cadetLoadedAt?.[c.id] || 0;
+
+            if (freshEditedAt > myLoadedAt) {
+                const whoEdited = freshData?.lastEditedBy || 'another admin';
+                const confirmed = confirm(`⚠️ CONFLICT DETECTED!\n\n${whoEdited} modified this record after you opened it.\n\nSaving now will overwrite their changes.\n\nPress OK to overwrite, or Cancel to discard your changes and reload.`);
+                if (!confirmed) {
+                    // Reload fresh data into the local cadets array and re-open the form
+                    window.cadets = window.cadets.map(x => x.id === c.id ? { ...x, ...freshData } : x);
+                    window.recalculateMetrics();
+                    window.openEvaluation(c.id);
+                    return;
+                }
+            }
+
+            const saveTime = Date.now();
             const updates = JSON.parse(JSON.stringify({
                 studentId: getVal('eval-input-id', ''),
                 email: nEmail,
                 gwaSem1: nGwa1, gwaSem2: nGwa2, gwaSem3: nGwa3, gwa: avgGwa,
                 individualBonus: nBonus,
                 meritsSem1: nSem1, meritsSem2: nSem2, meritsSem3: nSem3,
-                officer: nOff, starCadet: nStar
+                officer: nOff, starCadet: nStar,
+                lastEditedAt: saveTime,                          // ← stamp every save
+                lastEditedBy: window.currentAdminName || 'Admin' // ← who saved it
             }));
 
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), updates);
