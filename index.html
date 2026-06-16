@@ -1495,17 +1495,20 @@
             <p class="text-sm font-bold mt-2" id="print-masterlist-title">--</p>
         </div>
         <table class="w-full text-left border-collapse text-xs border border-black">
-            <thead class="bg-slate-50 text-left sticky top-0 z-10">
-  <tr class="bg-gray-100 border-b border-black">
-    <th class="p-2 border-r border-black">Cadet Name</th>
-    <th class="p-2 border-r border-black">ID</th>
-    <th class="p-2 border-r border-black text-center">Officer</th>
-    <th class="p-2 border-r border-black text-center">Merits</th>
-    <th class="p-2 border-r border-black text-center">Mean GWA</th>
-    <th class="p-2 border-r border-black text-center">Rating</th>
-    <th class="p-2 text-center">Grade %</th>
-  </tr>
-</thead>
+            <table class="w-full border-separate border-spacing-0">
+  <thead>
+    <tr class="bg-gray-100">
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-left">Cadet Name</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-left">ID</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-center">Officer</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-center">Merits</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-center">Mean GWA</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-r border-b border-black text-center">Rating</th>
+      <th class="sticky top-0 z-10 bg-gray-100 p-2 border-b border-black text-center">Grade %</th>
+    </tr>
+  </thead>
+  <tbody id="print-masterlist-tbody"></tbody>
+</table>
 <tbody id="print-masterlist-tbody"></tbody>
         </table>
     </div>
