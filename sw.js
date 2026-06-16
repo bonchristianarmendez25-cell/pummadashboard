@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pumma-dashboard-v1';
+const CACHE_NAME = 'pumma-dashboard-v2'; // Change to v3, v4, etc., on future updates
 
 // These are the files your app will save to the device so it loads instantly
 const urlsToCache = [
