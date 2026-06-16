@@ -79,10 +79,10 @@
             <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Please select your access level</p>
             <div class="space-y-4">
                 <div>
-                    <button onclick="openAdminLoginModal()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-md"><i data-lucide="user-cog" class="w-4 h-4"></i> Instructor / Admin Login</button>
+                    <button onclick="if(!document.getElementById('auth-overlay').dataset.ready){alert('Dashboard still loading, please wait...');return;} openAdminLoginModal()"</button>
                     <button onclick="recoverAdminPin()" class="text-[10px] text-slate-400 mt-2 hover:text-brand-blue dark:hover:text-white underline transition">Forgot Instructor PIN?</button>
                 </div>
-                <button onclick="loginAsCadet()" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+                <button onclick="if(!document.getElementById('auth-overlay').dataset.ready){alert('Dashboard still loading, please wait...');return;} loginAsCadet()"</button>
             </div>
             <p class="text-[9px] text-slate-400/70 mt-6 font-semibold uppercase tracking-widest">Note: New or recovered instructor accounts default to PIN: 1234</p>
         </div>
@@ -1840,6 +1840,11 @@
             return new Promise((resolve) => {
                 // Instantly stops the previous box from closing if a new one opens!
                 if (window.pummaDialogTimer) clearTimeout(window.pummaDialogTimer);
+                if (window._pummaBusy && options.isPrompt) {
+                    resolve(null);
+                    return;
+                }
+                if (options.isPrompt) window._pummaBusy = true;
                 
                 const overlay = document.getElementById('pumma-dialog');
                 const box = document.getElementById('pumma-dialog-box');
@@ -1885,6 +1890,7 @@
                 setTimeout(() => { if (options.isPrompt) inpE.focus(); else btnConfirm.focus(); }, 100);
 
                 const cleanup = () => {
+                    window._pummaBusy = false
                     btnConfirm.onclick = null; btnCancel.onclick = null; inpE.onkeypress = null;
                     overlay.classList.add('opacity-0'); box.classList.add('scale-95');
                     window.pummaDialogTimer = setTimeout(() => { 
@@ -5892,6 +5898,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 } else {
                     await signInAnonymously(auth);
                 }
+                document.getElementById('auth-overlay').dataset.ready = 'true';
             } catch (err) { console.error("Auth init error:", err); }
         }
 
@@ -5906,6 +5913,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
 
+            let eventsBound = false;
             onSnapshot(settingsRef, async (snap) => {
                 if (snap.exists()) {
                     window.appSettings = snap.data();
@@ -5927,7 +5935,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                         if (hint) hint.innerText = "Admin PIN is active.";
                     }
                     window.refreshProfileDropdown();
-                    bindEvents(); 
+                    if (!eventsBound) { bindEvents(); eventsBound = true; }
                     window.recalculateMetrics();
                 } else {
                     const initData = JSON.parse(JSON.stringify({
