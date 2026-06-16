@@ -2594,6 +2594,14 @@
                 if(window.customAlert) window.customAlert(`Request Approved! The GWA of ${targetAppeal.gwaGrade} was automatically applied to ${c.name}'s profile.`);
             }
         }
+            
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), payload); } catch(e) {}
+            if(window.logAuditActivity) window.logAuditActivity('Appeal Resolved', `Action: ${status} | Note provided: ${response || 'None'}`, c.name);
+            window.renderInbox();
+            if(status === 'Approved' && targetAppeal?.type === 'GWA Update') {
+                if(window.customAlert) window.customAlert(`Request Approved! The GWA of ${targetAppeal.gwaGrade} was automatically applied to ${c.name}'s profile.`);
+            }
+        }
 
         window.revertAppeal = async (cId, aId) => {
             const confirmed = await customConfirm("Are you sure you want to revert this decision and place the request back into the Pending Inbox?");
