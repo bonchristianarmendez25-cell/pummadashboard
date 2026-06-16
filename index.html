@@ -83,7 +83,7 @@
                     <button onclick="openAdminLoginModal()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-md"><i data-lucide="user-cog" class="w-4 h-4"></i> Instructor / Admin Login</button>
                     <button onclick="recoverAdminPin()" class="text-[10px] text-slate-400 mt-2 hover:text-brand-blue dark:hover:text-white underline transition">Forgot Instructor PIN?</button>
                 </div>
-                <button onclick="loginAsCadet()" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+                <button type="button" onclick="loginAsCadet(event)" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
             </div>
             <p class="text-[9px] text-slate-400/70 mt-6 font-semibold uppercase tracking-widest">Note: New or recovered instructor accounts default to PIN: 1234</p>
         </div>
@@ -3870,7 +3870,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             window.renderInstructorsEditor();
         };
 
-        window.loginAsCadet = async () => {
+        window.loginAsCadet = async (event) => {
+            if (event) event.preventDefault();
             const cidRaw = await customPrompt("Enter student ID (e.g. U123456):", "Student ID");
             if (!cidRaw) return;
             const cid = cidRaw.trim();
