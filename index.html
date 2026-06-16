@@ -83,7 +83,8 @@
                     <button onclick="openAdminLoginModal()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-md"><i data-lucide="user-cog" class="w-4 h-4"></i> Instructor / Admin Login</button>
                     <button onclick="recoverAdminPin()" class="text-[10px] text-slate-400 mt-2 hover:text-brand-blue dark:hover:text-white underline transition">Forgot Instructor PIN?</button>
                 </div>
-                <button type="button" onclick="loginAsCadet(event)" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+                <button type="button" id="cadet-login-btn" onclick="loginAsCadet(event)" disabled class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+                </button>
             </div>
             <p class="text-[9px] text-slate-400/70 mt-6 font-semibold uppercase tracking-widest">Note: New or recovered instructor accounts default to PIN: 1234</p>
         </div>
@@ -3842,13 +3843,17 @@ window.logAdminSettingsActivity = async (action, details) => {
             `).join('');
             if(typeof lucide !== 'undefined') lucide.createIcons();
         };
-
-        window.updateInstructorAccount = async (idx, field, val) => {
+        
+        let _instSaveTimer = null;
+        window.updateInstructorAccount = (idx, field, val) => {
             const instList = JSON.parse(JSON.stringify(window.appSettings.instructors || []));
-            if (field === 'username') val = val.toLowerCase().replace(/[^a-z0-9_]/g, ''); 
+            if (field === 'username') val = val.toLowerCase().replace(/[^a-z0-9_]/g, '');
             instList[idx][field] = val;
             window.appSettings.instructors = instList;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
+            clearTimeout(_instSaveTimer);
+            _instSaveTimer = setTimeout(async () => {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
+            }, 800);
         };
 
         window.deleteInstructorAccount = async (idx) => {
@@ -3872,6 +3877,12 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.loginAsCadet = async (event) => {
             if (event) event.preventDefault();
+            
+            if (!window.cadets || window.cadets.length === 0) {
+                alert("System is still loading cadet data. Please wait a moment and try again.");
+                return;
+            }
+            
             const cidRaw = await customPrompt("Enter student ID (e.g. U123456):", "Student ID");
             if (!cidRaw) return;
             const cid = cidRaw.trim();
@@ -6086,6 +6097,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 if (snap.exists()) {
                     settingsEverExisted = true;
                     window.appSettings = snap.data();
+                    const remoteData = snap.data();
                     window.appSettings.checklistProfiles = window.appSettings.checklistProfiles || defaultChecklistProfiles;
                     if (!window.appSettings.instructors || window.appSettings.instructors.length === 0) {
                         window.appSettings.instructors = [{ username: "admin", name: "Master Admin", pin: window.appSettings.adminPin || "1234" }];
@@ -6125,6 +6137,10 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 window.cadets = [];
                 if (!snap.empty) snap.forEach(docSnap => window.cadets.push(docSnap.data()));
                 window.recalculateMetrics();
+
+                window.cadetsLoaded = true;
+                const cadetBtn = document.querySelector('button[onclick="loginAsCadet(event)"]');
+                if (cadetBtn) cadetBtn.disabled = false;
             });
         });
         
