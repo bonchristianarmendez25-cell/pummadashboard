@@ -2543,6 +2543,20 @@
             window.renderInbox();
         }
 
+        window.deleteAppeal = async (cId, aId) => {
+            const confirmed = await customConfirm("Are you sure you want to permanently delete this request from the history log?");
+            if(!confirmed) return;
+            const c = window.cadets.find(x => x.id === cId);
+            if(!c) return;
+            
+            const updated = JSON.parse(JSON.stringify((c.appeals || []).filter(a => a.id !== aId)));
+            c.appeals = updated; 
+            
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), { appeals: updated }); } catch(e) {}
+            if(window.logAuditActivity) window.logAuditActivity('Appeal Deleted', `Action: Deleted from History`, c.name);
+            window.renderInbox();
+        }
+
         window.openAnnouncementsModal = () => { const m = document.getElementById('announcements-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } window.renderAnnouncements(); };
         window.closeAnnouncementsModal = () => { const m = document.getElementById('announcements-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
