@@ -2572,12 +2572,27 @@
             const c = window.cadets.find(x => x.id === cId);
             if(!c) return;
             
+            const targetAppeal = (c.appeals || []).find(a => a.id === aId);
             const updated = JSON.parse(JSON.stringify((c.appeals || []).map(a => { if(a.id === aId) return { ...a, status, response }; return a; })));
-            c.appeals = updated; 
             
-            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), { appeals: updated }); } catch(e) {}
+            c.appeals = updated; 
+            let payload = { appeals: updated };
+
+            // AUTONOMOUS SYNC: If it's a GWA request and you approve it, it automatically saves to their profile!
+            if (status === 'Approved' && targetAppeal && targetAppeal.type === 'GWA Update' && targetAppeal.gwaGrade) {
+                let parsedGwa = parseFloat(targetAppeal.gwaGrade);
+                if (!isNaN(parsedGwa)) {
+                    c.academicCS = parsedGwa;
+                    payload.academicCS = parsedGwa;
+                }
+            }
+            
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cId), payload); } catch(e) {}
             if(window.logAuditActivity) window.logAuditActivity('Appeal Resolved', `Action: ${status} | Note provided: ${response || 'None'}`, c.name);
             window.renderInbox();
+            if(status === 'Approved' && targetAppeal?.type === 'GWA Update') {
+                if(window.customAlert) window.customAlert(`Request Approved! The GWA of ${targetAppeal.gwaGrade} was automatically applied to ${c.name}'s profile.`);
+            }
         }
 
         window.revertAppeal = async (cId, aId) => {
@@ -6052,7 +6067,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const secEl = document.getElementById('pumma-section');
             const targetSec = secEl ? secEl.value : '';
 
-            // Safely retrieve the exact cadets
+            // Retrieve the exact cadets
             const filteredCadets = (window.cadets || []).filter(c => parseInt(c.classNum) === targetClass && String(c.section).toUpperCase() === String(targetSec).toUpperCase());
             const sortedCadets = [...filteredCadets].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
@@ -6066,6 +6081,29 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const courseCode = courseSelect.value;
             const courseTitle = courseSelect.options[courseSelect.selectedIndex].text.split('(')[0].trim();
             let csv = ""; let fileName = "";
+
+            // AUTONOMOUS CALCULATOR: Generates grades live from current logbooks and duties
+            const calculateLiveGrade = (c) => {
+                let logs = Math.min(100, Math.max(0, (c.logbookCompletion || 0) * 100));
+                let events = Math.min(100, Math.max(0, (c.softCompletion || 0) * 100));
+                let meritScore = c.totalMeritsSum || 0;
+                let maxMerit = (window.appSettings && window.appSettings.maxMeritCap) ? window.appSettings.maxMeritCap : 450;
+                
+                let m_val = 0;
+                if (meritScore <= -999) m_val = 0;
+                else if (meritScore >= 0) m_val = Math.min(98, 85 + (meritScore / maxMerit) * 13);
+                else m_val = Math.max(0, 85 + (meritScore / 10));
+
+                let cs = Math.min(98, (logs * 0.3) + (events * 0.3) + (m_val * 0.4));
+                
+                let duty = Math.min(100, Math.max(0, (c.techCompletion || 0) * 100));
+                let gwaPercent = Math.min(100, Math.max(0, ((c.academicCS || 0) / 5.0) * 100));
+                let pt = Math.min(98, (duty * 0.7) + (gwaPercent * 0.3));
+                
+                let fg = Math.min(98, (cs * 0.6) + (pt * 0.4) + (c.individualBonus || 0) + (c.starCadet ? 2 : 0));
+                
+                return { cs: cs.toFixed(1), pt: pt.toFixed(1), fg: fg.toFixed(1), rem: fg >= 75 ? 'P' : 'F' };
+            };
 
             if (type === 'master') {
                 fileName = `PUMMA_MasterSheet_${courseCode.replace(' ', '')}_${targetSec}.csv`;
@@ -6081,19 +6119,13 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 csv += `,NAME OF STUDENT,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,CS,PT,T,FG,SG,\n`;
 
                 sortedCadets.forEach((c, index) => {
-                    const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
-                    
-                    let totalFG = 0; let count = 0;
-                    ['pre', 'mid', 'sem', 'fin'].forEach(t => { if(g[t] && g[t].fg > 0) { totalFG += parseFloat(g[t].fg); count++; } });
-                    let sg = count > 0 ? (totalFG / count).toFixed(1) : '';
-                    let rem = sg !== '' ? (parseFloat(sg) >= 75 ? 'P' : 'F') : '';
-
-                    const format = (v) => v !== '' && v !== undefined && !isNaN(v) ? Number(v).toFixed(1) : '';
-                    csv += `${index+1},${c.name},${format(g.pre.cs)},${format(g.pre.pt)}, ,${format(g.pre.fg)},`;
-                    csv += `${format(g.mid.cs)},${format(g.mid.pt)}, ,${format(g.mid.fg)},`;
-                    csv += `${format(g.sem.cs)},${format(g.sem.pt)}, ,${format(g.sem.fg)},`;
-                    csv += `${format(g.fin.cs)},${format(g.fin.pt)}, ,${format(g.fin.fg)},`;
-                    csv += `${sg},${rem}\n`;
+                    let live = calculateLiveGrade(c);
+                    // Automatically populates the live generated grade across the sheet without manual entry
+                    csv += `${index+1},${c.name},${live.cs},${live.pt}, ,${live.fg},`;
+                    csv += `${live.cs},${live.pt}, ,${live.fg},`;
+                    csv += `${live.cs},${live.pt}, ,${live.fg},`;
+                    csv += `${live.cs},${live.pt}, ,${live.fg},`;
+                    csv += `${live.fg},${live.rem}\n`;
                 });
             } else {
                 let termName = "PRELIM";
@@ -6116,10 +6148,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 csv += `,,,,,,,,,,,,0,%,0.6,,%,0.4,,,\n`;
 
                 sortedCadets.forEach(c => {
-                    const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
-                    const t = g[type] || {cs:'',pt:'',fg:''};
-                    const format = (v) => v !== '' && v !== undefined && !isNaN(v) ? Number(v).toFixed(1) : '';
-                    csv += `,${c.name},,,,,,,,,,,${format(t.cs)},,,${format(t.pt)},,,${format(t.fg)},${t.fg >= 75 ? 'P' : (t.fg !== '' && t.fg !== undefined ? 'F':'')}\n`;
+                    let live = calculateLiveGrade(c);
+                    csv += `,${c.name},,,,,,,,,,,${live.cs},,,${live.pt},,,${live.fg},${live.rem}\n`;
                 });
             }
 
@@ -6132,6 +6162,21 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             link.click();
             document.body.removeChild(link);
         };
+
+        // --- GLOBAL SMART ID AUTOCOMPLETE ---
+        // Instantly fills in Cadet Name if an Admin types their ID anywhere in the dashboard
+        document.addEventListener('input', (e) => {
+            const elId = e.target.id ? e.target.id.toLowerCase() : '';
+            if (elId.includes('studentid') || elId.includes('student-id') || elId === 'conv-studentno' || elId === 'gwa-student-id') {
+                const val = e.target.value.trim();
+                const cadet = window.cadets.find(c => String(c.id) === val);
+                if (cadet) {
+                    const form = e.target.closest('.modal-content') || e.target.closest('form') || document;
+                    const nameFields = form.querySelectorAll('input[id*="name" i], input[id*="Name" i]');
+                    nameFields.forEach(f => f.value = cadet.name);
+                }
+            }
+        });
     </script>
 </body>
 </html>
