@@ -3785,38 +3785,68 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.changeAdminPin = async () => {
             const instructors = await window._fetchFreshInstructors();
             const myIndex = instructors.findIndex(i => i.username === window.currentAdminUsername);
-            
-            if (myIndex === -1) { alert("Critical Error: Your instructor session is invalid."); return; }
-
+            if (myIndex === -1) {
+                alert("Critical Error: Your instructor session is invalid.");
+                return;
+            }
+    
             const currentPin = instructors[myIndex].pin;
+    
             const enteredOld = await customPrompt("Enter your CURRENT PIN:", "Current PIN");
             if (enteredOld === null) return;
-            if (enteredOld.trim() !== currentPin) { alert("Incorrect current PIN."); return; }
-            
+            if (enteredOld.trim() !== currentPin) {
+                alert("Incorrect current PIN.");
+                return;
+            }
+    
             const newPin = await customPrompt("Enter your NEW Personal PIN:", "New PIN");
             if (!newPin) return;
+    
             const confirmPin = await customPrompt("Confirm NEW Personal PIN:", "Confirm PIN");
-            if (newPin.trim() !== confirmPin.trim()) { alert("PINs do not match."); return; }
-
-            // Re-fetch once more right before writing — these prompts can sit open for a
-            // while, and we don't want to commit on top of a now-outdated snapshot.
-            const latestInstructors = await window._fetchFreshInstructors();
-            const latestIndex = latestInstructors.findIndex(i => i.username === window.currentAdminUsername);
-            if (latestIndex === -1) { alert("Critical Error: Your instructor session is invalid."); return; }
-            latestInstructors[latestIndex].pin = newPin.trim();
-            window.appSettings.instructors = latestInstructors;
-            
-            const now = new Date().toLocaleString();
-            const device = window.getDeviceName();
-            const logs = JSON.parse(JSON.stringify(window.appSettings.adminLogs || []));
-            logs.unshift({ action: 'Security', details: 'Instructor changed their personal PIN', adminName: window.currentAdminName || 'Admin', date: now, device: device });
-            if (logs.length > 1500) logs.pop();
-            window.appSettings.adminLogs = logs;
+            if (newPin.trim() !== confirmPin.trim()) {
+                alert("PINs do not match.");
+                return;
+            }
 
             try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: latestInstructors, adminPin: newPin.trim(), adminLogs: logs });
+                const { runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+                const now = new Date().toLocaleString();
+                const device = window.getDeviceName();
+        
+                await runTransaction(db, async (transaction) => {
+                    const docSnap = await transaction.get(docRef);
+                    if (!docSnap.exists()) throw new Error("Settings document not found");
+            
+                    const data = docSnap.data();
+                    const freshList = data.instructors || [];
+                    const logs = data.adminLogs || [];
+            
+                    const targetIndex = freshList.findIndex(i => i.username === window.currentAdminUsername);
+                    if (targetIndex === -1) throw new Error("Instructor session invalid");
+            
+                    freshList[targetIndex].pin = newPin.trim();
+            
+                    logs.unshift({
+                        action: 'Security',
+                        details: 'Instructor changed their personal PIN',
+                        adminName: window.currentAdminName || 'Admin',
+                        date: now,
+                        device: device
+                    });
+                    if (logs.length > 1500) logs.pop();
+            
+                    transaction.update(docRef, {
+                        instructors: freshList,
+                        adminPin: newPin.trim(),
+                        adminLogs: logs
+                    });
+                });
                 alert("Your Personal PIN was successfully updated!");
-            } catch (e) { alert("Failed to update PIN."); }
+            } catch (e) {
+                console.error(e);
+                alert("Failed to update PIN: " + e.message);
+            }
         };
 
         window.recoverAdminPin = async () => {
@@ -3962,25 +3992,34 @@ window.logAdminSettingsActivity = async (action, details) => {
             const originalUsername = (window.appSettings.instructors && window.appSettings.instructors[idx]) ? window.appSettings.instructors[idx].username : null;
             if (field === 'username') val = val.toLowerCase().replace(/[^a-z0-9_]/g, '');
 
-            // Optimistic local update so the field doesn't visually snap back while the admin is still typing
+            // Optimistic local update
             const localList = JSON.parse(JSON.stringify(window.appSettings.instructors || []));
             if (localList[idx]) localList[idx][field] = val;
             window.appSettings.instructors = localList;
 
             clearTimeout(_instSaveTimer);
             _instSaveTimer = setTimeout(async () => {
-                // Re-fetch right before committing, then locate this row by the username
-                // it had when editing started — never blindly overwrite the whole array
-                // with what this tab happened to have cached.
-                const freshList = await window._fetchFreshInstructors();
-                let targetIdx = freshList.findIndex(i => i.username === originalUsername);
-                if (targetIdx === -1) targetIdx = idx;
-                if (freshList[targetIdx]) {
-                    freshList[targetIdx][field] = val;
-                    try {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: freshList });
-                        window.appSettings.instructors = freshList;
-                    } catch (e) { console.error('Failed to save instructor edit:', e); }
+                try {
+                    const { runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+            
+                    await runTransaction(db, async (transaction) => {
+                        const docSnap = await transaction.get(docRef);
+                        if (!docSnap.exists()) return;
+                
+                        const data = docSnap.data();
+                        const freshList = data.instructors || [];
+                
+                        let targetIdx = freshList.findIndex(i => i.username === originalUsername);
+                        if (targetIdx === -1) targetIdx = idx; 
+                
+                        if (freshList[targetIdx]) {
+                            freshList[targetIdx][field] = val;
+                            transaction.update(docRef, { instructors: freshList });
+                        }
+                    });
+                } catch (e) {
+                    console.error('Failed to save instructor edit:', e);
                 }
             }, 800);
         };
@@ -3989,30 +4028,66 @@ window.logAdminSettingsActivity = async (action, details) => {
             const currentList = window.appSettings.instructors || [];
             const target = currentList[idx];
             if (!target) return;
+    
             const confirmed = await customConfirm(`Are you sure you want to delete the account for ${target.username}?`);
             if (!confirmed) return;
 
-            const instList = await window._fetchFreshInstructors();
-            if (instList.length <= 1) { alert("You cannot delete the last remaining instructor account."); return; }
-            const freshIdx = instList.findIndex(i => i.username === target.username);
-            if (freshIdx === -1) {
-                alert("That account no longer exists (it may have already been removed elsewhere).");
-                window.appSettings.instructors = instList;
+            try {
+                const { runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+        
+                await runTransaction(db, async (transaction) => {
+                    const docSnap = await transaction.get(docRef);
+                    if (!docSnap.exists()) return;
+            
+                    const data = docSnap.data();
+                    const freshList = data.instructors || [];
+            
+                    if (freshList.length <= 1) {
+                        throw new Error("You cannot delete the last remaining instructor account.");
+                    }
+            
+                    const freshIdx = freshList.findIndex(i => i.username === target.username);
+                    if (freshIdx !== -1) {
+                        freshList.splice(freshIdx, 1);
+                        transaction.update(docRef, { instructors: freshList });
+                    }
+                });
+        
+                window.appSettings.instructors = await window._fetchFreshInstructors();
                 window.renderInstructorsEditor();
-                return;
+            } catch (e) {
+                if (e.message.includes("last remaining")) {
+                    alert(e.message);
+                } else {
+                    console.error(e);
+                    alert("Failed to delete instructor.");
+                }
             }
-            instList.splice(freshIdx, 1);
-            window.appSettings.instructors = instList;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
-            window.renderInstructorsEditor();
         };
 
         window.addInstructorAccount = async () => {
-            const instList = await window._fetchFreshInstructors();
-            instList.push({ username: `admin_${Date.now().toString().slice(-4)}`, name: "New Instructor", pin: "1234" });
-            window.appSettings.instructors = instList;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { instructors: instList });
-            window.renderInstructorsEditor();
+            try {
+                const { runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
+        
+                await runTransaction(db, async (transaction) => {
+                    const docSnap = await transaction.get(docRef);
+                    if (!docSnap.exists()) return;
+            
+                    const data = docSnap.data();
+                    const freshList = data.instructors || [];
+                    freshList.push({ username: `admin_${Date.now().toString().slice(-4)}`, name: "New Instructor", pin: "1234" });
+            
+                    transaction.update(docRef, { instructors: freshList });
+                });
+        
+                window.appSettings.instructors = await window._fetchFreshInstructors();
+                window.renderInstructorsEditor();
+            } catch (e) {
+                console.error(e);
+                alert("Failed to add instructor. Please check your connection.");
+            }
         };
 
         window.loginAsCadet = async (event) => {
