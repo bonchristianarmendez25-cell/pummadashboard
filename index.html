@@ -1933,7 +1933,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         
@@ -1980,7 +1980,9 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'pumma-2026-production';
 
         window.cadets = [];
