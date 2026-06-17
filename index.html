@@ -3910,8 +3910,8 @@ window.logAdminSettingsActivity = async (action, details) => {
         
         window._fetchFreshInstructors = async () => {
             try {
-                const { getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'));
+                const { getDocFromServer } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const snap = await getDocFromServer(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'));
                 const data = snap.exists() ? snap.data() : {};
                 const list = (data.instructors && data.instructors.length > 0) ? data.instructors : [{ username: "admin", name: "Master Admin", pin: data.adminPin || "1234" }];
                 return JSON.parse(JSON.stringify(list));
@@ -4659,9 +4659,9 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(c.officer !== nOff) changes.push(`Officer ${c.officer}->${nOff}`);
             if(c.starCadet !== nStar) changes.push(`Star ${c.starCadet}->${nStar}`);
 
-            // --- CONCURRENCY GUARD: check if another admin edited this record while you had it open ---
-            const { getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const freshSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id));
+            // --- CONCURRENCY GUARD: check if another admin edited this record while you had it open ----
+            const { getDocFromServer } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const freshSnap = await getDocFromServer(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id));
             const freshData = freshSnap.data();
             const freshEditedAt = freshData?.lastEditedAt || 0;
             const myLoadedAt = window._cadetLoadedAt?.[c.id] || 0;
