@@ -46,7 +46,6 @@ jobs:
             --include="*.pdf" \
             --exclude="*" \
             ./ www/
-          echo "=== www/ contents ==="
           ls -lah www/
 
       - name: Add Android platform
@@ -67,24 +66,32 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Sign APK
+      - name: Sign APK with apksigner
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/pumma-key.jks
-          jarsigner \
-            -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore /tmp/pumma-key.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            pumma-key
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v 4 \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            android/app/build/outputs/apk/release/app-release-signed.apk
-          echo "APK signed and aligned!"
 
-      - name: Upload signed APK artifact
+          UNSIGNED=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          ALIGNED=android/app/build/outputs/apk/release/app-release-aligned.apk
+          SIGNED=android/app/build/outputs/apk/release/app-release-signed.apk
+
+          # Step 1: zipalign
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 "$UNSIGNED" "$ALIGNED"
+
+          # Step 2: apksigner (modern Android signing)
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks /tmp/pumma-key.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --ks-key-alias pumma-key \
+            --out "$SIGNED" \
+            "$ALIGNED"
+
+          # Verify
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify "$SIGNED"
+          echo "APK signed and verified!"
+          ls -lah "$SIGNED"
+
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
           name: pumma-dashboard-release-apk
