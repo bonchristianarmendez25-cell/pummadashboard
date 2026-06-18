@@ -1,0 +1,86 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Capacitor dependencies
+        run: npm install
+
+      # Copies the existing website (root index.html + manifest/service
+      # worker/icons) into www/, which is the folder Capacitor bundles into
+      # the native app. This keeps index.html as the single source of
+      # truth — nothing needs to be maintained twice.
+      - name: Copy web assets into www/
+        run: |
+          mkdir -p www
+          cp -v index.html www/ 2>/dev/null || true
+          cp -v manifest.json www/ 2>/dev/null || true
+          cp -v sw.js www/ 2>/dev/null || true
+          for f in *.png *.jpg *.jpeg *.svg *.ico; do
+            [ -e "$f" ] && cp -v "$f" www/
+          done
+
+      # The native android/ project is generated fresh on every run rather
+      # than committed to the repo, so there's nothing to keep in sync by
+      # hand and no merge conflicts in generated native files.
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets into native project
+        run: npx cap sync android
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pumma-dashboard-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  release:
+    # Only runs when you push a version tag, e.g.: git tag v1.0.0 && git push origin v1.0.0
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: pumma-dashboard-debug-apk
+          path: dist
+
+      - name: Attach APK to a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
