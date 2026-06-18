@@ -52,6 +52,7 @@
     </script>
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #D5CFC4; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #263f77; }
@@ -92,14 +93,14 @@
     </div>
 
     <div onclick="openAnnouncementsModal()" class="bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 py-2.5 text-xs font-bold border-b border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/50 transition no-print">
-        <div class="max-w-7xl mx-auto px-4 w-full flex flex-wrap items-center justify-between gap-3">
+        <div class="max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             
             <div class="flex items-center gap-2 flex-1 min-w-0">
                 <i data-lucide="megaphone" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"></i> 
                 <span id="announcement-display" class="truncate block">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full mt-1 pb-0.5" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;">
                 <button onclick="event.stopPropagation(); openTripleR()" class="bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
                 <button onclick="event.stopPropagation(); openExamPrepModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open-check" class="w-3.5 h-3.5 hidden sm:block"></i> Exam Prep</button>
                 <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
