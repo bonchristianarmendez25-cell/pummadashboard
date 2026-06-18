@@ -3,6 +3,14 @@
   "appName": "PUMMA Dashboard",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "url": "https://pummadashboard-git-main-bonchristianarmendez25-cells-projects.vercel.app",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#263f77"
+    }
   }
 }
