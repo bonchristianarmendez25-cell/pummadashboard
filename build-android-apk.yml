@@ -41,22 +41,23 @@ jobs:
         run: npm install
 
       # ── Copy ALL web assets into www/ ─────────────────────────────────
-      # Use 'find' for PDFs so filenames with spaces are handled safely.
+      # rsync with --no-recursive + include patterns handles filenames
+      # that contain spaces (like "stcw code 2017 edition.pdf") safely.
       - name: Copy web assets into www/
         run: |
           mkdir -p www
-          cp index.html www/
-          cp manifest.json www/ 2>/dev/null || true
-          cp sw.js www/ 2>/dev/null || true
-          cp pumma_patch_apply.js www/ 2>/dev/null || true
-          for f in *.png *.jpg *.jpeg *.svg *.ico; do
-            [ -e "$f" ] && cp "$f" www/
-          done
-          # Use find + while-read so PDF names with spaces don't break the loop
-          find . -maxdepth 1 -iname "*.pdf" -print0 | while IFS= read -r -d '' f; do
-            cp "$f" www/
-            echo "Copied PDF: $f"
-          done
+          rsync -av --no-recursive \
+            --include="*.html" \
+            --include="*.json" \
+            --include="*.js" \
+            --include="*.png" \
+            --include="*.jpg" \
+            --include="*.jpeg" \
+            --include="*.svg" \
+            --include="*.ico" \
+            --include="*.pdf" \
+            --exclude="*" \
+            ./ www/
           echo "=== www/ contents ==="
           ls -lah www/
 
