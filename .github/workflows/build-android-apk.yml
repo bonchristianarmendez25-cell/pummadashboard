@@ -20,7 +20,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # ── Use the official action — handles SDK path & licenses automatically
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
@@ -32,7 +31,6 @@ jobs:
       - name: Install Capacitor dependencies
         run: npm install
 
-      # ── rsync handles filenames with spaces (e.g. "stcw code 2017 edition.pdf")
       - name: Copy web assets into www/
         run: |
           mkdir -p www
@@ -56,6 +54,18 @@ jobs:
 
       - name: Sync web assets into native project
         run: npx cap sync android
+
+      # ── Replace default Capacitor icons with the PUMMA logo ───────────
+      - name: Apply custom app icon
+        run: |
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            dest="android/app/src/main/res/mipmap-${density}"
+            src="android-icons/mipmap-${density}"
+            mkdir -p "$dest"
+            cp "${src}/ic_launcher.png"       "${dest}/ic_launcher.png"
+            cp "${src}/ic_launcher_round.png" "${dest}/ic_launcher_round.png"
+            echo "Copied icons → $dest"
+          done
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
