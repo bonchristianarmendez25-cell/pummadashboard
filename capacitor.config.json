@@ -2,6 +2,11 @@
   "appId": "ph.edu.pumma.dashboard",
   "appName": "PUMMA Dashboard",
   "webDir": "www",
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": false,
+    "overrideUserAgent": "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+  },
   "server": {
     "androidScheme": "https",
     "url": "https://pummadashboard-git-main-bonchristianarmendez25-cells-projects.vercel.app",
