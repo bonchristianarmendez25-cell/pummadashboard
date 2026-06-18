@@ -55,37 +55,36 @@ jobs:
       - name: Sync web assets into native project
         run: npx cap sync android
 
-      # ── Replace default Capacitor icons with the PUMMA logo ───────────
       - name: Apply custom app icon
         run: |
           pip install Pillow --break-system-packages -q
-          python3 << 'PYEOF'
-          from PIL import Image
-          import os, shutil
+          python3 -c "
+from PIL import Image
+import os
 
-          src = "MOCKBOAT LOGO.png"
-          if not os.path.exists(src):
-              print("⚠ MOCKBOAT LOGO.png not found — skipping icons")
-              exit(0)
+src = 'MOCKBOAT LOGO.png'
+if not os.path.exists(src):
+    print('MOCKBOAT LOGO.png not found - skipping')
+    exit(0)
 
-          img = Image.open(src).convert("RGBA")
-          sizes = {
-              "mipmap-mdpi": 48,
-              "mipmap-hdpi": 72,
-              "mipmap-xhdpi": 96,
-              "mipmap-xxhdpi": 144,
-              "mipmap-xxxhdpi": 192,
-          }
-          base = "android/app/src/main/res"
-          for folder, size in sizes.items():
-              d = os.path.join(base, folder)
-              os.makedirs(d, exist_ok=True)
-              resized = img.resize((size, size), Image.LANCZOS)
-              resized.save(os.path.join(d, "ic_launcher.png"))
-              resized.save(os.path.join(d, "ic_launcher_round.png"))
-              print(f"✓ {folder}: {size}x{size}")
-          print("✓ All icons applied from MOCKBOAT LOGO.png")
-          PYEOF
+img = Image.open(src).convert('RGBA')
+sizes = {
+    'mipmap-mdpi': 48,
+    'mipmap-hdpi': 72,
+    'mipmap-xhdpi': 96,
+    'mipmap-xxhdpi': 144,
+    'mipmap-xxxhdpi': 192,
+}
+base = 'android/app/src/main/res'
+for folder, size in sizes.items():
+    d = os.path.join(base, folder)
+    os.makedirs(d, exist_ok=True)
+    resized = img.resize((size, size), Image.LANCZOS)
+    resized.save(os.path.join(d, 'ic_launcher.png'))
+    resized.save(os.path.join(d, 'ic_launcher_round.png'))
+    print('Done: ' + folder + ' ' + str(size) + 'x' + str(size))
+print('All icons applied!')
+"
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
