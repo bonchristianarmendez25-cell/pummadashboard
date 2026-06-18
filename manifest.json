@@ -1,0 +1,24 @@
+{
+  "name": "PUMMA Competency Dashboard",
+  "short_name": "PUMMA",
+  "description": "Panpacific University Merchant Marine Academy Competency Dashboard",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F5",
+  "theme_color": "#263f77",
+  "icons": [
+    {
+      "src": "MOCKBOAT LOGO.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "MOCKBOAT LOGO.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

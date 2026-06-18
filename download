@@ -1,0 +1,13 @@
+# Node / Capacitor
+node_modules/
+android/
+www/
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backups
+*.bak
+*.orig

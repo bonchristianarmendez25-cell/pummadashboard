@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/sw\\.js",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Service-Worker-Allowed": "/"
+      },
+      "dest": "/sw.js"
+    },
+    {
+      "src": "/manifest\\.json",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/(.*\\.pdf)",
+      "headers": {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "inline",
+        "Cache-Control": "public, max-age=604800",
+        "X-Content-Type-Options": "nosniff"
+      },
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|svg|ico|webp))",
+      "headers": {
+        "Cache-Control": "public, max-age=604800, immutable"
+      },
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.js)",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
