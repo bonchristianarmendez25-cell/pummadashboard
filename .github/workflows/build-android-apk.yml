@@ -58,19 +58,34 @@ jobs:
       # ── Replace default Capacitor icons with the PUMMA logo ───────────
       - name: Apply custom app icon
         run: |
-          if [ -d "android-icons" ]; then
-            for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-              dest="android/app/src/main/res/mipmap-${density}"
-              src="android-icons/mipmap-${density}"
-              mkdir -p "$dest"
-              cp "${src}/ic_launcher.png"       "${dest}/ic_launcher.png" 2>/dev/null || true
-              cp "${src}/ic_launcher_round.png" "${dest}/ic_launcher_round.png" 2>/dev/null || true
-              echo "Copied icons → $dest"
-            done
-            echo "✓ Custom icons applied"
-          else
-            echo "⚠ android-icons/ not found — using default icon"
-          fi
+          pip install Pillow --break-system-packages -q
+          python3 << 'PYEOF'
+          from PIL import Image
+          import os, shutil
+
+          src = "MOCKBOAT LOGO.png"
+          if not os.path.exists(src):
+              print("⚠ MOCKBOAT LOGO.png not found — skipping icons")
+              exit(0)
+
+          img = Image.open(src).convert("RGBA")
+          sizes = {
+              "mipmap-mdpi": 48,
+              "mipmap-hdpi": 72,
+              "mipmap-xhdpi": 96,
+              "mipmap-xxhdpi": 144,
+              "mipmap-xxxhdpi": 192,
+          }
+          base = "android/app/src/main/res"
+          for folder, size in sizes.items():
+              d = os.path.join(base, folder)
+              os.makedirs(d, exist_ok=True)
+              resized = img.resize((size, size), Image.LANCZOS)
+              resized.save(os.path.join(d, "ic_launcher.png"))
+              resized.save(os.path.join(d, "ic_launcher_round.png"))
+              print(f"✓ {folder}: {size}x{size}")
+          print("✓ All icons applied from MOCKBOAT LOGO.png")
+          PYEOF
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
