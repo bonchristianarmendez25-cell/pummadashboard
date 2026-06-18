@@ -1,5 +1,0 @@
-# --- Add these lines to your existing .gitignore ---
-# Capacitor / Android build output (regenerated automatically by CI — don't commit it)
-/android
-/www
-/node_modules
