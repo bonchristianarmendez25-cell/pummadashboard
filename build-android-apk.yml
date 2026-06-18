@@ -41,6 +41,7 @@ jobs:
         run: npm install
 
       # ── Copy ALL web assets into www/ ─────────────────────────────────
+      # Use 'find' for PDFs so filenames with spaces are handled safely.
       - name: Copy web assets into www/
         run: |
           mkdir -p www
@@ -51,8 +52,10 @@ jobs:
           for f in *.png *.jpg *.jpeg *.svg *.ico; do
             [ -e "$f" ] && cp "$f" www/
           done
-          for f in *.pdf; do
-            [ -e "$f" ] && cp "$f" www/
+          # Use find + while-read so PDF names with spaces don't break the loop
+          find . -maxdepth 1 -iname "*.pdf" -print0 | while IFS= read -r -d '' f; do
+            cp "$f" www/
+            echo "Copied PDF: $f"
           done
           echo "=== www/ contents ==="
           ls -lah www/
