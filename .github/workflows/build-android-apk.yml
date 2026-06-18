@@ -14,23 +14,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── Java FIRST — Gradle/Capacitor need it from the start ──────────
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # ── Accept Android SDK licenses & install required packages ───────
+      # ── Use the official action — handles SDK path & licenses automatically
       - name: Set up Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          sdkmanager --version
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-          echo "y" | sdkmanager --licenses
+        uses: android-actions/setup-android@v3
 
-      # ── Node.js ───────────────────────────────────────────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -40,9 +33,7 @@ jobs:
       - name: Install Capacitor dependencies
         run: npm install
 
-      # ── Copy ALL web assets into www/ ─────────────────────────────────
-      # rsync with --no-recursive + include patterns handles filenames
-      # that contain spaces (like "stcw code 2017 edition.pdf") safely.
+      # ── rsync handles filenames with spaces (e.g. "stcw code 2017 edition.pdf")
       - name: Copy web assets into www/
         run: |
           mkdir -p www
