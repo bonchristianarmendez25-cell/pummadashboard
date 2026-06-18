@@ -58,14 +58,19 @@ jobs:
       # ── Replace default Capacitor icons with the PUMMA logo ───────────
       - name: Apply custom app icon
         run: |
-          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            dest="android/app/src/main/res/mipmap-${density}"
-            src="android-icons/mipmap-${density}"
-            mkdir -p "$dest"
-            cp "${src}/ic_launcher.png"       "${dest}/ic_launcher.png"
-            cp "${src}/ic_launcher_round.png" "${dest}/ic_launcher_round.png"
-            echo "Copied icons → $dest"
-          done
+          if [ -d "android-icons" ]; then
+            for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+              dest="android/app/src/main/res/mipmap-${density}"
+              src="android-icons/mipmap-${density}"
+              mkdir -p "$dest"
+              cp "${src}/ic_launcher.png"       "${dest}/ic_launcher.png" 2>/dev/null || true
+              cp "${src}/ic_launcher_round.png" "${dest}/ic_launcher_round.png" 2>/dev/null || true
+              echo "Copied icons → $dest"
+            done
+            echo "✓ Custom icons applied"
+          else
+            echo "⚠ android-icons/ not found — using default icon"
+          fi
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
