@@ -1,0 +1,8 @@
+{
+  "appId": "ph.edu.pumma.dashboard",
+  "appName": "PUMMA Dashboard",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
