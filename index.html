@@ -64,9 +64,16 @@
             body > *:not(#print-masterlist-container):not(#print-cadet-report) { display: none !important; }
             #print-masterlist-container:not(.hidden), #print-cadet-report:not(.hidden) { display: block !important; }
             body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @page { margin: 0.5cm; }
+            @page { margin: 0.6cm; }
             #print-masterlist-container table thead { display: table-header-group; }
             #print-masterlist-container table tr { page-break-inside: avoid; }
+            #print-masterlist-container table { font-size: 9px !important; }
+            #print-masterlist-container table th, #print-masterlist-container table td { padding: 3px 5px !important; line-height: 1.25; }
+            #print-masterlist-container .grid-cols-5 { gap: 6px !important; }
+        }
+        @media print {
+            #print-masterlist-container.print-landscape { page: landscape-page; }
+            @page landscape-page { size: landscape; margin: 0.6cm; }
         }
         
         .bg-login-decor { background-image: url('okay.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
@@ -134,12 +141,14 @@
             </div>
             <div class="flex gap-3 items-center admin-controls hidden">
                 <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
+                <button onclick="openCalculatorModal()" class="bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-800/50 text-violet-700 dark:text-violet-300 px-3 py-1.5 rounded border border-violet-200 dark:border-violet-800 text-xs flex items-center gap-2 font-semibold transition hidden sm:flex"><i data-lucide="calculator" class="w-3.5 h-3.5"></i> Calculator</button>
                 <button onclick="exportExcel()" class="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-2 font-semibold transition hidden sm:flex"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel</button>
                 <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-2 font-semibold transition"><i data-lucide="printer" class="w-3.5 h-3.5"></i> Masterlist</button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-2 font-semibold transition hidden sm:flex"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out</button>
             </div>
             <div class="flex gap-4 items-center cadet-controls hidden">
                 <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
+                <button onclick="openCalculatorModal()" class="bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-800/50 text-violet-700 dark:text-violet-300 px-3 py-1.5 rounded border border-violet-200 dark:border-violet-800 text-xs flex items-center gap-2 font-semibold transition"><i data-lucide="calculator" class="w-3.5 h-3.5"></i> Calculator</button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-3 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-2 font-semibold transition"><i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out</button>
             </div>
         </div>
@@ -737,7 +746,7 @@
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
                 <h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clock" class="text-brand-green w-5 h-5"></i> Admin Access History</h3>
                 <div class="flex items-center gap-3">
-                    <button onclick="exportAdminLogsCSV()" class="text-[10px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-2 py-1.5 rounded font-bold transition flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> CSV</button>
+                    <button onclick="exportAdminLogsXLSX()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel</button>
                     <button onclick="closeAdminLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
             </div>
@@ -752,6 +761,66 @@
     <div id="manage-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="settings-2" class="text-brand-green w-5 h-5"></i> Manage Duty Checklists</h3></div><button onclick="closeManageDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950" id="duties-editor-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><button onclick="addDutyDay()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-sm"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Day</button><button onclick="closeManageDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done</button></div></div></div>
     <div id="manage-violations-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-red-700 dark:text-red-400 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="alert-triangle" class="text-red-600 w-5 h-5"></i> Master Violations List</h3></div><button onclick="closeManageViolationsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950"><div class="grid grid-cols-12 gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 px-2"><div class="col-span-8">Violation / Incident Name</div><div class="col-span-3 text-center">Points (+ / -)</div><div class="col-span-1 text-center">Action</div></div><div id="violations-editor-container" class="space-y-2"></div><button onclick="addViolation()" class="mt-4 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-xs font-semibold transition-all flex items-center gap-1 shadow-sm mx-auto"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Violation Entry</button></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end shrink-0"><button onclick="closeManageViolationsModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
     <div id="graded-months-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-md w-full overflow-hidden shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calendar-check" class="text-brand-green w-5 h-5"></i> Active Logbook Months</h3></div><button onclick="closeGradedMonthsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-5"><div class="flex items-center justify-between mb-4 border-b border-brand-creamBorder dark:border-slate-700 pb-2"><span class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">Select Year:</span><select id="graded-months-year" onchange="renderGradedMonths()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1 text-xs font-bold focus:outline-none dark:text-white"></select></div><div id="graded-months-container" class="grid grid-cols-3 gap-3"></div></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end"><button onclick="closeGradedMonthsModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Save Selection</button></div></div></div>
+
+    <!-- Calculator Modal: GWA Unit Calculator + Scientific Calculator -->
+    <div id="calculator-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-violet-700 dark:text-violet-300 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calculator" class="w-5 h-5"></i> Calculator Tools</h3>
+                <button onclick="closeCalculatorModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-brand-creamBorder dark:border-slate-700 shrink-0 bg-brand-creamBg dark:bg-slate-950">
+                <button id="calc-tab-gwa" onclick="switchCalculatorTab('gwa')" class="flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition flex items-center justify-center gap-1.5 border-b-2 border-violet-600 text-violet-700 dark:text-violet-300"><i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i> GWA Unit Calculator</button>
+                <button id="calc-tab-sci" onclick="switchCalculatorTab('sci')" class="flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition flex items-center justify-center gap-1.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400"><i data-lucide="sigma" class="w-3.5 h-3.5"></i> Scientific Calculator</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <!-- GWA Unit Calculator Panel -->
+                <div id="calc-panel-gwa" class="p-5">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4">Enter each subject's <strong>units</strong> and <strong>final grade</strong>. GWA is computed as the unit-weighted average: <span class="font-mono">&Sigma;(units &times; grade) &divide; &Sigma;(units)</span>.</p>
+
+                    <div class="grid grid-cols-12 gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 px-1">
+                        <div class="col-span-5">Subject</div>
+                        <div class="col-span-3 text-center">Units</div>
+                        <div class="col-span-3 text-center">Final Grade</div>
+                        <div class="col-span-1"></div>
+                    </div>
+                    <div id="gwa-calc-rows" class="space-y-2"></div>
+
+                    <button onclick="addGwaCalcRow()" class="mt-3 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-brand-blue dark:text-white text-[11px] font-semibold transition-all flex items-center gap-1 shadow-sm"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Subject</button>
+
+                    <div class="mt-5 pt-4 border-t border-brand-creamBorder dark:border-slate-700 flex items-center justify-between">
+                        <div class="flex gap-4 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span>Total Units: <strong id="gwa-calc-total-units" class="text-brand-blue dark:text-blue-400">0</strong></span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">General Weighted Average</p>
+                            <p id="gwa-calc-result" class="text-2xl font-extrabold text-brand-green dark:text-green-400">0.00</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-3">
+                        <button onclick="resetGwaCalc()" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset</button>
+                        <button onclick="copyGwaResult()" class="px-3 py-1.5 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-[11px] font-semibold transition flex items-center gap-1"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Result</button>
+                    </div>
+                </div>
+
+                <!-- Scientific Calculator Panel -->
+                <div id="calc-panel-sci" class="p-5 hidden">
+                    <div class="max-w-xs mx-auto">
+                        <div class="bg-slate-900 rounded-lg p-3 mb-3 shadow-inner">
+                            <div id="sci-calc-history" class="text-right text-[11px] text-slate-400 h-4 truncate font-mono">&nbsp;</div>
+                            <div id="sci-calc-display" class="text-right text-2xl text-white font-mono break-all min-h-[2rem]">0</div>
+                        </div>
+                        <div class="grid grid-cols-5 gap-1.5 text-xs font-semibold" id="sci-calc-keys"></div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center">Angles are in <strong id="sci-calc-mode-label">degrees</strong>. Tap <span class="font-mono">DEG/RAD</span> to switch.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="section-duties-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="users" class="text-brand-green w-5 h-5"></i> Map Multiple Section Duties</h3></div><button onclick="closeSectionDutiesModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950" id="section-duties-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end shrink-0"><button onclick="closeSectionDutiesModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
     <div id="calendar-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print"><div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl"><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0"><div><h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="calendar" class="text-brand-green w-5 h-5"></i> Daily Logbook Tracker</h3></div><div class="flex items-center gap-3"><select id="cal-year-select" onchange="renderCalendarModal()" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-600 rounded px-3 py-1.5 text-xs font-bold text-brand-blue dark:text-blue-300 focus:outline-none"></select><button onclick="closeCalendarModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button></div></div><div class="flex-1 overflow-y-auto p-6 bg-brand-creamBg dark:bg-slate-950 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="calendar-container"></div><div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0"><span class="text-xs font-semibold text-slate-600 dark:text-slate-400">Total Submitted (Selected Year): <strong id="cal-total-days" class="text-brand-blue dark:text-blue-400 text-sm">0</strong> days</span><button onclick="closeCalendarModal()" class="px-5 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all shadow-sm">Done & Save</button></div></div></div>
 
@@ -806,7 +875,7 @@
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
                 <h3 class="font-bold text-brand-green dark:text-green-400 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="file-search" class="w-5 h-5"></i> System Activity & Edit Ledger</h3>
                 <div class="flex items-center gap-3">
-                    <button onclick="exportAuditLogsCSV()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV</button>
+                    <button onclick="exportAuditLogsXLSX()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-[10px] font-bold shadow-sm transition flex items-center gap-1"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export Excel</button>
                     <button onclick="closeAuditLogsModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
             </div>
@@ -1496,7 +1565,7 @@
 
 
     <!-- Printable Templates -->
-    <div id="print-masterlist-container" class="hidden font-sans text-black bg-white p-7">
+    <div id="print-masterlist-container" class="hidden print-landscape font-sans text-black bg-white p-7">
 
         <!-- Letterhead -->
         <div class="flex items-start justify-between pb-3 border-b-[3px] border-brand-blue">
@@ -1523,32 +1592,43 @@
         <div class="grid grid-cols-5 gap-2 mb-5" id="print-masterlist-stats"></div>
 
         <!-- Roster table -->
-        <table class="w-full text-left border-collapse text-[10.5px] border border-slate-300">
+        <table class="w-full text-left border-collapse text-[10px] border border-slate-300">
+            <colgroup>
+                <col style="width:3%">
+                <col style="width:24%">
+                <col style="width:13%">
+                <col style="width:9%">
+                <col style="width:9%">
+                <col style="width:10%">
+                <col style="width:9%">
+                <col style="width:10%">
+                <col style="width:13%">
+            </colgroup>
             <thead>
                 <tr class="bg-brand-blue text-white">
-                    <th class="p-2 border border-slate-300 text-center w-7">No.</th>
-                    <th class="p-2 border border-slate-300 text-left">Cadet Name</th>
-                    <th class="p-2 border border-slate-300 text-left font-mono">ID No.</th>
-                    <th class="p-2 border border-slate-300 text-center">Officer</th>
-                    <th class="p-2 border border-slate-300 text-center">Merits</th>
-                    <th class="p-2 border border-slate-300 text-center">Mean GWA</th>
-                    <th class="p-2 border border-slate-300 text-center">Rating</th>
-                    <th class="p-2 border border-slate-300 text-center">Grade %</th>
-                    <th class="p-2 border border-slate-300 text-center">Status</th>
+                    <th class="p-1.5 border border-slate-300 text-center">No.</th>
+                    <th class="p-1.5 border border-slate-300 text-left">Cadet Name</th>
+                    <th class="p-1.5 border border-slate-300 text-left font-mono">ID No.</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Officer</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Merits</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Mean GWA</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Rating</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Grade %</th>
+                    <th class="p-1.5 border border-slate-300 text-center">Status</th>
                 </tr>
             </thead>
             <tbody id="print-masterlist-tbody"></tbody>
         </table>
 
         <!-- Legend -->
-        <div class="flex items-center gap-4 mt-3 text-[9px] text-slate-500 font-medium">
+        <div class="flex items-center gap-4 mt-2.5 text-[8.5px] text-slate-500 font-medium">
             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-green inline-block"></span> 90%+ Excellent</span>
             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-blue inline-block"></span> 75&ndash;89.99% Passing</span>
             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span> Below 75% / For Review</span>
         </div>
 
         <!-- Signatures -->
-        <div class="mt-12 grid grid-cols-2 gap-16 text-[11px]">
+        <div class="mt-8 grid grid-cols-2 gap-16 text-[11px]">
             <div>
                 <p class="border-t border-slate-400 pt-1 font-bold uppercase tracking-wide" id="print-masterlist-prepared">&nbsp;</p>
                 <p class="text-slate-500 text-[9px] uppercase tracking-wider">Prepared by &middot; Class Adviser</p>
@@ -2566,15 +2646,15 @@
                 const rowBg = i % 2 === 1 ? 'bg-slate-50' : 'bg-white';
                 return `
                 <tr class="${rowBg} border-b border-slate-200">
-                    <td class="p-2 border-r border-slate-200 text-center text-slate-400 font-semibold">${i + 1}</td>
-                    <td class="p-2 border-r border-slate-200 font-bold">${c.name}</td>
-                    <td class="p-2 border-r border-slate-200 font-mono text-slate-500">${c.studentId || 'N/A'}</td>
-                    <td class="p-2 text-center border-r border-slate-200">${c.officer ? '<span class="text-brand-blue font-bold">YES</span>' : '<span class="text-slate-400">NO</span>'}</td>
-                    <td class="p-2 text-center border-r border-slate-200 ${c.totalMeritsSum < 0 ? 'text-rose-600 font-semibold' : ''}">${c.totalMeritsSum}</td>
-                    <td class="p-2 text-center border-r border-slate-200">${(c.gwa || 0).toFixed(2)}</td>
-                    <td class="p-2 text-center border-r border-slate-200">${(c.finalRating || 0).toFixed(2)}</td>
-                    <td class="p-2 text-center border-r border-slate-200 font-bold ${gradeColor}">${c.specificGradePercent}%</td>
-                    <td class="p-2 text-center">${statusBadge}</td>
+                    <td class="p-1.5 border-r border-slate-200 text-center text-slate-400 font-semibold">${i + 1}</td>
+                    <td class="p-1.5 border-r border-slate-200 font-bold">${c.name}</td>
+                    <td class="p-1.5 border-r border-slate-200 font-mono text-slate-500">${c.studentId || 'N/A'}</td>
+                    <td class="p-1.5 text-center border-r border-slate-200">${c.officer ? '<span class="text-brand-blue font-bold">YES</span>' : '<span class="text-slate-400">NO</span>'}</td>
+                    <td class="p-1.5 text-center border-r border-slate-200 ${c.totalMeritsSum < 0 ? 'text-rose-600 font-semibold' : ''}">${c.totalMeritsSum}</td>
+                    <td class="p-1.5 text-center border-r border-slate-200">${(c.gwa || 0).toFixed(2)}</td>
+                    <td class="p-1.5 text-center border-r border-slate-200">${(c.finalRating || 0).toFixed(2)}</td>
+                    <td class="p-1.5 text-center border-r border-slate-200 font-bold ${gradeColor}">${c.specificGradePercent}%</td>
+                    <td class="p-1.5 text-center">${statusBadge}</td>
                 </tr>`;
             }).join('');
 
@@ -4286,7 +4366,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         
         window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
-        window.exportAuditLogsCSV = () => {
+        window.exportAuditLogsXLSX = () => {
             const logs = window.appSettings.auditLogs || [];
             if (logs.length === 0) return alert("No activity logs to export.");
 
@@ -4344,11 +4424,53 @@ window.logAdminSettingsActivity = async (action, details) => {
             ws['!rows'] = [{ hpt: 30 }, { hpt: 18 }, { hpt: 6 }];
             ws['!rows'][3] = { hpt: 20 };
 
+            // Freeze header row
+            ws['!freeze'] = { xSplit: 0, ySplit: 4 };
+
             XLSX.utils.book_append_sheet(wb, ws, "Activity Ledger");
+
+            // ── Sheet 2: Summary ─────────────────────────────────────────────
+            const actionCounts = {};
+            logs.forEach(l => { const a = l.action || 'Unspecified'; actionCounts[a] = (actionCounts[a] || 0) + 1; });
+            const uniqueAdmins = [...new Set(logs.map(l => l.adminName).filter(Boolean))].length;
+            const dateGenerated = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const summaryData = [
+                ['PUMMA SYSTEM ACTIVITY & EDIT LEDGER — SUMMARY'],
+                [''],
+                ['Generated', dateGenerated],
+                ['Total Entries', logs.length],
+                ['Unique Authorizing Admins', uniqueAdmins],
+                ['Date Range (Oldest)', logs[logs.length - 1]?.date || 'N/A'],
+                ['Date Range (Newest)', logs[0]?.date || 'N/A'],
+                [''],
+                ['Activity Breakdown', ''],
+                ...Object.entries(actionCounts).map(([action, count]) => [action, count])
+            ];
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            wsSummary['!cols'] = [{ wch: 28 }, { wch: 36 }];
+
+            const titleCell = wsSummary['A1'];
+            if (titleCell) titleCell.s = { font: { bold: true, sz: 13, color: { rgb: "263F77" } }, alignment: { horizontal: "left" } };
+            const sectionCell = wsSummary['A9'];
+            if (sectionCell) sectionCell.s = { font: { bold: true, sz: 10, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "406F27" } } };
+            const labelStyle = { font: { bold: true, sz: 9, color: { rgb: "406F27" } } };
+            const valueStyle = { font: { sz: 9 } };
+            [2, 3, 4, 5, 6].forEach(r => {
+                const lCell = wsSummary[XLSX.utils.encode_cell({ r, c: 0 })];
+                const vCell = wsSummary[XLSX.utils.encode_cell({ r, c: 1 })];
+                if (lCell) lCell.s = labelStyle;
+                if (vCell) vCell.s = valueStyle;
+            });
+
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
             XLSX.writeFile(wb, `PUMMA_Activity_Ledger_${new Date().toISOString().slice(0,10)}.xlsx`);
         };
+        window.exportAuditLogsCSV = window.exportAuditLogsXLSX; // legacy alias
 
-        window.exportAdminLogsCSV = () => {
+        window.exportAdminLogsXLSX = () => {
             const logs = window.appSettings.adminLogs || [];
             if (logs.length === 0) return alert("No access logs to export.");
 
@@ -4394,9 +4516,48 @@ window.logAdminSettingsActivity = async (action, details) => {
             ws['!rows'] = [{ hpt: 30 }, { hpt: 18 }, { hpt: 6 }];
             ws['!rows'][3] = { hpt: 20 };
 
+            // Freeze header row
+            ws['!freeze'] = { xSplit: 0, ySplit: 4 };
+
             XLSX.utils.book_append_sheet(wb, ws, "Admin Access History");
+
+            // ── Sheet 2: Summary ─────────────────────────────────────────────
+            const totalLogins = logs.filter(l => l.action === 'Login').length;
+            const totalLogouts = logs.filter(l => l.action === 'Logout').length;
+            const uniqueAdmins2 = [...new Set(logs.map(l => l.adminName).filter(Boolean))].length;
+            const dateGenerated2 = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const summaryData2 = [
+                ['PUMMA ADMIN ACCESS HISTORY — SUMMARY'],
+                [''],
+                ['Generated', dateGenerated2],
+                ['Total Entries', logs.length],
+                ['Total Logins', totalLogins],
+                ['Total Logouts', totalLogouts],
+                ['Unique Admins', uniqueAdmins2],
+                ['Date Range (Oldest)', logs[logs.length - 1]?.date || 'N/A'],
+                ['Date Range (Newest)', logs[0]?.date || 'N/A'],
+            ];
+
+            const wsSummary2 = XLSX.utils.aoa_to_sheet(summaryData2);
+            wsSummary2['!cols'] = [{ wch: 24 }, { wch: 36 }];
+
+            const titleCell2 = wsSummary2['A1'];
+            if (titleCell2) titleCell2.s = { font: { bold: true, sz: 13, color: { rgb: "263F77" } }, alignment: { horizontal: "left" } };
+            const labelStyle2 = { font: { bold: true, sz: 9, color: { rgb: "406F27" } } };
+            const valueStyle2 = { font: { sz: 9 } };
+            [2, 3, 4, 5, 6, 7, 8].forEach(r => {
+                const lCell = wsSummary2[XLSX.utils.encode_cell({ r, c: 0 })];
+                const vCell = wsSummary2[XLSX.utils.encode_cell({ r, c: 1 })];
+                if (lCell) lCell.s = labelStyle2;
+                if (vCell) vCell.s = valueStyle2;
+            });
+
+            XLSX.utils.book_append_sheet(wb, wsSummary2, "Summary");
+
             XLSX.writeFile(wb, `PUMMA_Admin_Access_${new Date().toISOString().slice(0,10)}.xlsx`);
         };
+        window.exportAdminLogsCSV = window.exportAdminLogsXLSX; // legacy alias
         
         window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
@@ -4607,6 +4768,236 @@ window.logAdminSettingsActivity = async (action, details) => {
             const fraction = (v - r.lr) / (r.hr - r.lr);
             return (r.lg + (fraction * (r.hg - r.lg))).toFixed(2);
         };
+
+        /* =========================================================
+           CALCULATOR MODAL: GWA Unit Calculator + Scientific Calculator
+           Available to both admin and cadet roles.
+        ========================================================= */
+        let gwaCalcRowId = 0;
+
+        window.openCalculatorModal = () => {
+            const m = document.getElementById('calculator-modal');
+            if (!m) return;
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            if (!document.getElementById('gwa-calc-rows').children.length) {
+                addGwaCalcRow(); addGwaCalcRow(); addGwaCalcRow();
+            }
+            if (!document.getElementById('sci-calc-keys').children.length) {
+                buildSciCalcKeypad();
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        window.closeCalculatorModal = () => {
+            const m = document.getElementById('calculator-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.switchCalculatorTab = (tab) => {
+            const isGwa = tab === 'gwa';
+            document.getElementById('calc-panel-gwa').classList.toggle('hidden', !isGwa);
+            document.getElementById('calc-panel-sci').classList.toggle('hidden', isGwa);
+            const gwaTab = document.getElementById('calc-tab-gwa');
+            const sciTab = document.getElementById('calc-tab-sci');
+            gwaTab.classList.toggle('border-violet-600', isGwa);
+            gwaTab.classList.toggle('text-violet-700', isGwa);
+            gwaTab.classList.toggle('dark:text-violet-300', isGwa);
+            gwaTab.classList.toggle('border-transparent', !isGwa);
+            gwaTab.classList.toggle('text-slate-500', !isGwa);
+            gwaTab.classList.toggle('dark:text-slate-400', !isGwa);
+            sciTab.classList.toggle('border-violet-600', !isGwa);
+            sciTab.classList.toggle('text-violet-700', !isGwa);
+            sciTab.classList.toggle('dark:text-violet-300', !isGwa);
+            sciTab.classList.toggle('border-transparent', isGwa);
+            sciTab.classList.toggle('text-slate-500', isGwa);
+            sciTab.classList.toggle('dark:text-slate-400', isGwa);
+        };
+
+        // --- GWA Unit Calculator ---
+        window.addGwaCalcRow = () => {
+            gwaCalcRowId++;
+            const id = gwaCalcRowId;
+            const container = document.getElementById('gwa-calc-rows');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-12 gap-2 items-center';
+            row.id = `gwa-row-${id}`;
+            row.innerHTML = `
+                <input type="text" placeholder="e.g. Naval Architecture" class="col-span-5 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1.5 text-xs dark:text-white focus:outline-none focus:border-violet-500" oninput="calcGwaResult()">
+                <input type="number" step="0.5" min="0" placeholder="3" class="col-span-3 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1.5 text-xs text-center dark:text-white focus:outline-none focus:border-violet-500 gwa-units-input" oninput="calcGwaResult()">
+                <input type="number" step="0.01" min="0" placeholder="90.00" class="col-span-3 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-600 rounded px-2 py-1.5 text-xs text-center dark:text-white focus:outline-none focus:border-violet-500 gwa-grade-input" oninput="calcGwaResult()">
+                <button onclick="removeGwaCalcRow(${id})" class="col-span-1 flex justify-center text-rose-500 hover:text-rose-700 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            `;
+            container.appendChild(row);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            calcGwaResult();
+        };
+
+        window.removeGwaCalcRow = (id) => {
+            const row = document.getElementById(`gwa-row-${id}`);
+            if (row) row.remove();
+            calcGwaResult();
+        };
+
+        window.resetGwaCalc = () => {
+            document.getElementById('gwa-calc-rows').innerHTML = '';
+            gwaCalcRowId = 0;
+            addGwaCalcRow(); addGwaCalcRow(); addGwaCalcRow();
+        };
+
+        window.calcGwaResult = () => {
+            const rows = document.querySelectorAll('#gwa-calc-rows > div');
+            let totalUnits = 0, weightedSum = 0;
+            rows.forEach(row => {
+                const units = parseFloat(row.querySelector('.gwa-units-input')?.value) || 0;
+                const grade = parseFloat(row.querySelector('.gwa-grade-input')?.value) || 0;
+                if (units > 0 && grade > 0) {
+                    totalUnits += units;
+                    weightedSum += units * grade;
+                }
+            });
+            const gwa = totalUnits > 0 ? (weightedSum / totalUnits) : 0;
+            document.getElementById('gwa-calc-total-units').innerText = totalUnits.toFixed(1).replace(/\.0$/, '');
+            document.getElementById('gwa-calc-result').innerText = gwa.toFixed(2);
+        };
+
+        window.copyGwaResult = () => {
+            const result = document.getElementById('gwa-calc-result').innerText;
+            navigator.clipboard?.writeText(result).then(() => {
+                window.customAlert ? window.customAlert(`GWA of ${result} copied to clipboard.`) : alert(`GWA of ${result} copied to clipboard.`);
+            }).catch(() => {
+                window.customAlert ? window.customAlert(`Your GWA is ${result}`) : alert(`Your GWA is ${result}`);
+            });
+        };
+
+        // --- Scientific Calculator ---
+        let sciCalcExpr = '';
+        let sciCalcDegMode = true;
+
+        window.buildSciCalcKeypad = () => {
+            const keys = [
+                { label: 'DEG/RAD', action: 'toggleSciDegMode()', cls: 'col-span-2 bg-slate-700 text-white hover:bg-slate-600' },
+                { label: 'AC', action: 'sciCalcClear()', cls: 'bg-rose-600 text-white hover:bg-rose-700' },
+                { label: 'DEL', action: 'sciCalcDelete()', cls: 'bg-slate-500 text-white hover:bg-slate-400' },
+                { label: '%', action: "sciCalcAppend('%')", cls: 'bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300' },
+
+                { label: 'sin', action: "sciCalcFunc('sin')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: 'cos', action: "sciCalcFunc('cos')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: 'tan', action: "sciCalcFunc('tan')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: '(', action: "sciCalcAppend('(')", cls: 'bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300' },
+                { label: ')', action: "sciCalcAppend(')')", cls: 'bg-slate-200 dark:bg-slate-700 dark:text-white hover:bg-slate-300' },
+
+                { label: 'ln', action: "sciCalcFunc('ln')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: 'log', action: "sciCalcFunc('log')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: '√', action: "sciCalcFunc('sqrt')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: 'x²', action: "sciCalcAppend('^2')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+                { label: 'xʸ', action: "sciCalcAppend('^')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+
+                { label: '7', action: "sciCalcAppend('7')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '8', action: "sciCalcAppend('8')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '9', action: "sciCalcAppend('9')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '÷', action: "sciCalcAppend('/')", cls: 'bg-brand-blue-glow dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 hover:bg-blue-100' },
+                { label: 'π', action: "sciCalcAppend('pi')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+
+                { label: '4', action: "sciCalcAppend('4')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '5', action: "sciCalcAppend('5')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '6', action: "sciCalcAppend('6')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '×', action: "sciCalcAppend('*')", cls: 'bg-brand-blue-glow dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 hover:bg-blue-100' },
+                { label: 'e', action: "sciCalcAppend('e')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+
+                { label: '1', action: "sciCalcAppend('1')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '2', action: "sciCalcAppend('2')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '3', action: "sciCalcAppend('3')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '−', action: "sciCalcAppend('-')", cls: 'bg-brand-blue-glow dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 hover:bg-blue-100' },
+                { label: '1/x', action: "sciCalcAppend('1/(')", cls: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200' },
+
+                { label: '0', action: "sciCalcAppend('0')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '.', action: "sciCalcAppend('.')", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '±', action: "sciCalcToggleSign()", cls: 'bg-white dark:bg-slate-700 dark:text-white hover:bg-slate-100 border border-slate-200 dark:border-slate-600' },
+                { label: '+', action: "sciCalcAppend('+')", cls: 'bg-brand-blue-glow dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 hover:bg-blue-100' },
+                { label: '=', action: "sciCalcEquals()", cls: 'bg-brand-green text-white hover:bg-brand-green-hover' },
+            ];
+            const container = document.getElementById('sci-calc-keys');
+            container.innerHTML = keys.map(k => `<button onclick="${k.action}" class="py-2.5 rounded-lg transition shadow-sm ${k.cls}">${k.label}</button>`).join('');
+        };
+
+        window.sciCalcAppend = (val) => {
+            sciCalcExpr += val;
+            window.sciCalcRender();
+        };
+        window.sciCalcFunc = (fn) => {
+            sciCalcExpr += `${fn}(`;
+            window.sciCalcRender();
+        };
+        window.sciCalcClear = () => {
+            sciCalcExpr = '';
+            document.getElementById('sci-calc-history').innerHTML = '&nbsp;';
+            window.sciCalcRender();
+        };
+        window.sciCalcDelete = () => {
+            sciCalcExpr = sciCalcExpr.slice(0, -1);
+            window.sciCalcRender();
+        };
+        window.sciCalcToggleSign = () => {
+            sciCalcExpr = sciCalcExpr ? `-(${sciCalcExpr})` : '-';
+            window.sciCalcRender();
+        };
+        window.sciCalcRender = () => {
+            const display = document.getElementById('sci-calc-display');
+            if (display) display.innerText = sciCalcExpr || '0';
+        };
+        window.toggleSciDegMode = () => {
+            sciCalcDegMode = !sciCalcDegMode;
+            const label = document.getElementById('sci-calc-mode-label');
+            if (label) label.innerText = sciCalcDegMode ? 'degrees' : 'radians';
+        };
+        window.sciCalcEquals = () => {
+            if (!sciCalcExpr) return;
+            try {
+                const result = evaluateSciExpression(sciCalcExpr);
+                document.getElementById('sci-calc-history').innerText = sciCalcExpr + ' =';
+                sciCalcExpr = String(Math.round(result * 1e10) / 1e10);
+                window.sciCalcRender();
+            } catch (e) {
+                document.getElementById('sci-calc-display').innerText = 'Error';
+                sciCalcExpr = '';
+            }
+        };
+
+        // Safe scientific expression evaluator (no eval of arbitrary code)
+        function evaluateSciExpression(expr) {
+            const degToRad = (d) => d * Math.PI / 180;
+            let safeExpr = expr
+                .replace(/sin\(/g, 'SIN(')
+                .replace(/cos\(/g, 'COS(')
+                .replace(/tan\(/g, 'TAN(')
+                .replace(/ln\(/g, 'LN(')
+                .replace(/log\(/g, 'LOG(')
+                .replace(/sqrt\(/g, 'SQRT(')
+                .replace(/pi/g, 'PI')
+                .replace(/(?<![a-zA-Z])e(?![a-zA-Z(])/g, 'E')
+                .replace(/\^/g, '**')
+                .replace(/%/g, '/100');
+
+            // Validate only allowed characters remain (numbers, ops, known function names, parens)
+            const allowed = /^[0-9+\-*/().,\sA-Z]*$/;
+            if (!allowed.test(safeExpr)) throw new Error('Invalid expression');
+
+            const SIN = (x) => Math.sin(sciCalcDegMode ? degToRad(x) : x);
+            const COS = (x) => Math.cos(sciCalcDegMode ? degToRad(x) : x);
+            const TAN = (x) => Math.tan(sciCalcDegMode ? degToRad(x) : x);
+            const LN = (x) => Math.log(x);
+            const LOG = (x) => Math.log10(x);
+            const SQRT = (x) => Math.sqrt(x);
+            const PI = Math.PI;
+            const E = Math.E;
+
+            // eslint-disable-next-line no-new-func
+            const fn = new Function('SIN', 'COS', 'TAN', 'LN', 'LOG', 'SQRT', 'PI', 'E', `return (${safeExpr});`);
+            const result = fn(SIN, COS, TAN, LN, LOG, SQRT, PI, E);
+            if (typeof result !== 'number' || !isFinite(result)) throw new Error('Invalid result');
+            return result;
+        }
+
 
         window.recalculateMetrics = () => {
             try {
