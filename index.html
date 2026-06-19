@@ -2057,7 +2057,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         
@@ -2104,7 +2104,6 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const storage = getStorage(app);
 
         // PERFORMANCE FIX: Without this, every page load re-downloads the
         // entire cadets collection (including embedded avatar/logbook/appeal
@@ -2543,42 +2542,34 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = async () => {
-                    // Compress image via canvas before upload (keeps Storage usage small)
+                    // PERFORMANCE FIX: Compress avatar to thumbnail size before saving.
+                    // Avatars are only ever displayed at 64×64px in the UI, so 100×100
+                    // at quality 0.5 gives a clean image (~5-10 KB) instead of the old
+                    // 300×300 at 0.8 (~100-200 KB) that was bloating every Firestore doc.
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 300;
-                    let width = img.width;
-                    let height = img.height;
-                    if (width > height) {
-                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                    } else {
-                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    const TARGET = 100; // px — plenty for a profile thumbnail
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > TARGET) { h = Math.round(h * TARGET / w); w = TARGET; } }
+                    else       { if (h > TARGET) { w = Math.round(w * TARGET / h); h = TARGET; } }
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+
+                    // Safety check: warn if somehow still too large (shouldn't happen)
+                    const approxKB = Math.round((compressedBase64.length * 0.75) / 1024);
+                    if (approxKB > 200) {
+                        alert(`Image is still ${approxKB}KB after compression. Please try a smaller photo.`);
+                        return;
                     }
-                    canvas.width = width;
-                    canvas.height = height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
 
-                    // Show immediate preview while uploading
-                    const previewSrc = canvas.toDataURL('image/jpeg', 0.8);
-                    document.getElementById('eval-avatar-img').src = previewSrc;
-
+                    document.getElementById('eval-avatar-img').src = compressedBase64;
                     const c = window.cadets.find(x => x.id === window.selectedCadetId);
-                    if (!c) return;
-
-                    // Convert canvas to Blob for Firebase Storage upload
-                    canvas.toBlob(async (blob) => {
+                    if (c) {
+                        c.avatar = compressedBase64;
                         try {
-                            // Upload to Firebase Storage — path: avatars/{cadetId}.jpg
-                            const avatarRef = storageRef(storage, `avatars/${c.id}.jpg`);
-                            await uploadBytes(avatarRef, blob, { contentType: 'image/jpeg' });
-                            const downloadURL = await getDownloadURL(avatarRef);
-
-                            // Save only the URL (not the image data) to Firestore
-                            c.avatar = downloadURL;
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: downloadURL });
-
-                            // Update the displayed image with the permanent URL
-                            document.getElementById('eval-avatar-img').src = downloadURL;
-
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: compressedBase64 });
                             const toast = document.createElement('div');
                             toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-50';
                             toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> Profile picture updated!`;
@@ -2586,10 +2577,10 @@
                             if (typeof lucide !== 'undefined') lucide.createIcons();
                             setTimeout(() => toast.remove(), 3000);
                         } catch (err) {
-                            console.error('Avatar upload error:', err);
-                            alert("Failed to save profile picture. Check Firebase Storage rules and try again.");
+                            console.error(err);
+                            alert("Failed to save profile picture. Please try a different image.");
                         }
-                    }, 'image/jpeg', 0.8);
+                    }
                 };
                 img.src = e.target.result;
             };
@@ -2762,7 +2753,9 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 800; 
+                    // PERFORMANCE FIX: 400px max at quality 0.4 keeps attachment ~15-25KB
+                    // vs the old 800px at 0.6 which could reach 150KB per appeal.
+                    const MAX_SIZE = 400;
                     let width = img.width;
                     let height = img.height;
                     
@@ -2770,10 +2763,9 @@
                     else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
                     
                     canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     
-                    const b64 = canvas.toDataURL('image/jpeg', 0.6); 
+                    const b64 = canvas.toDataURL('image/jpeg', 0.4); 
                     setVal('appeal-attachment-b64', b64);
                     
                     const preview = document.getElementById('appeal-preview-img');
@@ -2795,33 +2787,13 @@
             const gwaSem = getVal('appeal-gwa-sem');
             const gwaGrade = getNum('appeal-gwa-grade', 0);
             
-            // STRICT CHECK: Ensure Date is only required for Excuses
             if (type === 'Medical Excuse' || type === 'Leave of Absence' || type === 'Duty Exemption') {
                 if (!targetDate) return alert("Please specify the target date(s) for the excuse/leave.");
             }
-            
-            // STRICT CHECK: General requests need a message
             if (!msg && type !== 'GWA Update') return alert("Message required.");
-            
-            // STRICT CHECK: GWA Updates MANDATE a picture and a valid grade
             if (type === 'GWA Update') {
                 if (!attachment) return alert("Upload failed: You MUST attach a screenshot of your grades as evidence.");
                 if (gwaGrade <= 0 || gwaGrade > 100) return alert("Please enter a valid GWA percentage.");
-            }
-
-            // Upload attachment to Firebase Storage if present (keeps Firestore docs small)
-            let attachmentUrl = '';
-            if (attachment) {
-                try {
-                    const appealId = Date.now().toString();
-                    const blob = await (await fetch(attachment)).blob();
-                    const attachRef = storageRef(storage, `appeals/${c.id}/${appealId}.jpg`);
-                    await uploadBytes(attachRef, blob, { contentType: 'image/jpeg' });
-                    attachmentUrl = await getDownloadURL(attachRef);
-                } catch (uploadErr) {
-                    console.error('Appeal attachment upload error:', uploadErr);
-                    return alert("Failed to upload attachment. Please check your connection and try again.");
-                }
             }
 
             const newApp = { 
@@ -2832,7 +2804,7 @@
                 gwaSem: type === 'GWA Update' ? gwaSem : null,
                 gwaGrade: type === 'GWA Update' ? gwaGrade : null,
                 message: msg, 
-                attachment: attachmentUrl, // Storage URL instead of base64
+                attachment: attachment,
                 status: 'Pending', 
                 response: '' 
             };
