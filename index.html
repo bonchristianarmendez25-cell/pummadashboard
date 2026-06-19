@@ -2057,6 +2057,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         
@@ -2103,6 +2104,7 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // PERFORMANCE FIX: Without this, every page load re-downloads the
         // entire cadets collection (including embedded avatar/logbook/appeal
@@ -2541,47 +2543,53 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = async () => {
+                    // Compress image via canvas before upload (keeps Storage usage small)
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 300; 
+                    const MAX_SIZE = 300;
                     let width = img.width;
                     let height = img.height;
-
                     if (width > height) {
-                        if (width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
-                        }
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                     } else {
-                        if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
-                        }
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                     }
-                    
                     canvas.width = width;
                     canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    document.getElementById('eval-avatar-img').src = compressedBase64;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                    // Show immediate preview while uploading
+                    const previewSrc = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('eval-avatar-img').src = previewSrc;
+
                     const c = window.cadets.find(x => x.id === window.selectedCadetId);
-                    if (c) {
-                        c.avatar = compressedBase64;
+                    if (!c) return;
+
+                    // Convert canvas to Blob for Firebase Storage upload
+                    canvas.toBlob(async (blob) => {
                         try {
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: compressedBase64 });
+                            // Upload to Firebase Storage — path: avatars/{cadetId}.jpg
+                            const avatarRef = storageRef(storage, `avatars/${c.id}.jpg`);
+                            await uploadBytes(avatarRef, blob, { contentType: 'image/jpeg' });
+                            const downloadURL = await getDownloadURL(avatarRef);
+
+                            // Save only the URL (not the image data) to Firestore
+                            c.avatar = downloadURL;
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: downloadURL });
+
+                            // Update the displayed image with the permanent URL
+                            document.getElementById('eval-avatar-img').src = downloadURL;
+
                             const toast = document.createElement('div');
                             toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-50';
                             toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> Profile picture updated!`;
-                            document.body.appendChild(toast); 
-                            if(typeof lucide !== 'undefined') lucide.createIcons();
+                            document.body.appendChild(toast);
+                            if (typeof lucide !== 'undefined') lucide.createIcons();
                             setTimeout(() => toast.remove(), 3000);
                         } catch (err) {
-                            console.error(err);
-                            alert("Failed to save profile picture. Please try a different image.");
+                            console.error('Avatar upload error:', err);
+                            alert("Failed to save profile picture. Check Firebase Storage rules and try again.");
                         }
-                    }
+                    }, 'image/jpeg', 0.8);
                 };
                 img.src = e.target.result;
             };
@@ -2801,6 +2809,21 @@
                 if (gwaGrade <= 0 || gwaGrade > 100) return alert("Please enter a valid GWA percentage.");
             }
 
+            // Upload attachment to Firebase Storage if present (keeps Firestore docs small)
+            let attachmentUrl = '';
+            if (attachment) {
+                try {
+                    const appealId = Date.now().toString();
+                    const blob = await (await fetch(attachment)).blob();
+                    const attachRef = storageRef(storage, `appeals/${c.id}/${appealId}.jpg`);
+                    await uploadBytes(attachRef, blob, { contentType: 'image/jpeg' });
+                    attachmentUrl = await getDownloadURL(attachRef);
+                } catch (uploadErr) {
+                    console.error('Appeal attachment upload error:', uploadErr);
+                    return alert("Failed to upload attachment. Please check your connection and try again.");
+                }
+            }
+
             const newApp = { 
                 id: Date.now().toString(), 
                 date: new Date().toLocaleDateString(), 
@@ -2809,7 +2832,7 @@
                 gwaSem: type === 'GWA Update' ? gwaSem : null,
                 gwaGrade: type === 'GWA Update' ? gwaGrade : null,
                 message: msg, 
-                attachment: attachment,
+                attachment: attachmentUrl, // Storage URL instead of base64
                 status: 'Pending', 
                 response: '' 
             };
@@ -4752,6 +4775,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         };
 
         window.getAvatarSrc = (c) => {
+            // Supports both legacy base64 avatars and new Firebase Storage URLs
             if (c.avatar) return c.avatar;
             return c.gender === 'F' ? SVG_FEMALE : SVG_MALE;
         };
@@ -6949,6 +6973,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
 
             let settingsEverExisted = false;
+            let _settingsInitLock = false; // prevents double-init on slow connections
             onSnapshot(settingsRef, async (snap) => {
                 if (snap.exists()) {
                     settingsEverExisted = true;
@@ -6974,15 +6999,14 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     window.refreshProfileDropdown();
                     bindEvents(); 
                     window.recalculateMetrics();
-                } else if (!settingsEverExisted && !snap.metadata.fromCache) {
+                } else if (!settingsEverExisted && !snap.metadata.fromCache && !_settingsInitLock) {
                     // CRITICAL: only treat this as "the document has never been
-                    // created" when it's a CONFIRMED response from the server.
-                    // A brand-new device's empty local cache can momentarily
-                    // report "doesn't exist" before the real server data
-                    // arrives — acting on that would overwrite the real
-                    // instructors/admin accounts with these hardcoded
-                    // defaults. Waiting for !fromCache means we only ever
-                    // initialize on a true first-time setup.
+                    // created" when it's a CONFIRMED response from the server AND
+                    // we haven't already started an init write. The lock prevents
+                    // a second cache miss (possible on slow networks) from firing
+                    // a second setDoc that would overwrite freshly-saved instructor
+                    // accounts with the hardcoded defaults.
+                    _settingsInitLock = true;
                     settingsEverExisted = true;
                     const initData = JSON.parse(JSON.stringify({
                         academicYear: "2025-2026",
@@ -6991,10 +7015,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                         violationsList: defaultViolationsList,
                         checklistProfiles: defaultChecklistProfiles
                     }));
-                    // NOTE: merge:true only protects fields *omitted* from this
-                    // write — it does NOT preserve old values for fields like
-                    // `instructors` that ARE included here. The real safety
-                    // net is the !fromCache check above; don't remove it.
+                    // merge:true so any fields NOT listed here are never erased.
+                    // The real safety is the !fromCache + _settingsInitLock guards above.
                     await setDoc(settingsRef, initData, { merge: true });
                 }
             }, (err) => {
@@ -7014,6 +7036,10 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     window.recalculateMetrics();
                 }, 200);
 
+                // PERFORMANCE FIX: Unlock Cadet Login as soon as ANY data arrives —
+                // whether from local IndexedDB cache or the server. The first snapshot
+                // (fromCache=true) fires almost instantly on repeat visits, so cadets
+                // no longer wait for a round-trip to Firestore before they can log in.
                 if (!window.cadetsLoaded) {
                     window.cadetsLoaded = true;
                     const cadetBtn = document.getElementById('cadet-login-btn');

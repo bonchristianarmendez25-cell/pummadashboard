@@ -1,48 +1,28 @@
 {
-  "version": 2,
-  "routes": [
+  "headers": [
     {
-      "src": "/sw\\.js",
-      "headers": {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Service-Worker-Allowed": "/"
-      },
-      "dest": "/sw.js"
+      "source": "/(.*\\.(png|jpg|jpeg|svg|ico|webp|gif))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     },
     {
-      "src": "/manifest\\.json",
-      "headers": {
-        "Cache-Control": "public, max-age=86400"
-      },
-      "dest": "/manifest.json"
+      "source": "/(.*\\.(js|css|woff|woff2|ttf))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     },
     {
-      "src": "/(.*\\.pdf)",
-      "headers": {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": "inline",
-        "Cache-Control": "public, max-age=604800",
-        "X-Content-Type-Options": "nosniff"
-      },
-      "dest": "/$1"
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
     },
     {
-      "src": "/(.*\\.(png|jpg|jpeg|svg|ico|webp))",
-      "headers": {
-        "Cache-Control": "public, max-age=604800, immutable"
-      },
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*\\.js)",
-      "headers": {
-        "Cache-Control": "public, max-age=86400"
-      },
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
     }
   ]
 }
