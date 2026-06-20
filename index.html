@@ -78,6 +78,14 @@
         
         .bg-login-decor { background-image: url('okay.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; }
         .dark .bg-login-decor { background-color: #0f172a; }
+
+        /* MOBILE FIX: without this, any single element that overflows its
+           container (a button row, a wide table, etc.) makes the ENTIRE page
+           horizontally scrollable, which looks like content is randomly
+           "shifted" or "cut off" on phones. This caps the page itself at the
+           viewport width so only the specific overflowing element scrolls
+           (via its own overflow-x-auto), not the whole layout. */
+        html, body { max-width: 100vw; overflow-x: hidden; }
     </style>
 </head>
 <body class="bg-brand-creamBg dark:bg-slate-900 text-brand-black dark:text-slate-200 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
@@ -110,17 +118,23 @@
                 <span id="announcement-display" class="truncate block">Orders of the Day: Welcome to the PUMMA Dashboard.</span>
             </div>
 
-            <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full mt-1 pb-0.5" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;">
-                <button onclick="event.stopPropagation(); openTripleR()" class="bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
-                <button onclick="event.stopPropagation(); openExamPrepModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open-check" class="w-3.5 h-3.5 hidden sm:block"></i> Exam Prep</button>
-                <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
-                <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
-                <button onclick="event.stopPropagation(); openColregsModal()" class="bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="scale" class="w-3.5 h-3.5 hidden sm:block"></i> COLREGs</button>
-                <button onclick="event.stopPropagation(); openLawLibrary('SOLAS')" class="bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="library" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime Law</button>
-                <button onclick="event.stopPropagation(); openPummaGradesheet()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="sheet" class="w-3.5 h-3.5 hidden sm:block"></i> PUMMA Grades</button>
-                <button onclick="event.stopPropagation(); openUniformModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="shirt" class="w-3.5 h-3.5 hidden sm:block"></i> Uniform Regs</button>
-                <div class="hidden lg:block w-px h-4 bg-amber-300 dark:bg-amber-700 mx-1"></div>
-                <span class="text-[10px] opacity-70 hover:opacity-100 transition hidden lg:block shrink-0 uppercase tracking-wider">View Board <i data-lucide="arrow-right" class="w-3 h-3 inline pb-0.5"></i></span>
+            <div class="relative min-w-0">
+                <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full mt-1 pb-0.5" style="scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;">
+                    <button onclick="event.stopPropagation(); openTripleR()" class="shrink-0 bg-brand-blue hover:bg-blue-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open" class="w-3.5 h-3.5 hidden sm:block"></i> TRIPLE R</button>
+                    <button onclick="event.stopPropagation(); openExamPrepModal()" class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="book-open-check" class="w-3.5 h-3.5 hidden sm:block"></i> Exam Prep</button>
+                    <button onclick="event.stopPropagation(); openMaritimeNewsModal()" class="shrink-0 bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="globe" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime News</button>
+                    <button onclick="event.stopPropagation(); openDutyCalendarModal()" class="shrink-0 bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="calendar-days" class="w-3.5 h-3.5 hidden sm:block"></i> Duty Schedule</button>
+                    <button onclick="event.stopPropagation(); openColregsModal()" class="shrink-0 bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="scale" class="w-3.5 h-3.5 hidden sm:block"></i> COLREGs</button>
+                    <button onclick="event.stopPropagation(); openLawLibrary('SOLAS')" class="shrink-0 bg-violet-600 hover:bg-violet-700 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="library" class="w-3.5 h-3.5 hidden sm:block"></i> Maritime Law</button>
+                    <button onclick="event.stopPropagation(); openPummaGradesheet()" class="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="sheet" class="w-3.5 h-3.5 hidden sm:block"></i> PUMMA Grades</button>
+                    <button onclick="event.stopPropagation(); openUniformModal()" class="shrink-0 bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm transition"><i data-lucide="shirt" class="w-3.5 h-3.5 hidden sm:block"></i> Uniform Regs</button>
+                    <div class="hidden lg:block w-px h-4 bg-amber-300 dark:bg-amber-700 mx-1 shrink-0"></div>
+                    <span class="text-[10px] opacity-70 hover:opacity-100 transition hidden lg:block shrink-0 uppercase tracking-wider">View Board <i data-lucide="arrow-right" class="w-3 h-3 inline pb-0.5"></i></span>
+                </div>
+                <!-- Fade + arrow hint so it's visually obvious this row scrolls on mobile, since the scrollbar itself is hidden -->
+                <div class="sm:hidden pointer-events-none absolute right-0 top-0 bottom-0.5 w-8 bg-gradient-to-l from-amber-100 dark:from-amber-900/30 to-transparent flex items-center justify-end">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 animate-pulse"></i>
+                </div>
             </div>
 
         </div>
@@ -295,10 +309,10 @@
                             <label class="block text-xs font-semibold text-brand-blue dark:text-blue-300 mb-2 flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5"></i> Exam Deck Manager</label>
                             
                             <div class="flex gap-2 mb-3">
-                                <select id="manage-deck-subject" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none flex-1 truncate"></select>
-                                <button onclick="addExamSubject()" class="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded hover:bg-emerald-100 transition shadow-sm" title="Add Subject"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                                <button onclick="renameExamSubject()" class="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-2.5 py-1.5 rounded hover:bg-sky-100 transition shadow-sm" title="Rename Subject"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                <button onclick="deleteExamSubject()" class="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 px-2.5 py-1.5 rounded hover:bg-rose-100 transition shadow-sm" title="Delete Subject"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <select id="manage-deck-subject" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none flex-1 min-w-0 truncate"></select>
+                                <button onclick="addExamSubject()" class="shrink-0 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded hover:bg-emerald-100 transition shadow-sm" title="Add Subject"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                <button onclick="renameExamSubject()" class="shrink-0 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-2.5 py-1.5 rounded hover:bg-sky-100 transition shadow-sm" title="Rename Subject"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deleteExamSubject()" class="shrink-0 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 px-2.5 py-1.5 rounded hover:bg-rose-100 transition shadow-sm" title="Delete Subject"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
 
                             <div class="bg-brand-creamBg dark:bg-slate-900 p-3 rounded border border-brand-creamBorder dark:border-slate-700 mb-3 space-y-2">
@@ -322,10 +336,10 @@
                             <select id="filter-section" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none focus:border-brand-green"></select>
                             <span class="bg-brand-blue dark:bg-green-700 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" id="cadet-badge-count">0 cadets</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="openBulkModal()" class="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"><i data-lucide="layers" class="w-4 h-4"></i> Bulk Actions</button>
-                            <div class="relative"><i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i><input type="text" id="table-search" placeholder="Search cadet name..." class="bg-white dark:bg-slate-800 pl-9 pr-4 py-2 w-44 border border-brand-creamBorder dark:border-slate-700 text-xs rounded-lg text-brand-black dark:text-white focus:outline-none focus:border-brand-green"></div>
-                            <button onclick="openAddCadetModal()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow"><i data-lucide="user-plus" class="w-4 h-4"></i> Add Cadet</button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="openBulkModal()" class="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0"><i data-lucide="layers" class="w-4 h-4"></i> Bulk Actions</button>
+                            <div class="relative flex-1 min-w-[140px] sm:flex-initial"><i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i><input type="text" id="table-search" placeholder="Search cadet name..." class="bg-white dark:bg-slate-800 pl-9 pr-4 py-2 w-full sm:w-44 border border-brand-creamBorder dark:border-slate-700 text-xs rounded-lg text-brand-black dark:text-white focus:outline-none focus:border-brand-green"></div>
+                            <button onclick="openAddCadetModal()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow shrink-0"><i data-lucide="user-plus" class="w-4 h-4"></i> Add Cadet</button>
                         </div>
                     </div>
                     <div class="overflow-auto flex-1 max-h-[600px]">
@@ -959,14 +973,14 @@
             </div>
 
             <!-- Tab Navigation -->
-            <div class="flex gap-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 pt-2 sticky top-[69px] z-10">
-                <button onclick="switchMatrixTab('rubrics')" id="tab-btn-rubrics" class="matrix-tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2 border-[#003366] text-[#003366] dark:border-blue-400 dark:text-blue-400 -mb-px flex items-center gap-1.5">
+            <div class="flex gap-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-2 sm:px-4 pt-2 sticky top-[69px] z-10 overflow-x-auto overflow-y-hidden whitespace-nowrap">
+                <button onclick="switchMatrixTab('rubrics')" id="tab-btn-rubrics" class="matrix-tab-btn shrink-0 px-3 sm:px-5 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wide sm:tracking-widest transition-colors border-b-2 border-[#003366] text-[#003366] dark:border-blue-400 dark:text-blue-400 -mb-px flex items-center gap-1.5">
                     <i data-lucide="star" class="w-3.5 h-3.5"></i> Rubrics
                 </button>
-                <button onclick="switchMatrixTab('formula')" id="tab-btn-formula" class="matrix-tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 -mb-px flex items-center gap-1.5">
+                <button onclick="switchMatrixTab('formula')" id="tab-btn-formula" class="matrix-tab-btn shrink-0 px-3 sm:px-5 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wide sm:tracking-widest transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 -mb-px flex items-center gap-1.5">
                     <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Formula &amp; Converter
                 </button>
-                <button onclick="switchMatrixTab('syllabus')" id="tab-btn-syllabus" class="matrix-tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 -mb-px flex items-center gap-1.5">
+                <button onclick="switchMatrixTab('syllabus')" id="tab-btn-syllabus" class="matrix-tab-btn shrink-0 px-3 sm:px-5 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wide sm:tracking-widest transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 -mb-px flex items-center gap-1.5">
                     <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Course Syllabus
                 </button>
             </div>
