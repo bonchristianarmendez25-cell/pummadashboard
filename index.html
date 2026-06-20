@@ -2899,8 +2899,8 @@
                 alert("Submission routed to Instructor Inbox successfully.");
                 window.closeSubmitAppealModal();
             } catch (err) {
-                console.error(err);
-                alert("Failed to submit. Please check your connection and try again.");
+                console.error('submitAppeal failed:', err);
+                alert(`Failed to submit. Error: ${err.code || err.message || 'Unknown error'}. Please check your connection and try again.`);
             }
         }
         
