@@ -526,6 +526,7 @@
                             <div class="text-4xl font-black text-brand-blue dark:text-brand-green font-serif flex items-center justify-center gap-2">
                                 <span id="eval-final-percent">0%</span>
                                 <span id="eval-bonus-badge" class="hidden text-[10px] bg-brand-green text-white px-2 py-1 rounded-full font-bold align-middle shadow-sm transform -translate-y-2">+0% Bonus</span>
+                                <span id="eval-penalty-badge" class="hidden text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-bold align-middle shadow-sm transform -translate-y-2">-0% Merit Penalty</span>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Based on Rating Score: <span id="eval-final-rating" class="font-bold">0.00</span></p>
                         </div>
@@ -974,7 +975,7 @@
             <div id="matrix-tab-rubrics" class="p-6 space-y-6">
                 <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-3">
                     <i data-lucide="info" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
-                    <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> Your Final Grade = <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong>. CS reflects your daily consistency; PT reflects your competency execution. Both are built from five regimental components tracked in this dashboard.</div>
+                    <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> Your Final Grade = <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong>. CS reflects your daily consistency; PT reflects your competency execution. Both are built from five regimental components tracked in this dashboard. <strong class="text-red-700 dark:text-red-400">A negative merit balance then directly subtracts from this total — see Merit Override Penalty below.</strong></div>
                 </div>
 
                 <!-- Weight Summary Cards -->
@@ -1028,7 +1029,19 @@
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-center align-top"><span class="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-black text-xs px-2 py-1 rounded-full">40% of CS</span><div class="text-[9px] text-slate-500 mt-1">= 24% of FG</div></td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300">Merit balance near maximum (450). Perfect attendance and decorum at every Flag Raising and Flag Lowering ceremony (+10 merits each). Zero demerits for the entire term. No uniform violations.</td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-600 dark:text-slate-400">Positive merit balance maintained. Attends Flag ceremonies regularly with few exceptions. Minor demerits (-10 to -30) for correctable uniform violations such as unshined shoes (-10) or bucklebelt (-10).</td>
-                                    <td class="p-3 text-[11px] align-top text-slate-500 dark:text-slate-500">Net negative merit balance. Frequent absences during Flag Raising/Lowering. High demerit accumulation (-100+) from violations: improper haircut (-50), absent (-50), or improper uniform (-30).</td>
+                                    <td class="p-3 text-[11px] align-top text-slate-500 dark:text-slate-500">Net negative merit balance. Frequent absences during Flag Raising/Lowering. High demerit accumulation (-100+) from violations: improper haircut (-50), absent (-50), or improper uniform (-30). <strong class="text-red-600 dark:text-red-400">Any negative balance also triggers the Merit Override Penalty below — it is no longer limited to lowering this row's own 24% share.</strong></td>
+                                </tr>
+
+                                <tr class="bg-red-50 dark:bg-red-900/20">
+                                    <td colspan="5" class="px-3 py-3 border-t-2 border-red-300 dark:border-red-800">
+                                        <div class="flex items-start gap-2">
+                                            <i data-lucide="alert-octagon" class="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5"></i>
+                                            <div class="text-[11px] text-red-800 dark:text-red-300">
+                                                <strong class="block text-[10px] uppercase tracking-widest mb-1">Merit Override Penalty — applies on top of everything above</strong>
+                                                A negative merit balance does not only lower the Merits row's own 24% share of your grade — it directly subtracts from your <strong>entire Final Grade</strong>, after Class Standing, Periodical Test, and any bonus have already been added. The penalty is <strong>3 percentage points for every -100 merits</strong>, with <strong>no floor</strong> — a severely negative balance can fail a term outright even with excellent academics, logbooks, and mockboat performance. Example: -1,000 merits subtracts 30 points from your Final Grade; -2,000 merits subtracts 60 points. There is no maximum to how far this can reduce a grade.
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
 
                                 <tr class="bg-rose-50 dark:bg-rose-900/30"><td colspan="5" class="px-3 py-1.5 text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-widest border-b border-rose-200 dark:border-rose-800">PERIODICAL TEST (PT) — 40% of Final Grade</td></tr>
@@ -1071,16 +1084,30 @@
                 <div class="bg-slate-900 rounded-xl p-5 text-white relative overflow-hidden">
                     <div class="absolute inset-0 opacity-5" style="background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:20px 20px;"></div>
                     <h4 class="font-black text-[#F2A900] text-sm uppercase tracking-widest mb-4 relative z-10 flex items-center gap-2"><i data-lucide="function-square" class="w-4 h-4"></i> Grade Formula Engine</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
                         <div class="bg-white/10 rounded-xl p-4 border border-white/20"><div class="text-[10px] font-bold text-blue-300 uppercase tracking-widest mb-2">Class Standing (CS)</div><div class="font-mono text-sm text-white space-y-1"><div><span class="text-blue-300">Logbooks</span> x 0.30</div><div>+ <span class="text-violet-300">Events</span> x 0.30</div><div>+ <span class="text-amber-300">Merits</span> x 0.40</div><div class="border-t border-white/20 mt-2 pt-2 font-black text-lg">= CS Score</div></div></div>
                         <div class="bg-white/10 rounded-xl p-4 border border-white/20"><div class="text-[10px] font-bold text-rose-300 uppercase tracking-widest mb-2">Periodical Test (PT)</div><div class="font-mono text-sm text-white space-y-1"><div><span class="text-rose-300">Mockboat</span> x 0.70</div><div>+ <span class="text-emerald-300">GWA/Acad</span> x 0.30</div><div class="border-t border-white/20 mt-2 pt-2 font-black text-lg">= PT Score</div></div></div>
-                        <div class="bg-[#F2A900]/20 rounded-xl p-4 border border-[#F2A900]/40"><div class="text-[10px] font-bold text-[#F2A900] uppercase tracking-widest mb-2">Final Grade (FG)</div><div class="font-mono text-sm text-white space-y-1"><div><span class="text-blue-300">CS</span> x 0.60</div><div>+ <span class="text-rose-300">PT</span> x 0.40</div><div>+ Individual Bonus</div><div class="border-t border-white/20 mt-2 pt-2 font-black text-2xl text-[#F2A900]">= FG (max 98)</div></div></div>
+                        <div class="bg-[#F2A900]/20 rounded-xl p-4 border border-[#F2A900]/40"><div class="text-[10px] font-bold text-[#F2A900] uppercase tracking-widest mb-2">Final Grade (FG)</div><div class="font-mono text-sm text-white space-y-1"><div><span class="text-blue-300">CS</span> x 0.60</div><div>+ <span class="text-rose-300">PT</span> x 0.40</div><div>+ Individual Bonus</div><div>− Merit Penalty (see right)</div><div class="border-t border-white/20 mt-2 pt-2 font-black text-2xl text-[#F2A900]">= FG (max 98)</div></div></div>
+                        <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/40"><div class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-2">Merit Override Penalty</div><div class="font-mono text-sm text-white space-y-1"><div>If Merits &lt; 0:</div><div>|Merits| ÷ 100 × 3</div><div class="border-t border-white/20 mt-2 pt-2 font-black text-lg text-red-400">= Points off FG</div><div class="text-[9px] text-slate-400 mt-1 normal-case font-sans">No floor — can reach 0%</div></div></div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-white/10 relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3 text-center text-[10px]">
+                    <div class="mt-4 pt-4 border-t border-white/10 relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-[10px]">
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-[#F2A900] font-bold">Star Cadet</div><div class="text-slate-400 mt-0.5">+2 bonus on FG if GWA >= 90</div></div>
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-amber-400 font-bold">Merit Cap</div><div class="text-slate-400 mt-0.5">Max 450 merits per semester</div></div>
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-red-400 font-bold">Grade Cap</div><div class="text-slate-400 mt-0.5">Final Grade capped at 98</div></div>
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-green-400 font-bold">Passing</div><div class="text-slate-400 mt-0.5">Minimum FG of 75 to pass</div></div>
+                        <div class="bg-red-900/20 rounded-lg p-2 border border-red-500/30"><div class="text-red-400 font-bold">Merit Penalty</div><div class="text-slate-400 mt-0.5">-3% per -100 merits, no floor</div></div>
+                    </div>
+                </div>
+
+                <!-- Merit Override Penalty — worked example -->
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                    <h4 class="font-bold text-red-700 dark:text-red-400 text-sm mb-2 uppercase tracking-widest flex items-center gap-2"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Merit Override Penalty — Worked Examples</h4>
+                    <p class="text-[11px] text-red-800 dark:text-red-300 mb-3">This penalty is calculated separately from the CS/PT weighting above and subtracted from the Final Grade afterward. It has no maximum — it is designed so a severely negative merit balance can fail a cadet even with strong academics, logbooks, and mockboat performance.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-[10px]">
+                        <div class="bg-white dark:bg-slate-800 rounded-lg p-2 border border-red-100 dark:border-red-900"><div class="font-mono font-black text-red-600 dark:text-red-400">-100 merits</div><div class="text-slate-500 mt-1">-3 pts off FG</div></div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg p-2 border border-red-100 dark:border-red-900"><div class="font-mono font-black text-red-600 dark:text-red-400">-500 merits</div><div class="text-slate-500 mt-1">-15 pts off FG</div></div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg p-2 border border-red-100 dark:border-red-900"><div class="font-mono font-black text-red-600 dark:text-red-400">-1,000 merits</div><div class="text-slate-500 mt-1">-30 pts off FG</div></div>
+                        <div class="bg-white dark:bg-slate-800 rounded-lg p-2 border border-red-100 dark:border-red-900"><div class="font-mono font-black text-red-600 dark:text-red-400">-2,000 merits</div><div class="text-slate-500 mt-1">-60 pts off FG</div></div>
                     </div>
                 </div>
 
@@ -1152,7 +1179,7 @@
                             <div class="grid grid-cols-3 gap-2 text-center border-t border-white/20 pt-3 mt-1">
                                 <div><div class="text-[9px] text-blue-300 font-bold uppercase">Class Standing</div><div class="font-black font-mono text-lg" id="conv-prev-cs">—</div><div class="text-[8px] text-blue-400">60% of FG</div></div>
                                 <div class="border-x border-white/20"><div class="text-[9px] text-rose-300 font-bold uppercase">Periodical Test</div><div class="font-black font-mono text-lg" id="conv-prev-pt">—</div><div class="text-[8px] text-rose-400">40% of FG</div></div>
-                                <div><div class="text-[9px] text-amber-300 font-bold uppercase">Merits Balance</div><div class="font-black font-mono text-lg" id="conv-prev-merits">—</div><div class="text-[8px] text-amber-400">raw pts</div></div>
+                                <div><div class="text-[9px] text-amber-300 font-bold uppercase">Merits Balance</div><div class="font-black font-mono text-lg" id="conv-prev-merits">—</div><div class="text-[8px] text-amber-400" id="conv-prev-merits-sub">raw pts</div></div>
                             </div>
                             <!-- Per-term grades row -->
                             <div class="grid grid-cols-4 gap-1 border-t border-white/20 pt-3 mt-2 text-center">
@@ -1343,12 +1370,15 @@
         window._convComputeGrades = (c) => {
             const cap = window.appSettings ? (window.appSettings.maxMeritCap || 450) : 450;
             const merits = (parseInt(c.meritsSem1)||0) + (parseInt(c.meritsSem2)||0) + (parseInt(c.meritsSem3)||0);
-            
-            // Patriotism/merits → percentage
-            let p_val;
-            if (merits <= -999) { p_val = 0; }
-            else if (merits >= 0) { p_val = Math.min(98, 85 + (merits / cap) * 13); }
-            else { p_val = Math.max(0, 85 + (merits / 10)); }
+
+            // MERIT OVERRIDE PENALTY — same rule as the main dashboard engine:
+            // 3 percentage points deducted per -100 negative merits, with no floor,
+            // applied AFTER everything else (CS, PT, or even a manually-typed FG).
+            // Negative merits override the grade regardless of where that grade
+            // came from, so this converter can never disagree with the live
+            // dashboard just because a term's grade was typed in by hand.
+            const meritPenalty = merits < 0 ? (Math.abs(merits) / 100) * 3 : 0;
+            const applyPenalty = (val) => Math.max(0, val - meritPenalty);
 
             // CS from cadet's stored specificGradePercent breakdown
             // We re-derive from the cadet's computed rating like the main engine does
@@ -1372,21 +1402,25 @@
                     if (computedFg === null && tCs !== null && tPt !== null) {
                         computedFg = Math.min(98, (tCs * 0.60) + (tPt * 0.40));
                     }
+                    if (computedFg !== null) computedFg = applyPenalty(computedFg);
                     result[termMap[t]] = {
                         cs: tCs !== null ? tCs.toFixed(2) : '',
                         pt: tPt !== null ? tPt.toFixed(2) : '',
                         fg: computedFg !== null ? computedFg.toFixed(2) : ''
                     };
                 });
-                return { termGrades: result, merits, cs, pt, fg: parseFloat(c.specificGradePercent)||0 };
+                // specificGradePercent already has the penalty applied by the main
+                // engine, so it's used as-is rather than penalized a second time here.
+                return { termGrades: result, merits, meritPenalty, cs, pt, fg: parseFloat(c.specificGradePercent)||0 };
             }
 
             // Fallback: build synthetic grades from main dashboard score
+            // (specificGradePercent already has the penalty applied upstream)
             const fg = parseFloat(c.specificGradePercent) || 0;
             const synth = { cs: cs.toFixed(2), pt: pt.toFixed(2), fg: fg.toFixed(2) };
             return {
                 termGrades: { PRELIM: synth, MIDTERM: synth, SEMI: synth, FINAL: synth },
-                merits, cs, pt, fg
+                merits, meritPenalty, cs, pt, fg
             };
         };
 
@@ -1440,6 +1474,11 @@
             set('conv-prev-cs',    computed.cs ? computed.cs.toFixed(2) : '—');
             set('conv-prev-pt',    computed.pt ? computed.pt.toFixed(2) : '—');
             set('conv-prev-merits', computed.merits !== undefined ? computed.merits : '—');
+            const meritsSubEl = document.getElementById('conv-prev-merits-sub');
+            if (meritsSubEl) {
+                meritsSubEl.textContent = computed.meritPenalty > 0 ? `-${computed.meritPenalty.toFixed(2)}% FG penalty` : 'raw pts';
+                meritsSubEl.className = computed.meritPenalty > 0 ? 'text-[8px] text-red-300 font-bold' : 'text-[8px] text-amber-400';
+            }
             set('conv-prev-status', statusText);
             document.getElementById('conv-prev-status').className = 'text-[10px] mt-0.5 font-bold ' + statusColor;
 
@@ -2303,7 +2342,7 @@
 
             setTxt('m-academic-cs', c.academicCS || '-');
             setTxt('m-leadership-cs', c.leadershipCS || '-');
-            setTxt('m-patriotism-cs', c.patriotismCS || '-');
+            setTxt('m-patriotism-cs', c.patriotismCS !== undefined ? c.patriotismCS.toFixed(1) : '-');
             setTxt('m-soft-cs', c.softCS || '-');
             setTxt('m-tech-cs', c.technicalCS || '-');
             setTxt('eval-final-percent', `${c.specificGradePercent}%`);
@@ -2317,6 +2356,17 @@
             } else {
                 badge.classList.add('hidden');
             }
+
+            const penaltyBadge = document.getElementById('eval-penalty-badge');
+            if (penaltyBadge) {
+                if (c.meritPenalty && c.meritPenalty > 0) {
+                    penaltyBadge.innerText = `-${c.meritPenalty.toFixed(2)}% Merit Penalty`;
+                    penaltyBadge.classList.remove('hidden');
+                } else {
+                    penaltyBadge.classList.add('hidden');
+                }
+            }
+
 
             const incLog = document.getElementById('cadet-incidents-log');
             if (c.incidents && c.incidents.length > 0) {
@@ -2701,7 +2751,7 @@
 
             setTxt('print-matrix-tech', c.technicalCS);
             setTxt('print-matrix-soft', c.softCS);
-            setTxt('print-matrix-patriotism', c.patriotismCS);
+            setTxt('print-matrix-patriotism', (c.patriotismCS !== undefined ? c.patriotismCS.toFixed(1) : c.patriotismCS));
             setTxt('print-matrix-leadership', c.leadershipCS);
             setTxt('print-matrix-academic', c.academicCS);
 
@@ -5097,8 +5147,40 @@ window.logAdminSettingsActivity = async (action, details) => {
                     else cadet.academicCS = cadet.gwa >= 90 ? 5 : cadet.gwa >= 85 ? 4 : 3;
                     cadet.leadershipCS = cadet.officer ? 5 : 3;
 
+                    // Patriotism / Merits scoring — two numbers are produced here:
+                    //
+                    // 1) patriotismCS (1-5): the display rating shown elsewhere in the
+                    //    app (e.g. "CS: 1" badges). Kept on the same 1-5 scale as the
+                    //    other four components so finalRating's weighted average still
+                    //    makes sense, but now genuinely continuous within that scale —
+                    //    previously ANY non-positive ratio fell into the same "1" bucket,
+                    //    which is why -25 and -2100 merits produced identical grades.
+                    //
+                    // 2) patriotismPercent (can go negative, no floor): a true 0-100%
+                    //    scale where exactly 0 merits = 0%, positive merits scale up
+                    //    toward 100% as they approach the merit cap, and negative merits
+                    //    scale down BELOW 0% proportionally. This is NOT used in the
+                    //    1-5 weighted average — it exists purely to drive the whole-grade
+                    //    merit penalty below, so cadets with very negative merits can
+                    //    fail outright even with strong academics/leadership/skills.
                     let meritRatio = cadet.totalMeritsSum / maxPeerMerit;
-                    cadet.patriotismCS = meritRatio >= 0.75 ? 5 : meritRatio >= 0.50 ? 4 : meritRatio >= 0.25 ? 3 : meritRatio >= 0.01 ? 2 : 1;
+                    if (cadet.totalMeritsSum > 0) {
+                        // Smooth continuous ramp from 1 (no merits) to 5 (at/above cap)
+                        cadet.patriotismCS = Math.min(5, 1 + Math.max(0, meritRatio) * 4);
+                    } else {
+                        // Negative merits: smoothly approach (but never quite hit) the
+                        // floor of 1, so worse negative balances still read as visibly
+                        // worse on the 1-5 display scale instead of all flattening to "1".
+                        cadet.patriotismCS = 1 / (1 + Math.abs(cadet.totalMeritsSum) / 200);
+                    }
+
+                    let patriotismPercent;
+                    if (cadet.totalMeritsSum >= 0) {
+                        patriotismPercent = Math.min(100, (cadet.totalMeritsSum / maxMeritCap) * 100);
+                    } else {
+                        patriotismPercent = (cadet.totalMeritsSum / maxMeritCap) * 100; // goes negative, uncapped
+                    }
+                    cadet.patriotismPercent = patriotismPercent;
 
                     let assigned = cadet.assignedDuties || [];
                     if (assigned.length === 0) {
@@ -5168,7 +5250,24 @@ window.logAdminSettingsActivity = async (action, details) => {
                     const totalBonus = cadet.bonusPercent + cadet.autoBonus + (cadet.starCadet ? 2.0 : 0);
                     const cappedBonus = Math.min(totalBonus, ratingBandCap - basePercent);
                     let specificGrade = basePercent + Math.max(0, cappedBonus);
+
+                    // MERIT OVERRIDE PENALTY: negative merits no longer just contribute
+                    // a flattened "1" to one of five weighted components — they now
+                    // directly deduct from the FINAL grade, after every other factor
+                    // (academics, leadership, technical, logbook, bonuses) has already
+                    // been counted. Rate: 3 percentage points per -100 merits, with NO
+                    // floor — a cadet deep in negative merits can fail outright even
+                    // with a perfect record everywhere else. This is what makes merits
+                    // "essential" for the next term rather than a minor, capped factor.
+                    let meritPenalty = 0;
+                    if (cadet.totalMeritsSum < 0) {
+                        meritPenalty = (Math.abs(cadet.totalMeritsSum) / 100) * 3;
+                        specificGrade -= meritPenalty;
+                    }
+                    cadet.meritPenalty = meritPenalty;
+
                     if (specificGrade > 98) specificGrade = 98;
+                    if (specificGrade < 0) specificGrade = 0; // grade is a %, can't go below 0 — but no floor above 0 either
                     cadet.specificGradePercent = specificGrade.toFixed(2);
 
                     if (parseInt(cadet.classNum) === targetClass && (targetSec === "ALL" || cadet.section.toUpperCase() === targetSec)) {
@@ -5326,7 +5425,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     <td class="p-3 text-center font-mono"><span class="px-2.5 py-1 rounded font-bold border border-brand-creamBorder dark:border-slate-600 ${mColor}">${c.totalMeritsSum}</span></td>
                     <td class="p-3 text-center font-mono font-semibold">${(c.gwa || 0).toFixed(2)}</td>
                     <td class="p-3 text-center">${c.officer ? '<span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span>' : '<span class="text-slate-400 text-[10px]">Cadet</span>'}</td>
-                    <td class="p-3 text-center font-mono font-bold">CS: ${c.patriotismCS}</td>
+                    <td class="p-3 text-center font-mono font-bold">CS: ${c.patriotismCS.toFixed(1)}</td>
                     <td class="p-3 text-center font-mono ${rColor} text-sm">${c.finalRating.toFixed(2)}</td>
                     <td class="p-3 text-right"><strong class="text-brand-green dark:text-green-400 font-bold text-sm bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded border border-brand-green/35 dark:border-green-800">${c.specificGradePercent}%</strong></td>
                     <td class="p-3 text-center"><button onclick="selectCadet('${c.id}')" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm transition">Assess</button></td>
@@ -6651,15 +6750,15 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             </head>
             <body>
             <table>
-                <tr><td colspan="21" class="title">PANPACIFIC UNIVERSITY MERCHANT MARINE ACADEMY</td></tr>
-                <tr><td colspan="21" class="subtitle">Cadet Masterlist & Appraisal Report - ${targetClass}${targetClass === 3 ? 'RD' : 'TH'} CLASS (SECTION: ${targetSec}) - A.Y. ${targetAcadYear}</td></tr>
-                <tr><td colspan="21" style="border: none;"></td></tr>
+                <tr><td colspan="22" class="title">PANPACIFIC UNIVERSITY MERCHANT MARINE ACADEMY</td></tr>
+                <tr><td colspan="22" class="subtitle">Cadet Masterlist & Appraisal Report - ${targetClass}${targetClass === 3 ? 'RD' : 'TH'} CLASS (SECTION: ${targetSec}) - A.Y. ${targetAcadYear}</td></tr>
+                <tr><td colspan="22" style="border: none;"></td></tr>
                 <tr>
                     <th>Name</th><th>ID</th><th>Class</th><th>Section</th><th>Officer</th><th>Star Cadet</th>
                     <th>Total Merits</th><th>Excess Merits</th><th>Auto Bonus %</th><th>Manual Bonus %</th>
                     <th>1st Sem GWA</th><th>2nd Sem GWA</th><th>3rd Sem GWA</th><th>Mean GWA</th>
                     <th>Academic CS</th><th>Leadership CS</th><th>Patriotism CS</th><th>Technical CS</th><th>Soft Skills CS</th>
-                    <th>Final Rating</th><th>Grade %</th>
+                    <th>Final Rating</th><th>Merit Penalty %</th><th>Grade %</th>
                 </tr>`;
             
             filtered.forEach((c, i) => {
@@ -6683,10 +6782,11 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     <td class="center bold">${(c.gwa || 0).toFixed(2)}</td>
                     <td class="center">${c.academicCS}</td>
                     <td class="center">${c.leadershipCS}</td>
-                    <td class="center">${c.patriotismCS}</td>
+                    <td class="center">${c.patriotismCS.toFixed(1)}</td>
                     <td class="center">${c.technicalCS}</td>
                     <td class="center">${c.softCS}</td>
                     <td class="center ${finalColor}">${c.finalRating.toFixed(2)}</td>
+                    <td class="center ${c.meritPenalty > 0 ? 'text-red' : ''}">${c.meritPenalty > 0 ? '-' + c.meritPenalty.toFixed(2) + '%' : '—'}</td>
                     <td class="right bold text-green">${c.specificGradePercent}%</td>
                 </tr>`;
             });
