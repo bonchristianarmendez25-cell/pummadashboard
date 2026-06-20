@@ -2057,6 +2057,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -2104,6 +2105,7 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // PERFORMANCE FIX: Without this, every page load re-downloads the
         // entire cadets collection (including embedded avatar/logbook/appeal
@@ -2534,6 +2536,23 @@
             } catch (e) { alert("Error deleting cadet."); }
         };
 
+        // --- Shared Storage Upload Helper ---
+        // Images used to be saved as base64 strings directly inside each cadet's
+        // Firestore document. Firestore documents have a hard 1 MiB size ceiling,
+        // and a cadet doc carries an avatar, every logbook day's photo, and every
+        // appeal attachment all at once — so after roughly 1-2 months of daily
+        // logbook photos, the document hit that ceiling and every further
+        // updateDoc() call silently failed, which is what looked like a
+        // "submission limit." Firebase Storage (already configured on this
+        // project) has no such per-file ceiling, so images now go there instead,
+        // and only a short download URL (a few dozen bytes) is stored in
+        // Firestore. This removes the limit entirely, for any number of months.
+        async function uploadImageToStorage(dataUrl, path) {
+            const ref = storageRef(storage, path);
+            await uploadString(ref, dataUrl, 'data_url');
+            return await getDownloadURL(ref);
+        }
+
         window.uploadCadetAvatar = (event) => {
             const file = event.target.files[0];
             if (!file || !window.selectedCadetId) return;
@@ -2557,19 +2576,13 @@
 
                     const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
 
-                    // Safety check: warn if somehow still too large (shouldn't happen)
-                    const approxKB = Math.round((compressedBase64.length * 0.75) / 1024);
-                    if (approxKB > 200) {
-                        alert(`Image is still ${approxKB}KB after compression. Please try a smaller photo.`);
-                        return;
-                    }
-
-                    document.getElementById('eval-avatar-img').src = compressedBase64;
+                    document.getElementById('eval-avatar-img').src = compressedBase64; // instant local preview
                     const c = window.cadets.find(x => x.id === window.selectedCadetId);
                     if (c) {
-                        c.avatar = compressedBase64;
                         try {
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: compressedBase64 });
+                            const downloadUrl = await uploadImageToStorage(compressedBase64, `avatars/${c.id}.jpg`);
+                            c.avatar = downloadUrl;
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: downloadUrl });
                             const toast = document.createElement('div');
                             toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-50';
                             toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> Profile picture updated!`;
@@ -2804,15 +2817,27 @@
                 gwaSem: type === 'GWA Update' ? gwaSem : null,
                 gwaGrade: type === 'GWA Update' ? gwaGrade : null,
                 message: msg, 
-                attachment: attachment,
+                attachment: '', // filled in below if an attachment was provided
                 status: 'Pending', 
                 response: '' 
             };
-            const updated = JSON.parse(JSON.stringify([...(c.appeals || []), newApp]));
-            
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { appeals: updated });
-            alert("Submission routed to Instructor Inbox successfully.");
-            window.closeSubmitAppealModal();
+
+            try {
+                if (attachment) {
+                    // Same fix as logbook/avatar uploads: store the attachment in
+                    // Firebase Storage and keep only the short URL in Firestore,
+                    // so appeal attachments never push a cadet's document toward
+                    // the 1 MiB Firestore limit either.
+                    newApp.attachment = await uploadImageToStorage(attachment, `appeals/${c.id}/${newApp.id}.jpg`);
+                }
+                const updated = JSON.parse(JSON.stringify([...(c.appeals || []), newApp]));
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { appeals: updated });
+                alert("Submission routed to Instructor Inbox successfully.");
+                window.closeSubmitAppealModal();
+            } catch (err) {
+                console.error(err);
+                alert("Failed to submit. Please check your connection and try again.");
+            }
         }
         
         window._inboxActiveTab = 'all';
@@ -5921,14 +5946,30 @@ window.logAdminSettingsActivity = async (action, details) => {
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             const b64 = document.getElementById('daily-log-b64').value;
             if (!b64) return alert("Please upload a photo of your logbook.");
-            
-            const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
-            updatedLog[window.currentLogbookKey] = { status: 'Pending', image: b64 };
-            
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
-            alert("Logbook evidence submitted for review!");
-            window.closeLogbookActionModal();
-            window.renderCalendarModal();
+
+            const key = window.currentLogbookKey;
+            const submitBtn = document.querySelector('#logbook-action-content button[onclick="submitDailyLogbook()"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Uploading...'; }
+
+            try {
+                // Each day's photo gets its own file in Storage (named by cadet + date),
+                // so the Firestore document only ever stores a short URL string per
+                // day — no matter how many months of logbook photos pile up, the
+                // document never approaches the 1 MiB limit that used to cut cadets
+                // off after a month or two.
+                const downloadUrl = await uploadImageToStorage(b64, `logbooks/${c.id}/${key}.jpg`);
+                const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
+                updatedLog[key] = { status: 'Pending', image: downloadUrl };
+
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
+                alert("Logbook evidence submitted for review!");
+                window.closeLogbookActionModal();
+                window.renderCalendarModal();
+            } catch (err) {
+                console.error(err);
+                alert("Failed to submit logbook photo. Please check your connection and try again.");
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Submit Evidence'; }
+            }
         };
 
         window.reviewDailyLogbook = async (action) => {
