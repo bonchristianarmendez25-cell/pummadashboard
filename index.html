@@ -30,6 +30,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // 1. Annihilate Right-Click (Context Menu)
@@ -2160,6 +2161,16 @@
         const auth = getAuth(app);
         const storage = getStorage(app);
 
+        // Image uploads (avatars, logbook photos, appeal evidence) go through
+        // Supabase Storage instead of Firebase Storage. Firebase Storage now
+        // requires the paid Blaze plan as of Oct 2024; Supabase's free tier
+        // (1GB storage, no credit card, no expiry) covers this app's needs.
+        // Firestore itself is untouched — only image hosting moved.
+        const SUPABASE_URL = "https://rkezlyppdscouotnpzgo.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_kzgNPMBsVuDaL-yqxqOJ3A_QK4Mb_99";
+        const SUPABASE_BUCKET = "pumma-uploads";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+
         // PERFORMANCE FIX: Without this, every page load re-downloads the
         // entire cadets collection (including embedded avatar/logbook/appeal
         // images) from the network from scratch before "Cadet View" unlocks.
@@ -2622,10 +2633,29 @@
             return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
         }
 
+        // Converts a base64 "data:image/jpeg;base64,..." string into a Blob,
+        // since Supabase's upload() call expects a Blob/File, not a raw string.
+        function dataUrlToBlob(dataUrl) {
+            const [header, base64] = dataUrl.split(',');
+            const mimeMatch = header.match(/data:(.*?);base64/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        }
+
         async function uploadImageToStorage(dataUrl, path) {
-            const ref = storageRef(storage, path);
-            await withTimeout(uploadString(ref, dataUrl, 'data_url'), 20000, 'Image upload');
-            return await withTimeout(getDownloadURL(ref), 15000, 'Fetching uploaded file URL');
+            const blob = dataUrlToBlob(dataUrl);
+            const { error: uploadError } = await withTimeout(
+                supabaseClient.storage.from(SUPABASE_BUCKET).upload(path, blob, { contentType: blob.type, upsert: true }),
+                20000,
+                'Image upload'
+            );
+            if (uploadError) throw uploadError;
+            const { data } = supabaseClient.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+            if (!data || !data.publicUrl) throw new Error('Could not get a public URL for the uploaded image.');
+            return data.publicUrl;
         }
 
         window.uploadCadetAvatar = (event) => {
