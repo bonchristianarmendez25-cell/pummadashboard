@@ -631,7 +631,7 @@
                 </div>
                 <p class="text-[9px] text-slate-500 mt-1 text-center">Submissions will be routed to the Instructor's Inbox for review.</p>
             </div>
-            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeSubmitAppealModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="submitAppeal()" class="px-4 py-2 rounded-lg bg-brand-blue hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Submit</button></div>
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeSubmitAppealModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="submitAppeal()" id="appeal-submit-btn" class="px-4 py-2 rounded-lg bg-brand-blue hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed"><i data-lucide="send" class="w-3.5 h-3.5"></i> Submit</button></div>
         </div>
     </div>
 
@@ -2611,10 +2611,21 @@
         // project) has no such per-file ceiling, so images now go there instead,
         // and only a short download URL (a few dozen bytes) is stored in
         // Firestore. This removes the limit entirely, for any number of months.
+        // Wraps a promise with a hard timeout so a stalled network request
+        // (common on flaky mobile data / restrictive WebView networking)
+        // fails loudly instead of hanging the UI forever with no feedback.
+        function withTimeout(promise, ms, label) {
+            let timer;
+            const timeout = new Promise((_, reject) => {
+                timer = setTimeout(() => reject(new Error(`${label || 'Operation'} timed out after ${ms / 1000}s. Check your internet connection and try again.`)), ms);
+            });
+            return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+        }
+
         async function uploadImageToStorage(dataUrl, path) {
             const ref = storageRef(storage, path);
-            await uploadString(ref, dataUrl, 'data_url');
-            return await getDownloadURL(ref);
+            await withTimeout(uploadString(ref, dataUrl, 'data_url'), 20000, 'Image upload');
+            return await withTimeout(getDownloadURL(ref), 15000, 'Fetching uploaded file URL');
         }
 
         window.uploadCadetAvatar = (event) => {
@@ -2855,6 +2866,16 @@
         };
 
         window.submitAppeal = async () => {
+            const btn = document.getElementById('appeal-submit-btn');
+            const setBtnLoading = (loading) => {
+                if (!btn) return;
+                btn.disabled = loading;
+                btn.innerHTML = loading
+                    ? '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Submitting...'
+                    : '<i data-lucide="send" class="w-3.5 h-3.5"></i> Submit';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            };
+
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
             if (!c) return;
             const type = getVal('appeal-type') || 'General Request';
@@ -2872,6 +2893,12 @@
                 if (!attachment) return alert("Upload failed: You MUST attach a screenshot of your grades as evidence.");
                 if (gwaGrade <= 0 || gwaGrade > 100) return alert("Please enter a valid GWA percentage.");
             }
+
+            // Visual feedback starts only once validation passes, right before
+            // the actual network work begins — this is the part that was
+            // silently hanging with zero on-screen indication that anything
+            // was happening, which looked exactly like a frozen button.
+            setBtnLoading(true);
 
             const newApp = { 
                 id: Date.now().toString(), 
@@ -2901,6 +2928,8 @@
             } catch (err) {
                 console.error('submitAppeal failed:', err);
                 alert(`Failed to submit. Error: ${err.code || err.message || 'Unknown error'}. Please check your connection and try again.`);
+            } finally {
+                setBtnLoading(false);
             }
         }
         
