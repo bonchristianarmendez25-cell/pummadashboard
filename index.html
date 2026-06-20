@@ -2110,7 +2110,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
 
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
         const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -2158,7 +2158,6 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const storage = getStorage(app);
 
         // PERFORMANCE FIX: Without this, every page load re-downloads the
         // entire cadets collection (including embedded avatar/logbook/appeal
@@ -2611,10 +2610,24 @@
         // project) has no such per-file ceiling, so images now go there instead,
         // and only a short download URL (a few dozen bytes) is stored in
         // Firestore. This removes the limit entirely, for any number of months.
-        async function uploadImageToStorage(dataUrl, path) {
-            const ref = storageRef(storage, path);
-            await uploadString(ref, dataUrl, 'data_url');
-            return await getDownloadURL(ref);
+        // FREE-TIER FIX: Firebase Storage requires a paid plan.
+        // Instead we compress images aggressively before saving to Firestore as base64.
+        // Target sizes: avatars ~5-10KB, logbook photos ~20-30KB, appeal attachments ~15-25KB.
+        // All well within Firestore's 1MB doc limit even with many entries per cadet.
+        async function compressImageBase64(dataUrl, maxPx, quality) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; } }
+                    else       { if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = dataUrl;
+            });
         }
 
         window.uploadCadetAvatar = (event) => {
@@ -2644,9 +2657,8 @@
                     const c = window.cadets.find(x => x.id === window.selectedCadetId);
                     if (c) {
                         try {
-                            const downloadUrl = await uploadImageToStorage(compressedBase64, `avatars/${c.id}.jpg`);
-                            c.avatar = downloadUrl;
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: downloadUrl });
+                            c.avatar = compressedBase64;
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { avatar: compressedBase64 });
                             const toast = document.createElement('div');
                             toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-50';
                             toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> Profile picture updated!`;
@@ -2886,13 +2898,15 @@
                 response: '' 
             };
 
+            // Disable submit button to prevent double-taps
+            const submitBtn = document.querySelector('#submit-appeal-modal button[onclick="submitAppeal()"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Submitting...'; }
+
             try {
                 if (attachment) {
-                    // Same fix as logbook/avatar uploads: store the attachment in
-                    // Firebase Storage and keep only the short URL in Firestore,
-                    // so appeal attachments never push a cadet's document toward
-                    // the 1 MiB Firestore limit either.
-                    newApp.attachment = await uploadImageToStorage(attachment, `appeals/${c.id}/${newApp.id}.jpg`);
+                    // Compress attachment to ~15-25KB before saving to Firestore as base64
+                    // (free alternative to Firebase Storage — no paid plan needed)
+                    newApp.attachment = await compressImageBase64(attachment, 400, 0.4);
                 }
                 const updated = JSON.parse(JSON.stringify([...(c.appeals || []), newApp]));
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { appeals: updated });
@@ -2901,6 +2915,7 @@
             } catch (err) {
                 console.error(err);
                 alert("Failed to submit. Please check your connection and try again.");
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Submit'; }
             }
         }
         
@@ -6065,14 +6080,13 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Uploading...'; }
 
             try {
-                // Each day's photo gets its own file in Storage (named by cadet + date),
-                // so the Firestore document only ever stores a short URL string per
-                // day — no matter how many months of logbook photos pile up, the
-                // document never approaches the 1 MiB limit that used to cut cadets
-                // off after a month or two.
-                const downloadUrl = await uploadImageToStorage(b64, `logbooks/${c.id}/${key}.jpg`);
+                // FREE-TIER FIX: Compress logbook photo to ~20-30KB before saving
+                // as base64 in Firestore. 500px at quality 0.45 is sharp enough
+                // for an instructor to verify the logbook signature while staying
+                // well within Firestore's 1MB document limit.
+                const compressed = await compressImageBase64(b64, 500, 0.45);
                 const updatedLog = JSON.parse(JSON.stringify({ ...(c.logbook || c.logbook2026 || {}) }));
-                updatedLog[key] = { status: 'Pending', image: downloadUrl };
+                updatedLog[key] = { status: 'Pending', image: compressed };
 
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { logbook: updatedLog, logbook2026: updatedLog });
                 alert("Logbook evidence submitted for review!");
