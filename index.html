@@ -31,6 +31,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
     <script>
         // 1. Annihilate Right-Click (Context Menu)
@@ -158,6 +159,7 @@
                 <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Toggle dark mode"><i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i><i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i></button>
                 <button onclick="openCalculatorModal()" class="bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-800/50 text-violet-700 dark:text-violet-300 px-2.5 py-1.5 rounded border border-violet-200 dark:border-violet-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Calculator"><i data-lucide="calculator" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Calculator</span></button>
                 <button onclick="exportExcel()" class="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Export Excel"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export Excel</span></button>
+                <button onclick="exportAllPhotosZip()" id="export-photos-btn" class="bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 text-xs flex items-center gap-1.5 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed" title="Backup all evidence photos as a ZIP before they're auto-deleted after 1 year"><i data-lucide="archive" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export All Photos</span></button>
                 <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-1.5 font-semibold transition" title="Masterlist"><i data-lucide="printer" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Masterlist</span></button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Sign Out"><i data-lucide="log-out" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Sign Out</span></button>
             </div>
@@ -2658,6 +2660,192 @@
             return data.publicUrl;
         }
 
+        // Recovers the internal storage path (e.g. "appeals/abc123/9991.jpg")
+        // from a public Supabase URL, since Firestore only stores the final
+        // public URL string, not the raw path needed for deletion.
+        function supabasePathFromUrl(url) {
+            if (!url || typeof url !== 'string') return null;
+            const marker = `/storage/v1/object/public/${SUPABASE_BUCKET}/`;
+            const idx = url.indexOf(marker);
+            if (idx === -1) return null;
+            return decodeURIComponent(url.slice(idx + marker.length));
+        }
+
+        /* =========================================================
+           OLD EVIDENCE PHOTO CLEANUP (auto-delete after 1 year)
+           ---------------------------------------------------------
+           Appeal/logbook PHOTOS are deleted from Supabase Storage once
+           they're older than 1 year — the written record (status, dates,
+           grade, message) stays in Firestore forever and remains fully
+           exportable to Excel. Only the image itself goes away, freeing
+           up space on the free storage tier.
+           Runs at most once per day (tracked via localStorage) so it
+           doesn't re-scan every cadet on every single page load.
+        ========================================================= */
+        const EVIDENCE_RETENTION_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+        window.runEvidencePhotoCleanup = async (force = false) => {
+            try {
+                const lastRun = localStorage.getItem('pumma_last_cleanup_run');
+                const now = Date.now();
+                if (!force && lastRun && (now - parseInt(lastRun, 10)) < 24 * 60 * 60 * 1000) {
+                    return; // already ran within the last 24 hours
+                }
+
+                const pathsToDelete = [];
+                const docUpdates = []; // { cadetId, data }
+
+                for (const c of window.cadets) {
+                    let changed = false;
+                    const update = {};
+
+                    // --- Appeals: strip attachment if appeal is old ---
+                    if (Array.isArray(c.appeals) && c.appeals.length) {
+                        const newAppeals = c.appeals.map(a => {
+                            if (!a.attachment) return a;
+                            const appealTime = new Date(a.date).getTime();
+                            if (isNaN(appealTime) || (now - appealTime) < EVIDENCE_RETENTION_MS) return a;
+                            const path = supabasePathFromUrl(a.attachment);
+                            if (path) pathsToDelete.push(path);
+                            changed = true;
+                            return { ...a, attachment: '', attachmentRemovedReason: 'Auto-deleted after 1 year (retention policy). Status and details preserved.' };
+                        });
+                        if (changed) update.appeals = newAppeals;
+                    }
+
+                    // --- Logbook: strip image if entry's date is old ---
+                    const logbookSrc = c.logbook || c.logbook2026;
+                    if (logbookSrc && typeof logbookSrc === 'object') {
+                        let logChanged = false;
+                        const newLogbook = {};
+                        for (const [key, entry] of Object.entries(logbookSrc)) {
+                            if (entry && typeof entry === 'object' && entry.image) {
+                                const parts = key.split('-');
+                                const entryDate = new Date(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2] || 1));
+                                if (!isNaN(entryDate.getTime()) && (now - entryDate.getTime()) >= EVIDENCE_RETENTION_MS) {
+                                    const path = supabasePathFromUrl(entry.image);
+                                    if (path) pathsToDelete.push(path);
+                                    newLogbook[key] = { ...entry, image: '' };
+                                    logChanged = true;
+                                    continue;
+                                }
+                            }
+                            newLogbook[key] = entry;
+                        }
+                        if (logChanged) {
+                            update.logbook = newLogbook;
+                            update.logbook2026 = newLogbook;
+                            changed = true;
+                        }
+                    }
+
+                    if (changed) docUpdates.push({ cadetId: c.id, data: update });
+                }
+
+                if (pathsToDelete.length) {
+                    // Supabase allows up to 1000 paths per remove() call.
+                    for (let i = 0; i < pathsToDelete.length; i += 1000) {
+                        const batch = pathsToDelete.slice(i, i + 1000);
+                        const { error } = await supabaseClient.storage.from(SUPABASE_BUCKET).remove(batch);
+                        if (error) console.warn('Evidence cleanup: failed to delete some files from Storage:', error);
+                    }
+                }
+
+                for (const { cadetId, data } of docUpdates) {
+                    try {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', cadetId), data);
+                    } catch (err) {
+                        console.warn(`Evidence cleanup: failed to update cadet ${cadetId}:`, err);
+                    }
+                }
+
+                localStorage.setItem('pumma_last_cleanup_run', String(now));
+                if (pathsToDelete.length) {
+                    console.log(`Evidence cleanup: removed ${pathsToDelete.length} photo(s) older than 1 year. Written records were preserved.`);
+                }
+            } catch (err) {
+                console.error('Evidence photo cleanup failed (non-fatal):', err);
+            }
+        };
+
+        /* =========================================================
+           EXPORT ALL PHOTOS — manual backup-before-cleanup safety net
+           Downloads every current appeal/logbook image across all
+           cadets into a single ZIP, organized by cadet name, so admins
+           can keep a permanent archive before anything is auto-deleted.
+        ========================================================= */
+        window.exportAllPhotosZip = async () => {
+            const btn = document.getElementById('export-photos-btn');
+            const setLoading = (loading, label) => {
+                if (!btn) return;
+                btn.disabled = loading;
+                btn.innerHTML = loading
+                    ? `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> ${label}`
+                    : `<i data-lucide="archive" class="w-3.5 h-3.5"></i> Export All Photos`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            };
+
+            try {
+                setLoading(true, 'Collecting photos...');
+                const zip = new JSZip();
+                let count = 0;
+
+                for (const c of window.cadets) {
+                    const safeName = (c.name || c.id).replace(/[\\/:*?"<>|]/g, '_');
+
+                    if (Array.isArray(c.appeals)) {
+                        for (const a of c.appeals) {
+                            if (!a.attachment) continue;
+                            try {
+                                const res = await fetch(a.attachment);
+                                if (!res.ok) continue;
+                                const blob = await res.blob();
+                                zip.file(`${safeName}/appeals/${a.date || a.id}_${a.type || 'appeal'}.jpg`, blob);
+                                count++;
+                            } catch (e) { console.warn('Skipped one appeal photo (fetch failed):', e); }
+                        }
+                    }
+
+                    const logbookSrc = c.logbook || c.logbook2026;
+                    if (logbookSrc && typeof logbookSrc === 'object') {
+                        for (const [key, entry] of Object.entries(logbookSrc)) {
+                            if (!entry || typeof entry !== 'object' || !entry.image) continue;
+                            try {
+                                const res = await fetch(entry.image);
+                                if (!res.ok) continue;
+                                const blob = await res.blob();
+                                zip.file(`${safeName}/logbook/${key}.jpg`, blob);
+                                count++;
+                            } catch (e) { console.warn('Skipped one logbook photo (fetch failed):', e); }
+                        }
+                    }
+                }
+
+                if (count === 0) {
+                    setLoading(false);
+                    return alert('No photos found to export.');
+                }
+
+                setLoading(true, `Zipping ${count} photos...`);
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = window.URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `PUMMA_Photo_Backup_${new Date().toISOString().slice(0, 10)}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                alert(`Exported ${count} photo(s) successfully.`);
+            } catch (err) {
+                console.error('exportAllPhotosZip failed:', err);
+                alert('Failed to export photos. Please check your connection and try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+
         window.uploadCadetAvatar = (event) => {
             const file = event.target.files[0];
             if (!file || !window.selectedCadetId) return;
@@ -2871,9 +3059,14 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // PERFORMANCE FIX: 400px max at quality 0.4 keeps attachment ~15-25KB
-                    // vs the old 800px at 0.6 which could reach 150KB per appeal.
-                    const MAX_SIZE = 400;
+                    // Images now go to Supabase Storage (not embedded in the
+                    // Firestore document), so the old aggressive 400px/0.4
+                    // compression — which existed only to keep documents
+                    // under Firestore's 1 MiB limit — is no longer needed.
+                    // 1600px at 0.85 keeps evidence screenshots (small text,
+                    // grade tables) sharp and legible while still landing
+                    // around 150-400KB, well within the free storage tier.
+                    const MAX_SIZE = 1600;
                     let width = img.width;
                     let height = img.height;
                     
@@ -2883,7 +3076,7 @@
                     canvas.width = width; canvas.height = height;
                     canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     
-                    const b64 = canvas.toDataURL('image/jpeg', 0.4); 
+                    const b64 = canvas.toDataURL('image/jpeg', 0.85); 
                     setVal('appeal-attachment-b64', b64);
                     
                     const preview = document.getElementById('appeal-preview-img');
@@ -6098,13 +6291,15 @@ window.logAdminSettingsActivity = async (action, details) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 600; 
+                    // Now uploaded to Supabase Storage rather than embedded in
+                    // Firestore, so a larger/sharper size is fine here too.
+                    const MAX_SIZE = 1400; 
                     let width = img.width; let height = img.height;
                     if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
                     else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                    const b64 = canvas.toDataURL('image/jpeg', 0.5); 
+                    const b64 = canvas.toDataURL('image/jpeg', 0.8); 
                     document.getElementById('daily-log-b64').value = b64;
                     document.getElementById('daily-log-preview').src = b64;
                     document.getElementById('daily-log-preview').classList.remove('hidden');
@@ -7220,6 +7415,14 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 clearTimeout(_cadetsDebounceTimer);
                 _cadetsDebounceTimer = setTimeout(() => {
                     window.recalculateMetrics();
+                    // Run the 1-year evidence-photo cleanup at most once per
+                    // admin session (and at most once per 24h overall, per
+                    // the check inside runEvidencePhotoCleanup itself).
+                    // Cadets never trigger this — only an admin session does.
+                    if (window.currentUserRole === 'admin' && !window._evidenceCleanupQueued) {
+                        window._evidenceCleanupQueued = true;
+                        window.runEvidencePhotoCleanup();
+                    }
                 }, 200);
 
                 // PERFORMANCE FIX: Unlock Cadet Login as soon as ANY data arrives —
