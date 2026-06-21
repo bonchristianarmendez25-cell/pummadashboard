@@ -7184,7 +7184,16 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         };
 
         window.emailAtRiskReport = async () => {
+            const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const targetClass = parseInt(getVal('filter-class', 3));
+            const targetSec = getVal('filter-section', 'ALL').toUpperCase();
+
             const atRiskList = window.cadets.filter(c => {
+                const matchesScope = (c.academicYear === targetAcadYear || !c.academicYear)
+                    && parseInt(c.classNum) === targetClass
+                    && (targetSec === "ALL" || c.section.toUpperCase() === targetSec);
+                if (!matchesScope) return false;
+
                 let isAtRisk = false;
                 if (c.totalMeritsSum < 0) isAtRisk = true;
                 if (c.gwa > 0 && c.gwa < 75) isAtRisk = true;
@@ -7193,13 +7202,15 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 return isAtRisk;
             });
 
+            const scopeLabel = `${targetClass}${targetClass === 3 ? 'RD' : 'TH'} CLASS (SECTION: ${targetSec})`;
+
             if (atRiskList.length === 0) {
-                alert("No At-Risk cadets to report at this time.");
+                alert(`No At-Risk cadets to report at this time for ${scopeLabel}.`);
                 return;
             }
 
-            const subject = `URGENT COMMAND ADVISORY: "At-Risk" Cadet Radar Report`;
-            let bodyText = `ATTENTION ON DECK!\n\nURGENT COMMAND ADVISORY: "AT-RISK" CADET RADAR REPORT\nCLASSIFICATION: REQUIRED ACTION / INTERVENTION\n\nTo all commanding officers and designated administrative personnel:\nThe following midshipmen have triggered the automated early-warning monitoring system on the PUMMA Dashboard. Immediate academic review or disciplinary intervention is hereby ordered.\n\n========================================\n--- AT-RISK MIDSHIPMEN DIRECTORY (${atRiskList.length} DETECTED) ---\n\n`;
+            const subject = `URGENT COMMAND ADVISORY: "At-Risk" Cadet Radar Report — ${scopeLabel}`;
+            let bodyText = `ATTENTION ON DECK!\n\nURGENT COMMAND ADVISORY: "AT-RISK" CADET RADAR REPORT\nSCOPE: ${scopeLabel} | A.Y. ${targetAcadYear}\nCLASSIFICATION: REQUIRED ACTION / INTERVENTION\n\nTo all commanding officers and designated administrative personnel:\nThe following midshipmen have triggered the automated early-warning monitoring system on the PUMMA Dashboard. Immediate academic review or disciplinary intervention is hereby ordered.\n\n========================================\n--- AT-RISK MIDSHIPMEN DIRECTORY (${atRiskList.length} DETECTED) ---\n\n`;
 
             atRiskList.forEach(c => {
                 let factors = [];
