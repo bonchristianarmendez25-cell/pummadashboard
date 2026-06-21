@@ -349,7 +349,7 @@
                         <table class="w-full text-left border-collapse whitespace-nowrap">
                             <thead class="bg-brand-creamAccent dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-brand-creamBorder dark:border-slate-700">
                                 <tr>
-                                    <th class="p-3">Cadet Name</th><th class="p-3 text-center">Cum. Merits</th><th class="p-3 text-center">Mean GWA</th><th class="p-3 text-center">Officer</th><th class="p-3 text-center">Patriotism</th><th class="p-3 text-center">Final Rating</th><th class="p-3 text-right">Specific Grade %</th><th class="p-3 text-center">Actions</th>
+                                    <th class="p-3">Cadet Name</th><th class="p-3 text-center">Cum. Merits</th><th class="p-3 text-center">Mean GWA</th><th class="p-3 text-center" title="Corps of Midshipmen officer status (not mockboat duty role)">Officer</th><th class="p-3 text-center">Patriotism</th><th class="p-3 text-center">Final Rating</th><th class="p-3 text-right">Specific Grade %</th><th class="p-3 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="cadets-tbody" class="divide-y divide-brand-creamBorder dark:divide-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium"></tbody>
@@ -484,8 +484,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="flex items-center justify-between bg-brand-creamAccent dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 text-xs">
-                                <span class="text-slate-700 dark:text-slate-300 font-semibold text-[10px]">Officer?</span>
+                            <div class="flex items-center justify-between bg-brand-creamAccent dark:bg-slate-900 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 text-xs" title="Corps of Midshipmen officer status (RCC, RDCC, RA, N1.1-N4, Battalion/Platoon Staff, Class Marcher, Guidon, etc. per PUMMA-RRR Sec. 2.4). This is NOT the rotating mockboat duty role (Master/Captain to Ordinary Seaman) — that is assessed separately under the Periodical Test rubric.">
+                                <span class="text-slate-700 dark:text-slate-300 font-semibold text-[10px]">Corps Officer?</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" id="eval-input-officer" class="sr-only peer cadet-disable">
                                     <div class="w-8 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-green"></div>
@@ -546,6 +546,7 @@
                                 <span id="eval-penalty-badge" class="hidden text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-bold align-middle shadow-sm transform -translate-y-2">-0% Merit Penalty</span>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Based on Rating Score: <span id="eval-final-rating" class="font-bold">0.00</span></p>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" id="eval-rating-breakdown-row">Base: <span id="eval-base-rating">0.00</span> + Bonus: <span id="eval-bonus-rating-add">0.00</span></p>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-2 pt-2 admin-controls hidden">
@@ -1064,7 +1065,7 @@
                                 <tr class="bg-rose-50 dark:bg-rose-900/30"><td colspan="5" class="px-3 py-1.5 text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-widest border-b border-rose-200 dark:border-rose-800">PERIODICAL TEST (PT) — 40% of Final Grade</td></tr>
 
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 align-top"><div class="flex items-start gap-2"><div class="bg-rose-100 dark:bg-rose-900/50 p-1.5 rounded mt-0.5"><i data-lucide="anchor" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400"></i></div><div><strong class="text-slate-900 dark:text-white block text-[11px]">Mockboat Duties &amp; Leadership</strong><span class="text-[10px] text-slate-500 block">Checklist Execution · Officer Role · Drills</span></div></div></td>
+                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 align-top"><div class="flex items-start gap-2"><div class="bg-rose-100 dark:bg-rose-900/50 p-1.5 rounded mt-0.5"><i data-lucide="anchor" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400"></i></div><div><strong class="text-slate-900 dark:text-white block text-[11px]">Mockboat Duties &amp; Leadership</strong><span class="text-[10px] text-slate-500 block">Checklist Execution · Watch Officer Role · Drills</span></div></div></td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-center align-top"><span class="bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300 font-black text-xs px-2 py-1 rounded-full">70% of PT</span><div class="text-[9px] text-slate-500 mt-1">= 28% of FG</div></td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300"><strong class="block text-emerald-700 dark:text-emerald-400 mb-1">As Officer:</strong> Exemplary bridge command — issues and repeats helm orders without hesitation. Leads team through emergency drills (Fire/Lifesaving) flawlessly. <strong class="block text-emerald-700 dark:text-emerald-400 mt-1.5 mb-1">Checklists:</strong> 90-100% of duty tasks completed per Day profile. Perfect surface preparation, knot execution, and 5S compliance.</td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-600 dark:text-slate-400">Serves as officer competently with minor coaching needed. Completes 70-89% of duty checklist tasks. Drill responses are timely but not perfectly coordinated. Basic knots and mooring executed correctly.</td>
@@ -1665,7 +1666,7 @@
                     <th class="p-1.5 border border-slate-300 text-center">No.</th>
                     <th class="p-1.5 border border-slate-300 text-left">Cadet Name</th>
                     <th class="p-1.5 border border-slate-300 text-left font-mono">ID No.</th>
-                    <th class="p-1.5 border border-slate-300 text-center">Officer</th>
+                    <th class="p-1.5 border border-slate-300 text-center" title="Corps of Midshipmen officer status">Officer</th>
                     <th class="p-1.5 border border-slate-300 text-center">Merits</th>
                     <th class="p-1.5 border border-slate-300 text-center">Mean GWA</th>
                     <th class="p-1.5 border border-slate-300 text-center">Rating</th>
@@ -1715,10 +1716,15 @@
                     <li class="flex justify-between"><span>Cumulative Merit Balance:</span><strong id="print-merits">--</strong></li>
                     <li class="flex justify-between hidden text-brand-green font-bold" id="print-auto-bonus-row"><span>Auto Bonus (Excess Merits):</span><strong id="print-auto-bonus">--</strong></li>
                     <li class="flex justify-between"><span>Extra Individual Bonus:</span><strong id="print-bonus" class="text-brand-green">--</strong></li>
-                    <li class="flex justify-between"><span>Star Cadet / Officer:</span><strong id="print-officer">--</strong></li>
+                    <li class="flex justify-between"><span>Star Cadet / Corps Officer:</span><strong id="print-officer">--</strong></li>
+                    <li class="flex justify-between border-t border-dashed pt-1 mt-1"><span>Base Rating (before bonus):</span><strong id="print-base-rating">--</strong></li>
+                    <li class="flex justify-between"><span>Bonus Applied to Rating:</span><strong id="print-bonus-rating-add" class="text-brand-green">--</strong></li>
+                    <li class="flex justify-between font-bold"><span>Final Rating (used for Grade %):</span><strong id="print-final-rating-2">--</strong></li>
                 </ul>
             </div>
-            <div class="border border-slate-200 p-4 rounded"><h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Duty Appraisal Matrix</h3><ul class="text-xs space-y-2"><li class="flex justify-between"><span>Technical Competence (15%):</span><strong id="print-matrix-tech">--</strong></li><li class="flex justify-between"><span>Soft Skills & Watchkeeping (25%):</span><strong id="print-matrix-soft">--</strong></li><li class="flex justify-between"><span>Patriotism Merit Index (25%):</span><strong id="print-matrix-patriotism">--</strong></li><li class="flex justify-between"><span>Leadership/Officer CS (25%):</span><strong id="print-matrix-leadership">--</strong></li><li class="flex justify-between"><span>Academic CS (10%):</span><strong id="print-matrix-academic">--</strong></li></ul></div>
+            <div class="border border-slate-200 p-4 rounded"><h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Duty Appraisal Matrix</h3><ul class="text-xs space-y-2"><li class="flex justify-between"><span>Technical Competence (15%):</span><strong id="print-matrix-tech">--</strong></li><li class="flex justify-between"><span>Soft Skills & Watchkeeping (25%):</span><strong id="print-matrix-soft">--</strong></li><li class="flex justify-between"><span>Patriotism Merit Index (25%):</span><strong id="print-matrix-patriotism">--</strong></li><li class="flex justify-between"><span>Leadership/Corps Officer CS (25%):</span><strong id="print-matrix-leadership">--</strong></li><li class="flex justify-between"><span>Academic CS (10%):</span><strong id="print-matrix-academic">--</strong></li></ul>
+            <p class="text-[10px] text-slate-400 mt-3 pt-2 border-t leading-relaxed">Bonuses (manual, excess-merit auto-bonus, Star Cadet) are converted into rating points and added directly to the Final Rating before it is converted to a Grade %. This keeps cadets with different ratings visibly distinct even after bonuses are applied, instead of multiple high performers all landing on the same capped percentage.</p>
+            </div>
         </div>
         <div class="text-center bg-brand-creamAccent border-2 border-dashed border-brand-creamBorder p-6 rounded mb-8">
             <span class="text-xs text-slate-500 uppercase tracking-widest block mb-1">Final Performance Grade Percentage</span>
@@ -2375,7 +2381,11 @@
             setTxt('eval-final-percent', `${c.specificGradePercent}%`);
             setTxt('eval-final-rating', (c.finalRating || 0).toFixed(2));
 
-            const totalBonus = (c.bonusPercent || 0) + (c.autoBonus || 0) + (c.starCadet ? 2 : 0);
+            const PERCENT_TO_RATING_DISPLAY = 0.49 / 2.00;
+            const totalBonus = c.totalBonusPercent !== undefined ? c.totalBonusPercent : (c.bonusPercent || 0) + (c.autoBonus || 0) + (c.starCadet ? 2 : 0);
+            setTxt('eval-base-rating', (c.baseRating !== undefined ? c.baseRating.toFixed(2) : (c.finalRating || 0).toFixed(2)));
+            setTxt('eval-bonus-rating-add', `+${(totalBonus * PERCENT_TO_RATING_DISPLAY).toFixed(2)}`);
+
             const badge = document.getElementById('eval-bonus-badge');
             if (totalBonus > 0) {
                 badge.innerText = `+${totalBonus.toFixed(2)}% Total Bonus`;
@@ -2928,7 +2938,7 @@
 
             const stats = [
                 { label: 'Total Cadets', value: totalCadets, color: 'text-brand-blue' },
-                { label: 'Officers', value: officerCount, color: 'text-brand-green' },
+                { label: 'Corps Officers', value: officerCount, color: 'text-brand-green' },
                 { label: 'Class Average', value: `${avgGrade.toFixed(2)}%`, color: 'text-brand-blue' },
                 { label: 'Top Grade', value: `${topGrade.toFixed(2)}%`, color: 'text-brand-green' },
                 { label: 'For Review', value: forReviewCount, color: forReviewCount > 0 ? 'text-rose-600' : 'text-slate-400' }
@@ -2997,6 +3007,11 @@
             setTxt('print-matrix-patriotism', (c.patriotismCS !== undefined ? c.patriotismCS.toFixed(1) : c.patriotismCS));
             setTxt('print-matrix-leadership', c.leadershipCS);
             setTxt('print-matrix-academic', c.academicCS);
+
+            const PERCENT_TO_RATING_DISPLAY = 0.49 / 2.00;
+            setTxt('print-base-rating', (c.baseRating !== undefined ? c.baseRating.toFixed(3) : '--'));
+            setTxt('print-bonus-rating-add', `+${((c.totalBonusPercent || 0) * PERCENT_TO_RATING_DISPLAY).toFixed(3)}`);
+            setTxt('print-final-rating-2', (c.finalRating || 0).toFixed(3));
 
             setTxt('print-final-percentage', `${c.specificGradePercent}%`);
             setTxt('print-final-rating', (c.finalRating || 0).toFixed(2));
@@ -5411,6 +5426,12 @@ window.logAdminSettingsActivity = async (action, details) => {
 
                     if (cadet.starCadet) cadet.academicCS = 5.0;
                     else cadet.academicCS = cadet.gwa >= 90 ? 5 : cadet.gwa >= 85 ? 4 : 3;
+                    // cadet.officer = Corps of Midshipmen officer status (RCC, RDCC, RA,
+                    // N1.1-N4, Battalion/Platoon Staff, Class Marcher, Guidon, etc. per
+                    // PUMMA-RRR Sec. 2.4) — the cadet's standing leadership position, not
+                    // their rotating mockboat duty role (Master/Captain down to Ordinary
+                    // Seaman). Mockboat watch performance is graded separately under the
+                    // Periodical Test rubric ("Mockboat Duties & Leadership" row).
                     cadet.leadershipCS = cadet.officer ? 5 : 3;
 
                     // Patriotism / Merits scoring — two numbers are produced here:
@@ -5500,22 +5521,37 @@ window.logAdminSettingsActivity = async (action, details) => {
                     }
                     
                     cadet.softCS = Math.round((softCS + logScore) / 2);
-                    cadet.finalRating = (cadet.academicCS * 0.10) + (cadet.leadershipCS * 0.25) + (cadet.patriotismCS * 0.25) + (cadet.softCS * 0.25) + (cadet.technicalCS * 0.15);
-                    let basePercent = parseFloat(window.convertRatingToPercentGrade(cadet.finalRating));
+                    cadet.baseRating = (cadet.academicCS * 0.10) + (cadet.leadershipCS * 0.25) + (cadet.patriotismCS * 0.25) + (cadet.softCS * 0.25) + (cadet.technicalCS * 0.15);
 
                     let excessMerits = Math.max(0, cadet.totalMeritsSum - maxMeritCap);
                     cadet.excessMerits = excessMerits;
-                    cadet.autoBonus = Math.min(5, (excessMerits / 10) * bonusRate); // capped at 5% max
-
+                    cadet.autoBonus = Math.min(5, (excessMerits / 10) * bonusRate); // capped at 5 PERCENT-equivalent, converted below
                     cadet.bonusPercent = parseFloat(cadet.individualBonus) || 0;
-                    // FIX: Cap bonus so it cannot push the grade past the next rating band's floor.
-                    // e.g. a Rating-2 cadet (base ~73%) cannot bonus past ~79% (the 2.51 band floor).
-                    const ratingBandCap = parseFloat(window.convertRatingToPercentGrade(
-                        Math.min(5.0, cadet.finalRating + 0.5)
-                    ));
-                    const totalBonus = cadet.bonusPercent + cadet.autoBonus + (cadet.starCadet ? 2.0 : 0);
-                    const cappedBonus = Math.min(totalBonus, ratingBandCap - basePercent);
-                    let specificGrade = basePercent + Math.max(0, cappedBonus);
+
+                    // BONUS NOW APPLIES TO THE RATING ITSELF, NOT JUST THE PERCENT GRADE.
+                    // Previously, all bonuses (manual + auto-from-merits + Star Cadet) were
+                    // added AFTER converting rating -> percent, then hard-capped at 98%.
+                    // That meant two cadets with genuinely different ratings (e.g. 4.70 and
+                    // 4.88) could both receive enough bonus to land on the exact same 98.00%
+                    // grade — the bonus layer was erasing real differences between high
+                    // performers instead of just rewarding them. Converting the bonus into
+                    // an equivalent rating-scale nudge and applying it to finalRating BEFORE
+                    // the single rating->percent conversion fixes this at the source: the
+                    // percent grade is now always a transparent, one-step function of the
+                    // final rating, so distinct ratings stay visibly distinct even with
+                    // bonuses applied, and 98% remains a true ceiling reached only by a
+                    // (boosted) rating that actually reaches 5.00 — not an artificial clamp.
+                    // Conversion factor: the top rating band (4.51-5.00, width 0.49) maps to
+                    // the top percent band (96-98%, width 2.00), so 1 percent point of bonus
+                    // ≈ 0.245 rating points. This keeps the bonus's real-world "weight" the
+                    // same as before for cadets near the top of the scale.
+                    const PERCENT_TO_RATING = 0.49 / 2.00;
+                    const totalBonusPercent = cadet.bonusPercent + cadet.autoBonus + (cadet.starCadet ? 2.0 : 0);
+                    cadet.totalBonusPercent = totalBonusPercent; // shown in the matrix breakdown
+                    const bonusRatingPoints = totalBonusPercent * PERCENT_TO_RATING;
+                    cadet.finalRating = Math.min(5.0, cadet.baseRating + bonusRatingPoints);
+
+                    let specificGrade = parseFloat(window.convertRatingToPercentGrade(cadet.finalRating));
 
                     // MERIT OVERRIDE PENALTY: negative merits no longer just contribute
                     // a flattened "1" to one of five weighted components — they now
@@ -5690,7 +5726,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     <td class="p-3"><div class="flex items-center gap-2"><img src="${window.getAvatarSrc(c)}" class="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col min-w-0"><span class="font-bold text-brand-black dark:text-white uppercase flex items-center gap-1 truncate">${c.name} ${flags}</span><span class="text-[9px] text-slate-500 dark:text-slate-400 font-mono truncate">ID: ${cIdDisplay} [SEC: ${c.section.toUpperCase()}]</span></div></div></td>
                     <td class="p-3 text-center font-mono"><span class="px-2.5 py-1 rounded font-bold border border-brand-creamBorder dark:border-slate-600 ${mColor}">${c.totalMeritsSum}</span></td>
                     <td class="p-3 text-center font-mono font-semibold">${(c.gwa || 0).toFixed(2)}</td>
-                    <td class="p-3 text-center">${c.officer ? '<span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span>' : '<span class="text-slate-400 text-[10px]">Cadet</span>'}</td>
+                    <td class="p-3 text-center">${c.officer ? '<span title="Corps of Midshipmen officer" class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span>' : '<span class="text-slate-400 text-[10px]">Cadet</span>'}</td>
                     <td class="p-3 text-center font-mono font-bold">CS: ${c.patriotismCS.toFixed(1)}</td>
                     <td class="p-3 text-center font-mono ${rColor} text-sm">${c.finalRating.toFixed(2)}</td>
                     <td class="p-3 text-right"><strong class="text-brand-green dark:text-green-400 font-bold text-sm bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded border border-brand-green/35 dark:border-green-800">${c.specificGradePercent}%</strong></td>
@@ -5734,7 +5770,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if((c.meritsSem1||0) !== nSem1) changes.push(`S1 Merits ${c.meritsSem1||0}->${nSem1}`);
             if((c.meritsSem2||0) !== nSem2) changes.push(`S2 Merits ${c.meritsSem2||0}->${nSem2}`);
             if((c.meritsSem3||0) !== nSem3) changes.push(`S3 Merits ${c.meritsSem3||0}->${nSem3}`);
-            if(c.officer !== nOff) changes.push(`Officer ${c.officer}->${nOff}`);
+            if(c.officer !== nOff) changes.push(`Corps Officer ${c.officer}->${nOff}`);
             if(c.starCadet !== nStar) changes.push(`Star ${c.starCadet}->${nStar}`);
 
             // --- CONCURRENCY GUARD: check if another admin edited this record while you had it open ---
@@ -7022,7 +7058,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 <tr><td colspan="22" class="subtitle">Cadet Masterlist & Appraisal Report - ${targetClass}${targetClass === 3 ? 'RD' : 'TH'} CLASS (SECTION: ${targetSec}) - A.Y. ${targetAcadYear}</td></tr>
                 <tr><td colspan="22" style="border: none;"></td></tr>
                 <tr>
-                    <th>Name</th><th>ID</th><th>Class</th><th>Section</th><th>Officer</th><th>Star Cadet</th>
+                    <th>Name</th><th>ID</th><th>Class</th><th>Section</th><th>Corps Officer</th><th>Star Cadet</th>
                     <th>Total Merits</th><th>Excess Merits</th><th>Auto Bonus %</th><th>Manual Bonus %</th>
                     <th>1st Sem GWA</th><th>2nd Sem GWA</th><th>3rd Sem GWA</th><th>Mean GWA</th>
                     <th>Academic CS</th><th>Leadership CS</th><th>Patriotism CS</th><th>Technical CS</th><th>Soft Skills CS</th>
