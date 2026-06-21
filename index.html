@@ -996,6 +996,11 @@
                     <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> Your Final Grade = <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong>. CS reflects your daily consistency; PT reflects your competency execution. Both are built from five regimental components tracked in this dashboard. <strong class="text-red-700 dark:text-red-400">A negative merit balance then directly subtracts from this total — see Merit Override Penalty below.</strong></div>
                 </div>
 
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
+                    <i data-lucide="shield" class="w-5 h-5 text-blue-700 dark:text-blue-400 shrink-0 mt-0.5"></i>
+                    <div class="text-xs text-blue-900 dark:text-blue-200"><strong>What "Officer" means on this dashboard:</strong> The <strong>Officer</strong> flag (toggled per cadet, shown as <span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700 align-middle">OFFICER</span> badge in the table) refers specifically to membership in the <strong>Corps of Midshipmen</strong> — the regimental command body documented in the PUMMA Regimental Rules (the "Triple R" handbook linked from the top banner). A cadet flagged as Officer is serving in a leadership post such as RCC, RDCC, RA, or an N-line billet (N1–N4), and is held to the Corps' "Covenant of Honor" standard of conduct. This flag <strong>directly raises Leadership CS</strong> (see Mockboat Duties &amp; Leadership row below) from 3 to 5, because Corps officers are graded on their command performance, not just task completion.</div>
+                </div>
+
                 <!-- Weight Summary Cards -->
                 <div>
                     <h4 class="font-bold text-[#003366] dark:text-blue-400 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-[#406f27]"></i> Component Weight Summary</h4>
@@ -1045,7 +1050,7 @@
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 align-top"><div class="flex items-start gap-2"><div class="bg-amber-100 dark:bg-amber-900/50 p-1.5 rounded mt-0.5"><i data-lucide="medal" class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400"></i></div><div><strong class="text-slate-900 dark:text-white block text-[11px]">Merits / Patriotism &amp; Discipline</strong><span class="text-[10px] text-slate-500 block">Flag Raising · Flag Lowering · Uniform</span></div></div></td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-center align-top"><span class="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-black text-xs px-2 py-1 rounded-full">40% of CS</span><div class="text-[9px] text-slate-500 mt-1">= 24% of FG</div></td>
-                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300">Merit balance near maximum (450). Perfect attendance and decorum at every Flag Raising and Flag Lowering ceremony (+10 merits each). Zero demerits for the entire term. No uniform violations.</td>
+                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300">Merit balance near maximum (<span id="rubric-merit-cap-1" class="font-bold">450</span>, set by <em>150 + Papers×10</em> below). Perfect attendance and decorum at every Flag Raising and Flag Lowering ceremony (+10 merits each). Zero demerits for the entire term. No uniform violations.</td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-600 dark:text-slate-400">Positive merit balance maintained. Attends Flag ceremonies regularly with few exceptions. Minor demerits (-10 to -30) for correctable uniform violations such as unshined shoes (-10) or bucklebelt (-10).</td>
                                     <td class="p-3 text-[11px] align-top text-slate-500 dark:text-slate-500">Net negative merit balance. Frequent absences during Flag Raising/Lowering. High demerit accumulation (-100+) from violations: improper haircut (-50), absent (-50), or improper uniform (-30). <strong class="text-red-600 dark:text-red-400">Any negative balance also triggers the Merit Override Penalty below — it is no longer limited to lowering this row's own 24% share.</strong></td>
                                 </tr>
@@ -1065,9 +1070,9 @@
                                 <tr class="bg-rose-50 dark:bg-rose-900/30"><td colspan="5" class="px-3 py-1.5 text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-widest border-b border-rose-200 dark:border-rose-800">PERIODICAL TEST (PT) — 40% of Final Grade</td></tr>
 
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 align-top"><div class="flex items-start gap-2"><div class="bg-rose-100 dark:bg-rose-900/50 p-1.5 rounded mt-0.5"><i data-lucide="anchor" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400"></i></div><div><strong class="text-slate-900 dark:text-white block text-[11px]">Mockboat Duties &amp; Leadership</strong><span class="text-[10px] text-slate-500 block">Checklist Execution · Watch Officer Role · Drills</span></div></div></td>
+                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 align-top"><div class="flex items-start gap-2"><div class="bg-rose-100 dark:bg-rose-900/50 p-1.5 rounded mt-0.5"><i data-lucide="anchor" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400"></i></div><div><strong class="text-slate-900 dark:text-white block text-[11px]">Mockboat Duties &amp; Leadership</strong><span class="text-[10px] text-slate-500 block">Checklist Execution · Corps of Midshipmen (Officer) Role · Drills</span><span class="text-[9px] text-blue-600 dark:text-blue-400 block mt-0.5 font-semibold">Leadership CS = 5 if Officer flag is ON, else 3 — see Officer note above</span></div></div></td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-center align-top"><span class="bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300 font-black text-xs px-2 py-1 rounded-full">70% of PT</span><div class="text-[9px] text-slate-500 mt-1">= 28% of FG</div></td>
-                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300"><strong class="block text-emerald-700 dark:text-emerald-400 mb-1">As Officer:</strong> Exemplary bridge command — issues and repeats helm orders without hesitation. Leads team through emergency drills (Fire/Lifesaving) flawlessly. <strong class="block text-emerald-700 dark:text-emerald-400 mt-1.5 mb-1">Checklists:</strong> 90-100% of duty tasks completed per Day profile. Perfect surface preparation, knot execution, and 5S compliance.</td>
+                                    <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-700 dark:text-slate-300"><strong class="block text-emerald-700 dark:text-emerald-400 mb-1">As Corps of Midshipmen Officer:</strong> Exemplary bridge command — issues and repeats helm orders without hesitation. Leads team through emergency drills (Fire/Lifesaving) flawlessly. <strong class="block text-emerald-700 dark:text-emerald-400 mt-1.5 mb-1">Checklists:</strong> 90-100% of duty tasks completed per Day profile. Perfect surface preparation, knot execution, and 5S compliance.</td>
                                     <td class="p-3 border-r border-slate-200 dark:border-slate-700 text-[11px] align-top text-slate-600 dark:text-slate-400">Serves as officer competently with minor coaching needed. Completes 70-89% of duty checklist tasks. Drill responses are timely but not perfectly coordinated. Basic knots and mooring executed correctly.</td>
                                     <td class="p-3 text-[11px] align-top text-slate-500 dark:text-slate-500">Fails to assume officer role effectively. Less than 70% of duty checklist completed. Repeated hesitation during drills. Poor tool handling. Fails to tie essential knots within time limits.</td>
                                 </tr>
@@ -1110,7 +1115,7 @@
                     </div>
                     <div class="mt-4 pt-4 border-t border-white/10 relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-[10px]">
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-[#F2A900] font-bold">Star Cadet</div><div class="text-slate-400 mt-0.5">+2 bonus on FG if GWA >= 90</div></div>
-                        <div class="bg-white/5 rounded-lg p-2"><div class="text-amber-400 font-bold">Merit Cap</div><div class="text-slate-400 mt-0.5">Max 450 merits per semester</div></div>
+                        <div class="bg-white/5 rounded-lg p-2"><div class="text-amber-400 font-bold">Merit Cap</div><div class="text-slate-400 mt-0.5">Max <span id="rubric-merit-cap-2" class="font-bold">450</span> merits per semester (<em>150 + Papers×10</em>)</div></div>
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-red-400 font-bold">Grade Cap</div><div class="text-slate-400 mt-0.5">Final Grade capped at 98</div></div>
                         <div class="bg-white/5 rounded-lg p-2"><div class="text-green-400 font-bold">Passing</div><div class="text-slate-400 mt-0.5">Minimum FG of 75 to pass</div></div>
                         <div class="bg-red-900/20 rounded-lg p-2 border border-red-500/30"><div class="text-red-400 font-bold">Merit Penalty</div><div class="text-slate-400 mt-0.5">-3% per -100 merits, no floor</div></div>
@@ -1129,8 +1134,161 @@
                     </div>
                 </div>
 
+                <!-- ═══ FULL STEP-BY-STEP ENGINE WALKTHROUGH ═══ -->
+                <div class="bg-white dark:bg-slate-900 border-2 border-[#003366] dark:border-blue-700 rounded-xl overflow-hidden">
+                    <div class="bg-[#003366] px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="list-ordered" class="text-[#F2A900] w-4 h-4"></i>
+                        <h4 class="font-black text-white text-sm uppercase tracking-wide">Complete Step-by-Step Grading Engine — Every Calculation, In Order</h4>
+                    </div>
+                    <div class="p-5 space-y-4 text-[11px] text-slate-700 dark:text-slate-300">
+                        <p class="italic text-slate-500 dark:text-slate-400">This is the exact sequence the dashboard's grading engine runs for every cadet, every time data changes. Provided for academic audit purposes — every number on a cadet's grade card traces back to one of the numbered steps below.</p>
+
+                        <!-- STEP 1 -->
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="font-black text-blue-700 dark:text-blue-400 text-xs uppercase tracking-wide mb-1">Step 1 — Determine the Merit Cap (live, never fixed)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px]">Merit Cap = 150 + (No. of Papers × 10)</div>
+                            <p class="mt-1.5">The Merit Cap is <strong>recalculated automatically</strong> from <strong>No. of Papers</strong> (set in General Config) every single time it changes — it is never a hardcoded number. With the current setting of <strong id="walkthrough-papers-1">30</strong> papers, the cap is <strong id="walkthrough-cap-1">450</strong>. This cap is the ceiling against which the Merits component (Step 4) and Excess Merit Bonus (Step 7) are measured.</p>
+                        </div>
+
+                        <!-- STEP 2 -->
+                        <div class="border-l-4 border-emerald-500 pl-4">
+                            <div class="font-black text-emerald-700 dark:text-emerald-400 text-xs uppercase tracking-wide mb-1">Step 2 — Academic CS (1–5 scale)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>IF Star Cadet flag is ON → Academic CS = 5.0 (fixed)</div>
+                                <div>ELSE IF Mean GWA ≥ 90 → Academic CS = 5</div>
+                                <div>ELSE IF Mean GWA ≥ 85 → Academic CS = 4</div>
+                                <div>ELSE → Academic CS = 3</div>
+                            </div>
+                            <p class="mt-1.5">Mean GWA is the average of every non-zero semester GWA entered (1st, 2nd, 3rd Sem). A cadet flagged <strong>Star Cadet</strong> (GWA ≥ 90 academic excellence award) automatically locks Academic CS at the maximum, regardless of any later GWA edits, AND separately earns a flat <strong>+2 percentage point bonus</strong> on the Final Grade (see Step 8).</p>
+                        </div>
+
+                        <!-- STEP 3 -->
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <div class="font-black text-indigo-700 dark:text-indigo-400 text-xs uppercase tracking-wide mb-1">Step 3 — Leadership CS (1–5 scale) — Corps of Midshipmen Officer Status</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px]">Leadership CS = Officer flag ON ? 5 : 3</div>
+                            <p class="mt-1.5">The <strong>Officer</strong> flag means the cadet currently holds a post in the <strong>Corps of Midshipmen</strong> (RCC, RDCC, RA, or an N-line billet N1–N4 per the PUMMA Regimental Rules / Triple R handbook) — not their rotating mockboat duty rank. Holding a Corps post is a binary switch: it does not scale gradually, it simply raises Leadership CS from the baseline 3 to the maximum 5.</p>
+                        </div>
+
+                        <!-- STEP 4 -->
+                        <div class="border-l-4 border-amber-500 pl-4">
+                            <div class="font-black text-amber-700 dark:text-amber-400 text-xs uppercase tracking-wide mb-1">Step 4 — Patriotism / Merits CS (1–5 scale, continuous)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>Peer Ceiling = "Dynamic" mode → highest total merits in the section/class<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Fixed" mode → the Merit Cap itself (Step 1)</div>
+                                <div>Merit Ratio = Total Merits ÷ Peer Ceiling</div>
+                                <div>IF Total Merits &gt; 0 → Patriotism CS = MIN(5, 1 + MAX(0, Merit Ratio) × 4)</div>
+                                <div>IF Total Merits ≤ 0 → Patriotism CS = 1 ÷ (1 + |Total Merits| ÷ 200)</div>
+                            </div>
+                            <p class="mt-1.5">This produces a smooth, continuous score on the 1–5 display scale — a cadet with -25 merits and a cadet with -2,100 merits do <strong>not</strong> get the same "1" rating; the second formula spreads negative balances out so worse balances visibly read worse, even though both ultimately also trigger the separate whole-grade penalty in Step 9.</p>
+                        </div>
+
+                        <!-- STEP 5 -->
+                        <div class="border-l-4 border-rose-500 pl-4">
+                            <div class="font-black text-rose-700 dark:text-rose-400 text-xs uppercase tracking-wide mb-1">Step 5 — Technical CS &amp; Soft Skills CS (Mockboat Checklists + Logbook)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>Technical Pass Rate = (Technical tasks completed ÷ Technical tasks assigned) × 100</div>
+                                <div>Technical CS = ≥90%→5 · ≥80%→4 · ≥70%→3 · ≥60%→2 · else→1</div>
+                                <div>Soft Skills Pass Rate = (Soft tasks completed ÷ Soft tasks assigned) × 100 → same 5/4/3/2/1 banding</div>
+                                <div>Logbook % = Valid logged weekdays ÷ Expected weekdays in graded months (Sat/Sun excluded)</div>
+                                <div>Log Score = ≥80%→5 · ≥60%→4 · ≥40%→3 · ≥20%→2 · else→1</div>
+                                <div class="border-t border-slate-300 dark:border-slate-700 pt-1 mt-1 font-black">Soft CS (final) = ROUND((Soft Skills Pass Rate score + Log Score) ÷ 2)</div>
+                            </div>
+                            <p class="mt-1.5">Technical and Soft Skills tasks come from whichever Checklist Profile(s) are assigned to the cadet's section under <strong>Map Duties</strong>. The displayed <strong>Soft CS</strong> blends checklist soft-skill completion with logbook diligence in equal parts.</p>
+                        </div>
+
+                        <!-- STEP 6 -->
+                        <div class="border-l-4 border-slate-500 pl-4">
+                            <div class="font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wide mb-1">Step 6 — Base Rating (weighted average of all five components, 1–5 scale)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px]">Base Rating = (Academic × 0.10) + (Leadership × 0.25) + (Patriotism × 0.25) + (Soft × 0.25) + (Technical × 0.15)</div>
+                            <p class="mt-1.5">Note: these five weights (10/25/25/25/15) operate on the underlying 1–5 rating scale and are mathematically equivalent to, but a different lens on, the CS/PT 60/40 percentage split shown in the rubrics tab and summary cards above — both views describe the same engine.</p>
+                        </div>
+
+                        <!-- STEP 7 -->
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <div class="font-black text-green-700 dark:text-green-400 text-xs uppercase tracking-wide mb-1">Step 7 — Excess Merit Auto-Bonus</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>Excess Merits = MAX(0, Total Merits − Merit Cap)</div>
+                                <div>Auto-Bonus % = MIN(5, (Excess Merits ÷ 10) × Bonus-Per-10 Rate)</div>
+                            </div>
+                            <p class="mt-1.5">Merits earned <em>above</em> the cap aren't wasted — they convert into a percentage bonus, at the configurable <strong>Excess Merit Bonus Rate</strong> (default <span id="formula-bonus-rate-2">0.5</span>% per 10 excess merits), capped at +5 percentage-points-equivalent.</p>
+                        </div>
+
+                        <!-- STEP 8 -->
+                        <div class="border-l-4 border-[#F2A900] pl-4">
+                            <div class="font-black text-amber-600 dark:text-[#F2A900] text-xs uppercase tracking-wide mb-1">Step 8 — Combine All Bonuses &amp; Convert Rating → Percent Grade</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>Total Bonus % = Manual Instructor Bonus + Auto-Bonus (Step 7) + (Star Cadet ? 2.0 : 0)</div>
+                                <div>Bonus-as-Rating = Total Bonus % × (0.49 ÷ 2.00)</div>
+                                <div>Final Rating = MIN(5.00, Base Rating + Bonus-as-Rating)</div>
+                                <div class="border-t border-slate-300 dark:border-slate-700 pt-1 mt-1">Percent Grade = banded conversion of Final Rating (see Rating→Percent table below)</div>
+                            </div>
+                            <p class="mt-1.5">Bonuses are converted into an equivalent nudge on the <strong>1–5 rating</strong> and applied <em>before</em> the rating is converted to a percent — not added directly to the percent afterward. This keeps two cadets with genuinely different ratings from being artificially flattened to the identical 98% ceiling; the conversion factor (0.49 rating points per 2.00 percent points) mirrors the slope of the top rating band itself.</p>
+                        </div>
+
+                        <!-- STEP 9 -->
+                        <div class="border-l-4 border-red-600 pl-4">
+                            <div class="font-black text-red-700 dark:text-red-400 text-xs uppercase tracking-wide mb-1">Step 9 — Apply the Merit Override Penalty (final step, whole-grade)</div>
+                            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px] space-y-1">
+                                <div>IF Total Merits &lt; 0:</div>
+                                <div>&nbsp;&nbsp;Merit Penalty = (|Total Merits| ÷ 100) × 3</div>
+                                <div>&nbsp;&nbsp;Percent Grade = Percent Grade − Merit Penalty</div>
+                                <div class="border-t border-slate-300 dark:border-slate-700 pt-1 mt-1 font-black">Final Grade = CLAMP(Percent Grade, 0, 98)</div>
+                            </div>
+                            <p class="mt-1.5">This is the very last operation, applied after Steps 1–8 are fully resolved. There is no floor on the penalty itself — only the final grade is clamped to a 0–98% range — so a deeply negative merit balance can override an otherwise excellent academic and leadership record.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating → Percent Grade Conversion Table -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <div class="bg-[#263f77] px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="table-2" class="text-[#F2A900] w-4 h-4"></i>
+                        <h4 class="font-black text-white text-sm uppercase tracking-wide">Rating → Percent Grade Conversion Table</h4>
+                        <span class="text-[10px] text-blue-200 ml-2">— used in Step 8 above</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-[11px]">
+                            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wide">
+                                <tr><th class="p-2 border-b border-slate-200 dark:border-slate-700">Rating Range</th><th class="p-2 border-b border-slate-200 dark:border-slate-700">Percent Grade Band</th><th class="p-2 border-b border-slate-200 dark:border-slate-700">Descriptor</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr class="bg-emerald-50 dark:bg-emerald-900/20"><td class="p-2 font-mono font-bold">4.51 – 5.00</td><td class="p-2 font-mono font-bold text-emerald-700 dark:text-emerald-400">96.00% – 98.00%</td><td class="p-2">Outstanding</td></tr>
+                                <tr><td class="p-2 font-mono">4.01 – 4.50</td><td class="p-2 font-mono">93.00% – 95.00%</td><td class="p-2">Very Satisfactory</td></tr>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50"><td class="p-2 font-mono">3.51 – 4.00</td><td class="p-2 font-mono">90.00% – 92.00%</td><td class="p-2">Satisfactory <span class="text-[9px] text-blue-600 dark:text-blue-400">(Competent threshold)</span></td></tr>
+                                <tr><td class="p-2 font-mono">3.01 – 3.50</td><td class="p-2 font-mono">85.00% – 89.00%</td><td class="p-2">Fairly Satisfactory</td></tr>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50"><td class="p-2 font-mono">2.51 – 3.00</td><td class="p-2 font-mono">80.00% – 84.00%</td><td class="p-2">Developing</td></tr>
+                                <tr><td class="p-2 font-mono">2.01 – 2.50</td><td class="p-2 font-mono">75.00% – 79.00%</td><td class="p-2">Passing <span class="text-[9px] text-amber-600 dark:text-amber-400">(Minimum to pass)</span></td></tr>
+                                <tr class="bg-red-50 dark:bg-red-900/20"><td class="p-2 font-mono">1.51 – 2.00</td><td class="p-2 font-mono text-red-700 dark:text-red-400">70.00% – 73.00%</td><td class="p-2">Needs Improvement</td></tr>
+                                <tr class="bg-red-50 dark:bg-red-900/20"><td class="p-2 font-mono">1.00 – 1.50</td><td class="p-2 font-mono text-red-700 dark:text-red-400">60.00% – 69.00%</td><td class="p-2">Failing</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 p-3">Conversion uses linear interpolation within each band: <span class="font-mono">Percent = LowGrade + ((Rating − LowRating) ÷ (HighRating − LowRating)) × (HighGrade − LowGrade)</span>. Ratings are clamped to 1.00–5.00 before conversion. This table is also available pre-filled on the main dashboard under <strong>Commission Reference Table</strong>.</p>
+                </div>
+
+                <!-- Worked Numeric Example -->
+                <div class="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                    <h4 class="font-black text-[#003366] dark:text-blue-400 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4 text-[#406f27]"></i> Fully Worked Numeric Example</h4>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mb-3">Sample cadet: GWA 92 (Star Cadet), Officer = YES, Total Merits = +520, 30 Papers configured (Merit Cap = 450), Bonus Rate = 0.5%/10 excess, Technical Pass 95%, Soft Pass 92%, Logbook 88%, Manual Bonus = 0%.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] font-mono bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+                        <div>1. Merit Cap = 150+(30×10) = <strong>450</strong></div>
+                        <div>2. Academic CS = Star Cadet → <strong>5.0</strong></div>
+                        <div>3. Leadership CS = Officer=YES → <strong>5</strong></div>
+                        <div>4. Merit Ratio = 520÷450 = 1.156 → Patriotism CS = MIN(5, 1+1.156×4) = <strong>5.0</strong></div>
+                        <div>5a. Technical CS: 95%→<strong>5</strong></div>
+                        <div>5b. Soft Pass 92%→5, Log 88%→5 → Soft CS = ROUND((5+5)/2) = <strong>5</strong></div>
+                        <div class="md:col-span-2 border-t border-slate-200 dark:border-slate-700 pt-1.5 mt-1">6. Base Rating = (5×.10)+(5×.25)+(5×.25)+(5×.25)+(5×.15) = <strong>5.00</strong></div>
+                        <div>7. Excess Merits = 520−450 = 70 → Auto-Bonus = MIN(5,(70÷10)×0.5) = <strong>3.5%</strong></div>
+                        <div>8a. Total Bonus % = 0 + 3.5 + 2.0(Star) = <strong>5.5%</strong></div>
+                        <div>8b. Bonus-as-Rating = 5.5×(0.49÷2.00) = 1.3475 → Final Rating = MIN(5,5.00+1.3475) = <strong>5.00</strong> (capped)</div>
+                        <div class="md:col-span-2">8c. Percent Grade (5.00 rating, top band) = <strong>98.00%</strong></div>
+                        <div class="md:col-span-2">9. Merit Penalty: Total Merits is positive → no penalty applied</div>
+                        <div class="md:col-span-2 border-t-2 border-[#003366] dark:border-blue-600 pt-2 mt-1 text-sm"><strong class="text-[#003366] dark:text-blue-400">FINAL GRADE = 98.00% (Outstanding)</strong></div>
+                    </div>
+                </div>
+
                 <!-- Term Dissection -->
                 <div>
+
                     <h4 class="font-bold text-[#003366] dark:text-blue-400 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><i data-lucide="calendar-range" class="w-4 h-4 text-[#406f27]"></i> Academic Term Dissection — PU Form-03 Format</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4"><div class="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-2">1. PRELIM</div><p class="text-[10px] text-slate-600 dark:text-slate-400">Weeks 1-4. Baseline competency: watchkeeping foundation, surface preparation, initial logbook habits, and flag ceremony participation.</p><div class="mt-2 flex gap-1 flex-wrap"><span class="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">CS</span><span class="text-[9px] bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded font-bold">PT</span><span class="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">FG</span></div></div>
@@ -1139,6 +1297,40 @@
                         <div class="border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4"><div class="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-2">4. FINALS</div><p class="text-[10px] text-slate-600 dark:text-slate-400">Weeks 15-18. Full ICPE execution across all four CO areas in a single 4-hour rotation. Star Cadet bonus applied. SG (Semestral Grade) computed.</p><div class="mt-2 flex gap-1 flex-wrap"><span class="text-[9px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold">CS</span><span class="text-[9px] bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded font-bold">PT</span><span class="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">FG</span><span class="text-[9px] bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold">SG</span></div></div>
                     </div>
                     <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 pl-1">SG (Semestral Grade) = Average of all four term Final Grades. Pass = SG >= 75.</p>
+                </div>
+
+                <!-- Corps of Midshipmen / Officer Reference -->
+                <div class="bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#003366] to-[#263f77] px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="shield" class="text-[#F2A900] w-4 h-4"></i>
+                        <h4 class="font-black text-white text-sm uppercase tracking-wide">Officer Status &amp; the Corps of Midshipmen</h4>
+                        <span class="text-[10px] text-blue-200 ml-2">— per the PUMMA Regimental Rules (Triple R)</span>
+                    </div>
+                    <div class="p-5 space-y-3 text-[11px] text-slate-700 dark:text-slate-300">
+                        <p>The dashboard's <strong>Officer</strong> toggle (per cadet, in the cadet profile editor) is a direct digital record of <strong>Corps of Midshipmen</strong> membership — the student-officer command body that runs PUMMA's regimental system. Per the Regimental Rules, the Corps is "a professional association of student-officers who have been vetted and selected to lead their peers through the rigors of maritime discipline," operating under a stricter "Covenant of Honor" than the general cadet body.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                <div class="font-bold text-blue-800 dark:text-blue-300 text-[10px] uppercase tracking-wide mb-1">Typical Corps Posts (Officer = YES)</div>
+                                <ul class="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                                    <li>RCC — Regimental Commandant of Cadets (highest officer)</li>
+                                    <li>RDCC — Regimental Deputy Commandant (Chief Officer)</li>
+                                    <li>RA — Regimental Adjutant (Chief Operating Officer)</li>
+                                    <li>N1.1–N1.3, N2, N3, N4 — N-line staff officers (Operations, Intelligence/Security, Welfare, Logistics)</li>
+                                    <li>Battalion / Platoon command staff, Class Marcher, Guidon bearer</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                                <div class="font-bold text-slate-700 dark:text-slate-300 text-[10px] uppercase tracking-wide mb-1">Effect on Grading</div>
+                                <ul class="list-disc pl-4 space-y-0.5 text-slate-600 dark:text-slate-400">
+                                    <li>Leadership CS jumps from baseline <strong>3 → 5</strong> (Step 3 of the engine)</li>
+                                    <li>Counted toward the <strong>Officer Count</strong> stat shown in class/section summaries</li>
+                                    <li>Shown as an <span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-1.5 py-0.5 rounded text-[9px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span> badge across the Cadet Table, Masterlist, and printed appraisal cards</li>
+                                    <li>Independent of Mockboat duty rank (Master/Captain down to Ordinary Seaman) — a cadet can be a rotating Mockboat "Captain" for the day without holding a standing Corps post, and vice versa</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 italic">"Leadership is a weight, not a rank" — every midshipman officer is personally accountable for the performance and morale of the cadets under their charge, which is why the rubric rewards Officer status as the maximum Leadership CS score rather than a partial credit.</p>
+                    </div>
                 </div>
 
                 <!-- Manual Grade Converter -->
@@ -5360,6 +5552,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                 const papers = window.appSettings.papers || parseInt(getVal('input-papers', 30));
                 const maxMeritCap = 150 + (papers * 10);
                 window._liveMeritCap = maxMeritCap;
+                // Keep the stored setting in lockstep with the derived value so
+                // ANY code path reading window.appSettings.maxMeritCap directly
+                // (Converter, Matrix tab, Assessment radar, exports, etc.) always
+                // sees the correct number — it is never allowed to go stale.
+                window.appSettings.maxMeritCap = maxMeritCap;
                 const bonusRate = parseFloat(window.appSettings.bonusPerTen) || 0.5;
                 
                 setVal('input-acad-year', targetAcadYear);
@@ -5368,7 +5565,12 @@ window.logAdminSettingsActivity = async (action, details) => {
                 setVal('input-max-merit', maxMeritCap);
                 setVal('input-bonus-rate', bonusRate);
                 setTxt('cap-formula-display', `Result: ${maxMeritCap} max`);
+                setTxt('rubric-merit-cap-1', maxMeritCap);
+                setTxt('rubric-merit-cap-2', maxMeritCap);
                 setTxt('formula-bonus-rate', bonusRate);
+                setTxt('formula-bonus-rate-2', bonusRate);
+                setTxt('walkthrough-papers-1', papers);
+                setTxt('walkthrough-cap-1', maxMeritCap);
                 setTxt('announcement-display', window.appSettings.announcement || "Orders of the Day: Welcome to the PUMMA Dashboard.");
 
                 const vList = window.appSettings.violationsList || defaultViolationsList;
@@ -7319,8 +7521,15 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         function bindEvents() {
             const addEvent = (id, event, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(event, fn); };
             addEvent('input-papers', 'change', async (e) => {
-                window.appSettings.papers = parseInt(e.target.value);
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { papers: window.appSettings.papers });
+                window.appSettings.papers = parseInt(e.target.value) || 30;
+                // maxMeritCap is ALWAYS derived from papers — never a separately
+                // stored fixed number. This keeps every reader of
+                // window.appSettings.maxMeritCap (Converter, Matrix, Assessment
+                // radar, etc.) in sync the instant "No. of Papers" changes,
+                // instead of only updating inside recalculateMetrics()'s local var.
+                window.appSettings.maxMeritCap = 150 + (window.appSettings.papers * 10);
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { papers: window.appSettings.papers, maxMeritCap: window.appSettings.maxMeritCap });
+                window.recalculateMetrics();
             });
             addEvent('select-peer-mode', 'change', async (e) => {
                 window.appSettings.peerMode = e.target.value;
