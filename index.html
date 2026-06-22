@@ -5625,6 +5625,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.recalculateMetrics = () => {
             try {
+                if (!window.cadets) window.cadets = []; // safety net during initial load
                 const targetAcadYear = getVal('input-acad-year', '2025-2026');
                 const targetClass = parseInt(getVal('filter-class', 3));
                 const targetSec = getVal('filter-section', 'ALL').toUpperCase();
@@ -5985,6 +5986,12 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (!tbody) return;
             tbody.innerHTML = '';
             
+            if (!window.cadets || !window.cadets.length) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400 text-xs"><i data-lucide="loader-2" class="w-4 h-4 animate-spin inline-block mr-2"></i>Loading cadet records…</td></tr>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
             const targetClass = parseInt(getVal('filter-class', 3));
             const targetSec = getVal('filter-section', 'ALL').toUpperCase();
@@ -7609,7 +7616,10 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         };
 
         // --- Core Application Boot System --- 
+        let _bindEventsDone = false; // GUARD: prevents duplicate listeners if settingsRef fires more than once
         function bindEvents() {
+            if (_bindEventsDone) return; // already bound — skip to prevent stacked duplicate listeners
+            _bindEventsDone = true;
             const addEvent = (id, event, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(event, fn); };
             addEvent('input-papers', 'change', async (e) => {
                 window.appSettings.papers = parseInt(e.target.value) || 30;
