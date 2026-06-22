@@ -1347,6 +1347,28 @@
                             <p class="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">Auto-Compute Mode — Enter a cadet's name or ID to instantly pull and calculate their grades from the database.</p>
                         </div>
 
+                        <!-- OFFICIAL PANPACIFIC GRADING SHEET FORMULA -->
+                        <div class="bg-[#003366] rounded-xl p-4 mb-4 text-white">
+                            <h5 class="font-black text-xs uppercase tracking-widest mb-2 flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-[#F2A900]"></i> Official Panpacific Grading Sheet Formula (per term)</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+                                <div class="bg-white/10 rounded-lg p-2.5">
+                                    <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Step 1 — T (raw total)</div>
+                                    <div class="font-mono text-[10px] bg-black/20 rounded px-1.5 py-1 mb-1">T = CS + PT</div>
+                                    <div class="text-blue-200 text-[10px]">Excel: <code class="bg-black/20 px-1 rounded">=IFERROR((CS+PT),"")</code></div>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2.5">
+                                    <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Step 2 — FG (rounded)</div>
+                                    <div class="font-mono text-[10px] bg-black/20 rounded px-1.5 py-1 mb-1">FG = ROUND(T, 0)</div>
+                                    <div class="text-blue-200 text-[10px]">Excel: <code class="bg-black/20 px-1 rounded">=IFERROR(ROUND(T,0),"")</code></div>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2.5">
+                                    <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Cap &amp; Override</div>
+                                    <div class="text-[10px] leading-relaxed">FG is capped at <strong class="text-[#F2A900]">98</strong> (the system's absolute ceiling) and floored at <strong>0</strong>. A negative merit balance subtracts directly from FG <em>after</em> rounding (Merit Override Penalty — see Rubrics tab), so T and FG can legitimately differ by more than just rounding once a penalty applies.</div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-blue-200 mt-2.5 pt-2 border-t border-white/20">CS is itself the dashboard's full Base Rating converted to a percentage (Academic 10% + Leadership 25% + Patriotism 25% + Soft Skills 25% + Technical 15%, see Rubrics tab) — so this converter's "CS" column and the main dashboard's "Specific Grade %" are the same number, not two different calculations. <strong>This is why CS + PT can exceed 98 or even 100 before rounding</strong> — CS alone can already approach 98, and PT (the GWA-based periodical score, also capped at 98) is added on top in this term-by-term sheet view; the ROUND + 98-cap in Step 2 is what brings the displayed FG back within range, matching the original Panpacific template's behavior exactly.</p>
+                        </div>
+
                         <!-- LOOKUP ROW -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                             <div class="flex flex-col md:col-span-2">
@@ -1400,7 +1422,21 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-2 mb-4 flex-wrap">
+                        <div class="flex items-end gap-2 mb-4 flex-wrap">
+                            <div class="flex flex-col">
+                                <label class="text-[9px] font-bold mb-1 text-slate-500 dark:text-slate-400 uppercase tracking-wider">Load Class</label>
+                                <select id="conv-load-class" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-[#003366] dark:text-white font-bold">
+                                    <option value="ALL">All Classes</option>
+                                    <option value="3">3RD CLASS</option>
+                                    <option value="4">4TH CLASS</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[9px] font-bold mb-1 text-slate-500 dark:text-slate-400 uppercase tracking-wider">Load Section</label>
+                                <select id="conv-load-section" class="p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-[#003366] dark:text-white font-bold">
+                                    <option value="ALL">All Sections</option>
+                                </select>
+                            </div>
                             <button onclick="converterAddRecord()" id="conv-add-btn" disabled class="bg-[#003366] hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-1.5 shadow-sm"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Add to Sheet</button>
                             <button onclick="converterAutoAddAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-2 shadow-sm"><i data-lucide="users" class="w-3.5 h-3.5"></i> Load All Cadets</button>
                             <button onclick="converterExportExcel()" class="bg-[#406f27] hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition flex items-center gap-2 shadow-sm"><i data-lucide="download" class="w-3.5 h-3.5"></i> Download Panpacific Excel (.xlsx)</button>
@@ -1413,22 +1449,22 @@
                                     <tr>
                                         <th rowspan="2" class="p-2 border-r border-blue-800">No.</th>
                                         <th rowspan="2" class="p-2 border-r border-blue-800 text-left min-w-[140px]">Name of Student</th>
-                                        <th colspan="3" class="p-2 border-r border-blue-800 text-blue-200">PRELIM</th>
-                                        <th colspan="3" class="p-2 border-r border-blue-800 text-violet-200">MID-TERM</th>
-                                        <th colspan="3" class="p-2 border-r border-blue-800 text-amber-200">SEMI-FINALS</th>
-                                        <th colspan="3" class="p-2 border-r border-blue-800 text-emerald-200">FINAL</th>
+                                        <th colspan="4" class="p-2 border-r border-blue-800 text-blue-200">PRELIM</th>
+                                        <th colspan="4" class="p-2 border-r border-blue-800 text-violet-200">MID-TERM</th>
+                                        <th colspan="4" class="p-2 border-r border-blue-800 text-amber-200">SEMI-FINALS</th>
+                                        <th colspan="4" class="p-2 border-r border-blue-800 text-emerald-200">FINAL</th>
                                         <th rowspan="2" class="p-2 border-r border-blue-800 text-[#F2A900]">SG</th>
                                         <th rowspan="2" class="p-2">Rem</th>
                                     </tr>
                                     <tr>
-                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
-                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
-                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
-                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
+                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 text-[9px]">T</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
+                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 text-[9px]">T</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
+                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 text-[9px]">T</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
+                                        <th class="p-1 border-r border-blue-800 text-[9px]">CS</th><th class="p-1 border-r border-blue-800 text-[9px]">PT</th><th class="p-1 border-r border-blue-800 text-[9px]">T</th><th class="p-1 border-r border-blue-800 font-black text-[9px]">FG</th>
                                     </tr>
                                 </thead>
                                 <tbody id="conv-tableBody" class="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
-                                    <tr id="conv-empty-row"><td colspan="16" class="py-8 text-slate-400 dark:text-slate-500 italic text-xs">No records yet. Enter cadet data above and click "Calculate &amp; Add to Sheet."</td></tr>
+                                    <tr id="conv-empty-row"><td colspan="20" class="py-8 text-slate-400 dark:text-slate-500 italic text-xs">No records yet. Enter cadet data above and click "Calculate &amp; Add to Sheet."</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1608,14 +1644,24 @@
                     const tCs  = g.cs  !== '' && g.cs  !== undefined ? parseFloat(g.cs)  : null;
                     const tPt  = g.pt  !== '' && g.pt  !== undefined ? parseFloat(g.pt)  : null;
                     const tFg  = g.fg  !== '' && g.fg  !== undefined ? parseFloat(g.fg)  : null;
+                    // Matches the official Panpacific Excel template exactly:
+                    // T = CS + PT (a plain sum — CS and PT are each already
+                    // pre-weighted to their own share of the grade, e.g. CS is
+                    // the dashboard's full Specific Grade %, so summing them
+                    // directly reproduces the template's =IFERROR((CS+PT),"")
+                    // and =IFERROR(ROUND(T,0),"") cells, rather than applying
+                    // a second 60/40 weighting on top of already-final numbers.
+                    let tRaw = null;
                     let computedFg = tFg;
-                    if (computedFg === null && tCs !== null && tPt !== null) {
-                        computedFg = Math.min(98, (tCs * 0.60) + (tPt * 0.40));
+                    if (tCs !== null && tPt !== null) {
+                        tRaw = tCs + tPt;
+                        if (computedFg === null) computedFg = Math.min(98, Math.round(tRaw));
                     }
                     if (computedFg !== null) computedFg = applyPenalty(computedFg);
                     result[termMap[t]] = {
                         cs: tCs !== null ? tCs.toFixed(2) : '',
                         pt: tPt !== null ? tPt.toFixed(2) : '',
+                        t: tRaw !== null ? tRaw.toFixed(2) : '',
                         fg: computedFg !== null ? computedFg.toFixed(2) : ''
                     };
                 });
@@ -1624,10 +1670,13 @@
                 return { termGrades: result, merits, meritPenalty, cs, pt, fg: parseFloat(c.specificGradePercent)||0 };
             }
 
-            // Fallback: build synthetic grades from main dashboard score
+            // Fallback: build synthetic grades from main dashboard score.
+            // T = CS + PT here too, for the same reason as above — no
+            // additional 60/40 weighting on top of already-final percentages.
             // (specificGradePercent already has the penalty applied upstream)
             const fg = parseFloat(c.specificGradePercent) || 0;
-            const synth = { cs: cs.toFixed(2), pt: pt.toFixed(2), fg: fg.toFixed(2) };
+            const tFallback = cs + pt;
+            const synth = { cs: cs.toFixed(2), pt: pt.toFixed(2), t: tFallback.toFixed(2), fg: fg.toFixed(2) };
             return {
                 termGrades: { PRELIM: synth, MIDTERM: synth, SEMI: synth, FINAL: synth },
                 merits, meritPenalty, cs, pt, fg
@@ -1638,12 +1687,16 @@
         window._convSelectedCadet = null;
 
         window.converterSearchCadet = () => {
-            const q = (document.getElementById('conv-search').value || '').trim().toLowerCase();
+            const qRaw = (document.getElementById('conv-search').value || '').trim();
+            const q = qRaw.toLowerCase();
+            const qIdNormalized = window.normalizeCadetId(qRaw);
             const dd = document.getElementById('conv-search-dropdown');
             if (!q || q.length < 2) { dd.classList.add('hidden'); window._convSelectedCadet = null; document.getElementById('conv-cadet-preview').classList.add('hidden'); document.getElementById('conv-add-btn').disabled = true; return; }
             const matches = (window.cadets || []).filter(c =>
                 (c.name||'').toLowerCase().includes(q) ||
-                (c.cadetId||c.id||'').toLowerCase().includes(q)
+                (c.studentId||'').toLowerCase().includes(q) ||
+                window.normalizeCadetId(c.studentId) === qIdNormalized ||
+                (c.id||'').toLowerCase().includes(q)
             ).slice(0, 10);
             if (!matches.length) {
                 dd.innerHTML = '<div class="p-3 text-slate-400 text-xs italic">No cadet found.</div>';
@@ -1654,7 +1707,7 @@
                 <div onclick="converterSelectCadet('${c.id}')" class="p-2.5 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0 flex items-center justify-between gap-2">
                     <div>
                         <div class="font-bold text-[#003366] dark:text-blue-300 text-[11px]">${c.name||'—'}</div>
-                        <div class="text-[9px] text-slate-400">ID: ${c.cadetId||c.id||'—'} &nbsp;|&nbsp; Sec: ${c.section||'—'}</div>
+                        <div class="text-[9px] text-slate-400">ID: ${c.studentId||c.id||'—'} &nbsp;|&nbsp; Sec: ${c.section||'—'}</div>
                     </div>
                     <span class="text-[9px] font-black ${parseFloat(c.specificGradePercent)>=75?'text-emerald-600':'text-rose-600'}">${c.specificGradePercent||'—'}%</span>
                 </div>`).join('');
@@ -1678,7 +1731,7 @@
             const setC = (id, cls) => { const el = document.getElementById(id); if(el) { el.className = el.className.replace(/text-\w+-\d+/g,''); el.classList.add(...cls.split(' ')); } };
 
             set('conv-prev-name', c.name||'—');
-            set('conv-prev-id',   c.cadetId||c.id||'—');
+            set('conv-prev-id',   c.studentId||c.id||'—');
             set('conv-prev-sec',  c.section||'—');
             set('conv-prev-grade', fg ? fg.toFixed(2)+'%' : '—');
             set('conv-prev-cs',    computed.cs ? computed.cs.toFixed(2) : '—');
@@ -1710,7 +1763,7 @@
             if (!c) { if(window.customAlert) window.customAlert('Please select a cadet first.'); return; }
             const term = document.getElementById('conv-term').value;
             const computed = window._convComputeGrades(c);
-            const studentNo = c.cadetId || c.id;
+            const studentNo = c.studentId || c.id;
             const name = (c.name||'').toUpperCase();
 
             if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',fg:''}, MIDTERM:{cs:'',pt:'',fg:''}, SEMI:{cs:'',pt:'',fg:''}, FINAL:{cs:'',pt:'',fg:''} }; }
@@ -1734,13 +1787,23 @@
         };
 
         window.converterAutoAddAll = () => {
-            const cadets = (window.cadets||[]);
-            if (!cadets.length) { if(window.customAlert) window.customAlert('No cadets loaded yet.'); return; }
+            const allCadets = (window.cadets||[]);
+            if (!allCadets.length) { if(window.customAlert) window.customAlert('No cadets loaded yet.'); return; }
+
+            const loadClass = getVal('conv-load-class', 'ALL');
+            const loadSection = getVal('conv-load-section', 'ALL').toUpperCase();
+            const cadets = allCadets.filter(c =>
+                (loadClass === 'ALL' || String(c.classNum) === String(loadClass)) &&
+                (loadSection === 'ALL' || (c.section || '').toUpperCase() === loadSection)
+            );
+
+            if (!cadets.length) { if(window.customAlert) window.customAlert('No cadets match the selected Class/Section filter.'); return; }
+
             cadets.forEach(c => {
                 const computed = window._convComputeGrades(c);
-                const studentNo = c.cadetId || c.id;
+                const studentNo = c.studentId || c.id;
                 const name = (c.name||'').toUpperCase();
-                if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',fg:''}, MIDTERM:{cs:'',pt:'',fg:''}, SEMI:{cs:'',pt:'',fg:''}, FINAL:{cs:'',pt:'',fg:''} }; }
+                if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',t:'',fg:''}, MIDTERM:{cs:'',pt:'',t:'',fg:''}, SEMI:{cs:'',pt:'',t:'',fg:''}, FINAL:{cs:'',pt:'',t:'',fg:''} }; }
                 const tg = computed.termGrades;
                 convRecords[studentNo].PRELIM  = tg.PRELIM;
                 convRecords[studentNo].MIDTERM = tg.MIDTERM;
@@ -1763,10 +1826,10 @@
                 tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                     <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 text-slate-500 text-[10px]">${data.rowNum}</td>
                     <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 text-left font-bold text-[#003366] dark:text-blue-300 text-[11px] min-w-[130px]">${data.name}<div class="text-[9px] text-slate-400 font-normal">${id}</div></td>
-                    ${td(data.PRELIM.cs,'PRELIM')}${td(data.PRELIM.pt,'PRELIM')}${td(data.PRELIM.fg,'PRELIM',true)}
-                    ${td(data.MIDTERM.cs,'MIDTERM')}${td(data.MIDTERM.pt,'MIDTERM')}${td(data.MIDTERM.fg,'MIDTERM',true)}
-                    ${td(data.SEMI.cs,'SEMI')}${td(data.SEMI.pt,'SEMI')}${td(data.SEMI.fg,'SEMI',true)}
-                    ${td(data.FINAL.cs,'FINAL')}${td(data.FINAL.pt,'FINAL')}${td(data.FINAL.fg,'FINAL',true)}
+                    ${td(data.PRELIM.cs,'PRELIM')}${td(data.PRELIM.pt,'PRELIM')}${td(data.PRELIM.t,'PRELIM')}${td(data.PRELIM.fg,'PRELIM',true)}
+                    ${td(data.MIDTERM.cs,'MIDTERM')}${td(data.MIDTERM.pt,'MIDTERM')}${td(data.MIDTERM.t,'MIDTERM')}${td(data.MIDTERM.fg,'MIDTERM',true)}
+                    ${td(data.SEMI.cs,'SEMI')}${td(data.SEMI.pt,'SEMI')}${td(data.SEMI.t,'SEMI')}${td(data.SEMI.fg,'SEMI',true)}
+                    ${td(data.FINAL.cs,'FINAL')}${td(data.FINAL.pt,'FINAL')}${td(data.FINAL.t,'FINAL')}${td(data.FINAL.fg,'FINAL',true)}
                     <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 font-black text-[#003366] dark:text-white">${sg}</td>
                     <td class="p-1.5">${rem}</td></tr>`;
             }
@@ -1785,7 +1848,7 @@
         window.converterConfirmClear = () => {
             for(const k in convRecords) delete convRecords[k]; convRowCount=0;
             const tbody = document.getElementById('conv-tableBody');
-            if (tbody) tbody.innerHTML = '<tr id="conv-empty-row"><td colspan="16" class="py-8 text-slate-400 dark:text-slate-500 italic text-xs">No records yet. Search for a cadet and click "Add to Sheet."</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr id="conv-empty-row"><td colspan="20" class="py-8 text-slate-400 dark:text-slate-500 italic text-xs">No records yet. Search for a cadet and click "Add to Sheet."</td></tr>';
             const modal = document.getElementById('conv-clear-modal');
             if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
         };
@@ -1794,19 +1857,19 @@
             if(Object.keys(convRecords).length===0) { alert('No data to export!'); return; }
             let excelData = [
                 ['PANPACIFIC UNIVERSITY'],['Campus'],['GRADING SHEET'],['Term / A.Y.','2526'],[],
-                ['No.','NAME OF STUDENT','PRELIM','','','MID-TERM','','','SEMI-FINALS','','','FINAL','','','SG','REMARKS'],
-                ['','','CS','PT','FG','CS','PT','FG','CS','PT','FG','CS','PT','FG','','']
+                ['No.','NAME OF STUDENT','PRELIM','','','','MID-TERM','','','','SEMI-FINALS','','','','FINAL','','','','SG','REMARKS'],
+                ['','','CS','PT','T','FG','CS','PT','T','FG','CS','PT','T','FG','CS','PT','T','FG','','']
             ];
             let rn=1;
             for(const [id,data] of Object.entries(convRecords)) {
                 const allFgs=['PRELIM','MIDTERM','SEMI','FINAL'].map(t=>parseFloat(data[t].fg)).filter(v=>!isNaN(v)&&v>0);
                 const sg=allFgs.length>0?(allFgs.reduce((a,b)=>a+b,0)/allFgs.length).toFixed(1):'';
                 const rem=sg!==''?(parseFloat(sg)>=75?'P':'F'):'';
-                excelData.push([rn++,data.name,data.PRELIM.cs,data.PRELIM.pt,data.PRELIM.fg,data.MIDTERM.cs,data.MIDTERM.pt,data.MIDTERM.fg,data.SEMI.cs,data.SEMI.pt,data.SEMI.fg,data.FINAL.cs,data.FINAL.pt,data.FINAL.fg,sg,rem]);
+                excelData.push([rn++,data.name,data.PRELIM.cs,data.PRELIM.pt,data.PRELIM.t,data.PRELIM.fg,data.MIDTERM.cs,data.MIDTERM.pt,data.MIDTERM.t,data.MIDTERM.fg,data.SEMI.cs,data.SEMI.pt,data.SEMI.t,data.SEMI.fg,data.FINAL.cs,data.FINAL.pt,data.FINAL.t,data.FINAL.fg,sg,rem]);
             }
             const ws=XLSX.utils.aoa_to_sheet(excelData);
             if(!ws['!merges'])ws['!merges']=[];
-            ws['!merges'].push({s:{r:5,c:2},e:{r:5,c:4}},{s:{r:5,c:5},e:{r:5,c:7}},{s:{r:5,c:8},e:{r:5,c:10}},{s:{r:5,c:11},e:{r:5,c:13}});
+            ws['!merges'].push({s:{r:5,c:2},e:{r:5,c:5}},{s:{r:5,c:6},e:{r:5,c:9}},{s:{r:5,c:10},e:{r:5,c:13}},{s:{r:5,c:14},e:{r:5,c:17}});
             const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Grading Sheet');
             XLSX.writeFile(wb,'PUMMA_Official_Grading_Sheet.xlsx');
         };
@@ -2320,6 +2383,22 @@
         const SVG_FEMALE = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2238%22%20r%3D%2218%22%20fill%3D%22%2364748b%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2252%22%20r%3D%2212%22%20fill%3D%22%2364748b%22%2F%3E%3Cpath%20d%3D%22M50%2062c-15.5%200-28%2011.5-28%2032v6h56v-6c0-20.5-12.5-32-28-32z%22%20fill%3D%22%2364748b%22%2F%3E%3C%2Fsvg%3E";
 
         const safeSetInnerHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+        // Normalizes a cadet Student ID to a single canonical form so lookups
+        // never fail just because of case or a missing "U" prefix. Cadets
+        // previously saved without this normalization (e.g. "2401084" or
+        // "u2401084" instead of "U2401084") would silently fail to match on
+        // login or in the converter, even though the cadet genuinely existed.
+        // - Trims whitespace
+        // - Uppercases everything
+        // - Prefixes a leading "U" if the ID is purely numeric and doesn't
+        //   already start with a letter (so "2401084" -> "U2401084")
+        window.normalizeCadetId = (raw) => {
+            if (!raw) return '';
+            let v = String(raw).trim().toUpperCase();
+            if (/^[0-9]+$/.test(v)) v = 'U' + v;
+            return v;
+        };
         const getVal = (id, fallback = '') => { const e = document.getElementById(id); return e ? e.value : fallback; };
         const getNum = (id, fallback = 0) => { const e = document.getElementById(id); return e ? (parseFloat(e.value) || fallback) : fallback; };
         const getChk = (id) => { const e = document.getElementById(id); return e ? e.checked : false; };
@@ -2494,6 +2573,7 @@
                 safeSetInnerHTML('filter-section', `<option value="ALL">ALL SECTIONS</option>` + SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
                 safeSetInnerHTML('modal-cadet-section', SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
                 safeSetInnerHTML('bulk-target-section', `<option value="ALL">ALL SECTIONS</option>` + SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
+                safeSetInnerHTML('conv-load-section', `<option value="ALL">All Sections</option>` + SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
                 
                 const currentYear = new Date().getFullYear();
                 const maxYear = Math.max(2030, currentYear + 5);
@@ -4743,12 +4823,12 @@ window.logAdminSettingsActivity = async (action, details) => {
             
             const cidRaw = await customPrompt("Enter student ID (e.g. U123456):", "Student ID");
             if (!cidRaw) return;
-            const cid = cidRaw.trim();
+            const cid = window.normalizeCadetId(cidRaw.trim());
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
             
             const c = window.cadets.find(x => 
                 (x.academicYear === targetAcadYear || !x.academicYear) &&
-                (x.studentId === cid || `PUMMA-0${x.classNum}-${x.id.substring(x.id.length - 4)}` === cid || x.name.toUpperCase().includes(cid.toUpperCase()))
+                (window.normalizeCadetId(x.studentId) === cid || `PUMMA-0${x.classNum}-${x.id.substring(x.id.length - 4)}` === cid || x.name.toUpperCase().includes(cidRaw.trim().toUpperCase()))
             );
 
             if (c) {
@@ -5995,7 +6075,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             const saveTime = Date.now();
             const updates = JSON.parse(JSON.stringify({
-                studentId: getVal('eval-input-id', ''),
+                studentId: window.normalizeCadetId(getVal('eval-input-id', '')),
                 email: nEmail,
                 gwaSem1: nGwa1, gwaSem2: nGwa2, gwaSem3: nGwa3, gwa: avgGwa,
                 individualBonus: nBonus,
@@ -7494,7 +7574,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
                     id: nextId, classNum: classVal, academicYear: getVal('input-acad-year', "2025-2026"), section: secVal,
-                    studentId: getVal('modal-cadet-id', ''), email: email, gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), 
+                    studentId: window.normalizeCadetId(getVal('modal-cadet-id', '')), email: email, gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), 
                     gwaSem1: gwa1, gwaSem2: gwa2, gwaSem3: gwa3, gwa: avgGwa,
                     meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
                     officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, accessLogs: []
