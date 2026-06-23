@@ -1664,9 +1664,16 @@
                         if (computedFg === null) computedFg = Math.min(98, Math.round(tRaw));
                     }
                     if (computedFg !== null) computedFg = applyPenalty(computedFg);
+                    // Export CS and PT as their WEIGHTED portions so the university
+                    // grade sheet formula (=CS+PT) never overflows past 99:
+                    //   CS_weighted = raw_CS × 0.60  (max ≈ 58.8)
+                    //   PT_weighted = raw_PT × 0.40  (max ≈ 39.2)
+                    //   T = CS_weighted + PT_weighted ≤ 99  ✓
+                    const csWeighted = tCs !== null ? parseFloat((tCs * 0.60).toFixed(2)) : null;
+                    const ptWeighted = tPt !== null ? parseFloat((tPt * 0.40).toFixed(2)) : null;
                     result[termMap[t]] = {
-                        cs: tCs !== null ? tCs.toFixed(2) : '',
-                        pt: tPt !== null ? tPt.toFixed(2) : '',
+                        cs: csWeighted !== null ? csWeighted.toFixed(2) : '',
+                        pt: ptWeighted !== null ? ptWeighted.toFixed(2) : '',
                         t: tRaw !== null ? tRaw.toFixed(2) : '',
                         fg: computedFg !== null ? computedFg.toFixed(2) : ''
                     };
@@ -1682,7 +1689,10 @@
             // (specificGradePercent already has the penalty applied upstream)
             const fg = parseFloat(c.specificGradePercent) || 0;
             const tFallback = (cs * 0.60) + (pt * 0.40);
-            const synth = { cs: cs.toFixed(2), pt: pt.toFixed(2), t: tFallback.toFixed(2), fg: fg.toFixed(2) };
+            // Export weighted portions so university formula (=CS+PT) never overflows
+            const csW = parseFloat((cs * 0.60).toFixed(2));
+            const ptW = parseFloat((pt * 0.40).toFixed(2));
+            const synth = { cs: csW.toFixed(2), pt: ptW.toFixed(2), t: tFallback.toFixed(2), fg: fg.toFixed(2) };
             return {
                 termGrades: { PRELIM: synth, MIDTERM: synth, SEMI: synth, FINAL: synth },
                 merits, meritPenalty, cs, pt, fg
@@ -7995,7 +8005,10 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     ['pre','mid','sem','fin'].forEach(tk => { if(g[tk] && g[tk].fg > 0) { totalFG += parseFloat(g[tk].fg); count++; } });
                     const sg = count > 0 ? parseFloat((totalFG/count).toFixed(1)) : '';
                     const rem = sg !== '' ? (sg >= 75 ? 'P' : 'F') : '';
-                    wsData.push([i+1, c.name, format(g.pre.cs), format(g.pre.pt), '', format(g.pre.fg), format(g.mid.cs), format(g.mid.pt), '', format(g.mid.fg), format(g.sem.cs), format(g.sem.pt), '', format(g.sem.fg), format(g.fin.cs), format(g.fin.pt), '', format(g.fin.fg), sg, rem]);
+                    // Use weighted CS (×0.60) and PT (×0.40) so university formula =CS+PT never errors
+                    const wcs = (v) => v !== '' && !isNaN(v) ? parseFloat((parseFloat(v)*0.60).toFixed(2)) : '';
+                    const wpt = (v) => v !== '' && !isNaN(v) ? parseFloat((parseFloat(v)*0.40).toFixed(2)) : '';
+                    wsData.push([i+1, c.name, wcs(g.pre.cs), wpt(g.pre.pt), '', format(g.pre.fg), wcs(g.mid.cs), wpt(g.mid.pt), '', format(g.mid.fg), wcs(g.sem.cs), wpt(g.sem.pt), '', format(g.sem.fg), wcs(g.fin.cs), wpt(g.fin.pt), '', format(g.fin.fg), sg, rem]);
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -8077,7 +8090,10 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     const g = c.pummaGrades || { pre:{cs:'',pt:'',fg:''}, mid:{cs:'',pt:'',fg:''}, sem:{cs:'',pt:'',fg:''}, fin:{cs:'',pt:'',fg:''} };
                     const t = g[termKey] || {cs:'',pt:'',fg:''};
                     const rem = t.fg !== '' && t.fg !== undefined ? (t.fg >= 75 ? 'P' : 'F') : '';
-                    wsData.push(["", c.name, ...Array(10).fill(""), format(t.cs), "", "", format(t.pt), "", "", format(t.fg), rem]);
+                    // Use weighted CS (×0.60) and PT (×0.40) so university =CS+PT formula never errors
+                    const wcsT = (v) => v !== '' && v !== undefined && !isNaN(v) ? parseFloat((parseFloat(v)*0.60).toFixed(2)) : '';
+                    const wptT = (v) => v !== '' && v !== undefined && !isNaN(v) ? parseFloat((parseFloat(v)*0.40).toFixed(2)) : '';
+                    wsData.push(["", c.name, ...Array(10).fill(""), wcsT(t.cs), "", "", wptT(t.pt), "", "", format(t.fg), rem]);
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
