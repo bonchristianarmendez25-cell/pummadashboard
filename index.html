@@ -33,6 +33,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
+    <!-- Firebase App (Hosting + Analytics) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBtg153ugQ-TPWuPPQm280j8MnQ2Hz-s5I",
+        authDomain: "pumma-competency-dashboard.firebaseapp.com",
+        databaseURL: "https://pumma-competency-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "pumma-competency-dashboard",
+        storageBucket: "pumma-competency-dashboard.firebasestorage.app",
+        messagingSenderId: "818515996308",
+        appId: "1:818515996308:web:18e9ad670a788e580d0e81",
+        measurementId: "G-HJ9XXZ1XZ9"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+
     <script>
         // 1. Annihilate Right-Click (Context Menu)
         document.addEventListener('contextmenu', event => event.preventDefault());
