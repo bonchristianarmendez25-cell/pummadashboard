@@ -1352,9 +1352,9 @@
                             <h5 class="font-black text-xs uppercase tracking-widest mb-2 flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-[#F2A900]"></i> Official Panpacific Grading Sheet Formula (per term)</h5>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
                                 <div class="bg-white/10 rounded-lg p-2.5">
-                                    <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Step 1 — T (raw total)</div>
-                                    <div class="font-mono text-[10px] bg-black/20 rounded px-1.5 py-1 mb-1">T = CS + PT</div>
-                                    <div class="text-blue-200 text-[10px]">Excel: <code class="bg-black/20 px-1 rounded">=IFERROR((CS+PT),"")</code></div>
+                                    <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Step 1 — T (weighted blend)</div>
+                                    <div class="font-mono text-[10px] bg-black/20 rounded px-1.5 py-1 mb-1">T = (CS × 0.60) + (PT × 0.40)</div>
+                                    <div class="text-blue-200 text-[10px]">Excel: <code class="bg-black/20 px-1 rounded">=IFERROR((CS*0.6)+(PT*0.4),"")</code></div>
                                 </div>
                                 <div class="bg-white/10 rounded-lg p-2.5">
                                     <div class="text-[9px] text-blue-300 font-bold uppercase tracking-wider mb-1">Step 2 — FG (rounded)</div>
@@ -1366,7 +1366,7 @@
                                     <div class="text-[10px] leading-relaxed">FG is capped at <strong class="text-[#F2A900]">98</strong> (the system's absolute ceiling) and floored at <strong>0</strong>. A negative merit balance subtracts directly from FG <em>after</em> rounding (Merit Override Penalty — see Rubrics tab), so T and FG can legitimately differ by more than just rounding once a penalty applies.</div>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-blue-200 mt-2.5 pt-2 border-t border-white/20">CS is itself the dashboard's full Base Rating converted to a percentage (Academic 10% + Leadership 25% + Patriotism 25% + Soft Skills 25% + Technical 15%, see Rubrics tab) — so this converter's "CS" column and the main dashboard's "Specific Grade %" are the same number, not two different calculations. <strong>This is why CS + PT can exceed 98 or even 100 before rounding</strong> — CS alone can already approach 98, and PT (the GWA-based periodical score, also capped at 98) is added on top in this term-by-term sheet view; the ROUND + 98-cap in Step 2 is what brings the displayed FG back within range, matching the original Panpacific template's behavior exactly.</p>
+                            <p class="text-[10px] text-blue-200 mt-2.5 pt-2 border-t border-white/20">CS is itself the dashboard's full Base Rating converted to a percentage (Academic 10% + Leadership 25% + Patriotism 25% + Soft Skills 25% + Technical 15%, see Rubrics tab). <strong>T is the WEIGHTED BLEND of CS (60%) and PT (40%), never a plain sum</strong> — weighting first guarantees T can never exceed 98, since CS and PT are each already capped at 98 individually. A plain CS+PT sum is what was causing "####" overflow errors in the university's own template whenever PT was nonzero (e.g. CS 98.00 + PT 93.30 = 191.3, an invalid percentage); the weighted-blend formula above eliminates that error entirely while still matching the template's intended Class Standing 60% / Periodical Test 40% split shown in its header.</p>
                         </div>
 
                         <!-- LOOKUP ROW -->
@@ -1644,17 +1644,23 @@
                     const tCs  = g.cs  !== '' && g.cs  !== undefined ? parseFloat(g.cs)  : null;
                     const tPt  = g.pt  !== '' && g.pt  !== undefined ? parseFloat(g.pt)  : null;
                     const tFg  = g.fg  !== '' && g.fg  !== undefined ? parseFloat(g.fg)  : null;
-                    // Matches the official Panpacific Excel template exactly:
-                    // T = CS + PT (a plain sum — CS and PT are each already
-                    // pre-weighted to their own share of the grade, e.g. CS is
-                    // the dashboard's full Specific Grade %, so summing them
-                    // directly reproduces the template's =IFERROR((CS+PT),"")
-                    // and =IFERROR(ROUND(T,0),"") cells, rather than applying
-                    // a second 60/40 weighting on top of already-final numbers.
+                    // OFFICIAL PANPACIFIC FORMULA (confirmed against the live
+                    // university grading sheet, including the bug it currently
+                    // has): Class Standing is 60% of the term grade and
+                    // Periodical Test is 40%. T is the WEIGHTED BLEND of the
+                    // two, not a plain sum — a plain sum is what was producing
+                    // "####" overflow errors in the university's own sheet
+                    // whenever PT was anything other than 0 (e.g. CS 98.00 +
+                    // PT 93.30 = 191.3, which is meaningless as a percentage
+                    // and breaks the cell). Weighting first guarantees T can
+                    // never exceed 98, since CS and PT are each already
+                    // capped at 98 individually:
+                    //   T  = (CS x 0.60) + (PT x 0.40)
+                    //   FG = ROUND(T, 0)
                     let tRaw = null;
                     let computedFg = tFg;
                     if (tCs !== null && tPt !== null) {
-                        tRaw = tCs + tPt;
+                        tRaw = (tCs * 0.60) + (tPt * 0.40);
                         if (computedFg === null) computedFg = Math.min(98, Math.round(tRaw));
                     }
                     if (computedFg !== null) computedFg = applyPenalty(computedFg);
@@ -1671,11 +1677,11 @@
             }
 
             // Fallback: build synthetic grades from main dashboard score.
-            // T = CS + PT here too, for the same reason as above — no
-            // additional 60/40 weighting on top of already-final percentages.
+            // Same weighted-blend formula as above — T = (CS x 0.60) + (PT x 0.40),
+            // never a plain sum, so it can never overflow past 98.
             // (specificGradePercent already has the penalty applied upstream)
             const fg = parseFloat(c.specificGradePercent) || 0;
-            const tFallback = cs + pt;
+            const tFallback = (cs * 0.60) + (pt * 0.40);
             const synth = { cs: cs.toFixed(2), pt: pt.toFixed(2), t: tFallback.toFixed(2), fg: fg.toFixed(2) };
             return {
                 termGrades: { PRELIM: synth, MIDTERM: synth, SEMI: synth, FINAL: synth },
@@ -1790,8 +1796,10 @@
             const allCadets = (window.cadets||[]);
             if (!allCadets.length) { if(window.customAlert) window.customAlert('No cadets loaded yet.'); return; }
 
-            const loadClass = getVal('conv-load-class', 'ALL');
-            const loadSection = getVal('conv-load-section', 'ALL').toUpperCase();
+            const loadClassEl = document.getElementById('conv-load-class');
+            const loadSectionEl = document.getElementById('conv-load-section');
+            const loadClass = loadClassEl ? loadClassEl.value : 'ALL';
+            const loadSection = (loadSectionEl ? loadSectionEl.value : 'ALL').toUpperCase();
             const cadets = allCadets.filter(c =>
                 (loadClass === 'ALL' || String(c.classNum) === String(loadClass)) &&
                 (loadSection === 'ALL' || (c.section || '').toUpperCase() === loadSection)
