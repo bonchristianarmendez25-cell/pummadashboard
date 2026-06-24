@@ -2648,7 +2648,7 @@
             { id: "b1", name: "Present / Event (Bonus)", points: 10 }
         ];
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyD4qFW3AWKi2T5_pk-6CcFzSnKID9NWuQs", authDomain: "pumma-dashboard-comptency.firebaseapp.com", projectId: "pumma-dashboard-comptency", storageBucket: "pumma-dashboard-comptency.firebasestorage.app", messagingSenderId: "254551866342", appId: "1:254551866342:web:969b34dc0cc5216627b427", measurementId: "G-2660Y39PN0" };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "AIzaSyBtg153ugQ-TPWuPPQm280j8MnQ2Hz-s5I", authDomain: "pumma-competency-dashboard.firebaseapp.com", databaseURL: "https://pumma-competency-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "pumma-competency-dashboard", storageBucket: "pumma-competency-dashboard.firebasestorage.app", messagingSenderId: "818515996308", appId: "1:818515996308:web:18e9ad670a788e580d0e81", measurementId: "G-HJ9XXZ1XZ9" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const storage = getStorage(app);
@@ -2658,8 +2658,8 @@
         // requires the paid Blaze plan as of Oct 2024; Supabase's free tier
         // (1GB storage, no credit card, no expiry) covers this app's needs.
         // Firestore itself is untouched — only image hosting moved.
-        const SUPABASE_URL = "https://rkezlyppdscouotnpzgo.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_-NwlPlmFpDpTzSIoASE4WA_CaaVJIXk";
+        const SUPABASE_URL = "https://nfluhqipnbarhfqzatsm.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_qhpus4Yy7LXtGjLBR0xMIg_yJGaF6Cj";
         const SUPABASE_BUCKET = "pumma-uploads";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 
