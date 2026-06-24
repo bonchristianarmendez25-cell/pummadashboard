@@ -343,6 +343,7 @@
                             <button onclick="openBulkModal()" class="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0"><i data-lucide="layers" class="w-4 h-4"></i> Bulk Actions</button>
                             <div class="relative flex-1 min-w-[140px] sm:flex-initial"><i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i><input type="text" id="table-search" placeholder="Search cadet name..." class="bg-white dark:bg-slate-800 pl-9 pr-4 py-2 w-full sm:w-44 border border-brand-creamBorder dark:border-slate-700 text-xs rounded-lg text-brand-black dark:text-white focus:outline-none focus:border-brand-green"></div>
                             <button onclick="openAddCadetModal()" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow shrink-0"><i data-lucide="user-plus" class="w-4 h-4"></i> Add Cadet</button>
+                            <button onclick="openBulkImportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow shrink-0"><i data-lucide="upload" class="w-4 h-4"></i> Bulk Import</button>
                         </div>
                     </div>
                     <div class="overflow-auto flex-1 max-h-[600px]">
@@ -704,6 +705,95 @@
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeAddCadetModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="saveNewCadet()" class="px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all border border-brand-creamBorder dark:border-slate-700">Save Cadet</button></div>
         </div>
     </div>
+
+    <!-- Bulk Import Modal: upload Excel/CSV, map columns, preview, confirm -->
+    <div id="bulk-import-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-b border-brand-creamBorder dark:border-slate-700 flex items-center justify-between shrink-0">
+                <h3 class="font-bold text-brand-blue dark:text-white text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="upload" class="text-indigo-600 w-5 h-5"></i> Bulk Import Cadets</h3>
+                <button onclick="closeBulkImportModal()" class="text-slate-400 hover:text-brand-black dark:hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 space-y-4">
+                <!-- Step 1: Upload -->
+                <div id="bulk-import-step-upload">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 text-[11px] text-indigo-800 dark:text-indigo-300 flex gap-2 mb-4">
+                        <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                        <span>Upload an Excel (.xlsx) or CSV file with your cadets' Names and Student IDs. Any column headers work — you'll confirm which column is which on the next step. You can also map columns for 1st, 2nd, and 3rd semester merits if your file has them; leave any semester as "None" if you don't have that data yet. Class, Section, and other fields default to what you pick below and can be edited per-cadet afterward.</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Default Class (for all imported cadets)</label><select id="bulk-import-class" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="4">4th Class</option><option value="3" selected>3rd Class</option></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Default Section (for all imported cadets)</label><select id="bulk-import-section" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs uppercase focus:outline-none focus:border-brand-blue"></select></div>
+                    </div>
+
+                    <label for="bulk-import-file" class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-brand-creamBorder dark:border-slate-600 rounded-xl py-10 cursor-pointer hover:bg-brand-creamBg dark:hover:bg-slate-900 transition">
+                        <i data-lucide="file-spreadsheet" class="w-8 h-8 text-indigo-500"></i>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Click to select an Excel or CSV file</span>
+                        <span class="text-[10px] text-slate-400">.xlsx, .xls, or .csv</span>
+                    </label>
+                    <input type="file" id="bulk-import-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleBulkImportFile(event)">
+                </div>
+
+                <!-- Step 2: Column mapping + preview -->
+                <div id="bulk-import-step-preview" class="hidden">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Which column is the Name?</label>
+                            <select id="bulk-import-name-col" onchange="renderBulkImportPreview()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Which column is the Student ID?</label>
+                            <select id="bulk-import-id-col" onchange="renderBulkImportPreview()" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></select>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">Merits (optional — leave as "None" for any semester you don't have a column for)</p>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">1st Sem Merits Column</label>
+                                <select id="bulk-import-merit1-col" onchange="renderBulkImportPreview()" class="w-full bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-brand-black dark:text-white font-semibold text-[11px] focus:outline-none focus:border-brand-blue"><option value="">None</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">2nd Sem Merits Column</label>
+                                <select id="bulk-import-merit2-col" onchange="renderBulkImportPreview()" class="w-full bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-brand-black dark:text-white font-semibold text-[11px] focus:outline-none focus:border-brand-blue"><option value="">None</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">3rd Sem Merits Column</label>
+                                <select id="bulk-import-merit3-col" onchange="renderBulkImportPreview()" class="w-full bg-white dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-1.5 text-brand-black dark:text-white font-semibold text-[11px] focus:outline-none focus:border-brand-blue"><option value="">None</option></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bulk-import-summary" class="text-[11px] text-slate-500 dark:text-slate-400 mb-2"></div>
+
+                    <div class="border border-brand-creamBorder dark:border-slate-700 rounded-xl overflow-hidden overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-creamAccent dark:bg-slate-900">
+                                <tr>
+                                    <th class="p-2 w-10 text-center">Use?</th>
+                                    <th class="p-2">Name (preview)</th>
+                                    <th class="p-2">Student ID (preview)</th>
+                                    <th class="p-2 w-16 text-center">S1</th>
+                                    <th class="p-2 w-16 text-center">S2</th>
+                                    <th class="p-2 w-16 text-center">S3</th>
+                                    <th class="p-2 w-24 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bulk-import-preview-rows" class="divide-y divide-brand-creamBorder dark:divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-between items-center shrink-0">
+                <button onclick="closeBulkImportModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button>
+                <button onclick="confirmBulkImport()" id="bulk-import-confirm-btn" class="hidden px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"><i data-lucide="users" class="w-3.5 h-3.5"></i> Import <span id="bulk-import-confirm-count">0</span> Cadets</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Admin Authentication & Management Modals -->
     <div id="admin-login-modal" class="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
@@ -7827,6 +7917,250 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 alert("Critical Error: Failed to save cadet. Please check your internet connection and try again.");
             }
         };
+
+        /* =========================================================
+           BULK IMPORT: upload Excel/CSV of cadet Names + Student IDs,
+           auto-detect which columns are which, preview, then create
+           every cadet using the same record shape as saveNewCadet().
+        ========================================================= */
+        let _bulkImportRows = []; // raw parsed rows: array of objects keyed by header
+        let _bulkImportHeaders = [];
+
+        window.openBulkImportModal = () => {
+            const m = document.getElementById('bulk-import-modal');
+            if (!m) return;
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('bulk-import-step-upload').classList.remove('hidden');
+            document.getElementById('bulk-import-step-preview').classList.add('hidden');
+            document.getElementById('bulk-import-confirm-btn').classList.add('hidden');
+            document.getElementById('bulk-import-file').value = '';
+            _bulkImportRows = []; _bulkImportHeaders = [];
+            safeSetInnerHTML('bulk-import-section', SECTIONS.map(s => `<option value="${s}">${s.toUpperCase()}</option>`).join(''));
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        window.closeBulkImportModal = () => {
+            const m = document.getElementById('bulk-import-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        // Guesses which parsed column header is the Name vs the Student ID,
+        // so most files "just work" without the admin manually mapping
+        // anything — they only need to fix the guess if it's wrong.
+        function guessColumn(headers, keywords) {
+            const lower = headers.map(h => String(h).toLowerCase());
+            for (const kw of keywords) {
+                const idx = lower.findIndex(h => h === kw);
+                if (idx !== -1) return headers[idx];
+            }
+            for (const kw of keywords) {
+                const idx = lower.findIndex(h => h.includes(kw));
+                if (idx !== -1) return headers[idx];
+            }
+            return headers[0] || '';
+        }
+
+        window.handleBulkImportFile = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[firstSheetName];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    if (!rows.length) {
+                        alert('That file appears to be empty, or the data starts on a row this reader could not find a header for. Make sure the first row contains column titles (e.g. "Name", "Student ID").');
+                        return;
+                    }
+
+                    _bulkImportHeaders = Object.keys(rows[0]);
+                    _bulkImportRows = rows;
+
+                    const nameCol = guessColumn(_bulkImportHeaders, ['name', 'full name', 'student name', 'cadet name', 'cadet']);
+                    const idCol = guessColumn(_bulkImportHeaders, ['student id', 'cadet id', 'id no', 'id number', 'studentno', 'student no', 'id']);
+                    const merit1Col = guessColumn(_bulkImportHeaders, ['1st sem merit', 'sem 1 merit', 'merit 1', 'merits1', '1st semester merit', 'sem1']);
+                    const merit2Col = guessColumn(_bulkImportHeaders, ['2nd sem merit', 'sem 2 merit', 'merit 2', 'merits2', '2nd semester merit', 'sem2']);
+                    const merit3Col = guessColumn(_bulkImportHeaders, ['3rd sem merit', 'sem 3 merit', 'merit 3', 'merits3', '3rd semester merit', 'sem3']);
+
+                    safeSetInnerHTML('bulk-import-name-col', _bulkImportHeaders.map(h => `<option value="${h}" ${h === nameCol ? 'selected' : ''}>${h}</option>`).join(''));
+                    safeSetInnerHTML('bulk-import-id-col', _bulkImportHeaders.map(h => `<option value="${h}" ${h === idCol ? 'selected' : ''}>${h}</option>`).join(''));
+                    // Merit columns default to "None" unless we're confident we found a real match
+                    // (require the keyword to actually appear in the header, not just fall back to column 0).
+                    const meritColOptions = (guessed) => `<option value="">None</option>` + _bulkImportHeaders.map(h => `<option value="${h}" ${h === guessed ? 'selected' : ''}>${h}</option>`).join('');
+                    const headerLower = _bulkImportHeaders.map(h => String(h).toLowerCase());
+                    const isRealMatch = (col, kws) => col && kws.some(kw => String(col).toLowerCase().includes(kw));
+                    safeSetInnerHTML('bulk-import-merit1-col', meritColOptions(isRealMatch(merit1Col, ['merit', 'sem1', '1st']) ? merit1Col : ''));
+                    safeSetInnerHTML('bulk-import-merit2-col', meritColOptions(isRealMatch(merit2Col, ['merit', 'sem2', '2nd']) ? merit2Col : ''));
+                    safeSetInnerHTML('bulk-import-merit3-col', meritColOptions(isRealMatch(merit3Col, ['merit', 'sem3', '3rd']) ? merit3Col : ''));
+
+                    document.getElementById('bulk-import-step-upload').classList.add('hidden');
+                    document.getElementById('bulk-import-step-preview').classList.remove('hidden');
+                    document.getElementById('bulk-import-confirm-btn').classList.remove('hidden');
+
+                    window.renderBulkImportPreview();
+                } catch (err) {
+                    console.error('Bulk import parse error:', err);
+                    alert('Could not read that file. Please make sure it\'s a valid .xlsx, .xls, or .csv file.');
+                }
+            };
+
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        };
+
+        window.renderBulkImportPreview = () => {
+            const nameCol = document.getElementById('bulk-import-name-col').value;
+            const idCol = document.getElementById('bulk-import-id-col').value;
+            const merit1Col = document.getElementById('bulk-import-merit1-col').value;
+            const merit2Col = document.getElementById('bulk-import-merit2-col').value;
+            const merit3Col = document.getElementById('bulk-import-merit3-col').value;
+            const existingIds = new Set((window.cadets || []).map(c => window.normalizeCadetId(c.studentId)).filter(Boolean));
+            const seenInFile = new Set();
+
+            // Reads a merit cell and falls back to 0 for blank/non-numeric
+            // values, so a missing entry never breaks the import — it's
+            // simply treated as "no merits recorded yet" for that semester.
+            const readMerit = (row, col) => {
+                if (!col) return 0;
+                const v = parseInt(row[col], 10);
+                return isNaN(v) ? 0 : v;
+            };
+
+            let validCount = 0;
+            const rowsHtml = _bulkImportRows.map((row, i) => {
+                const rawName = String(row[nameCol] || '').trim();
+                const rawId = String(row[idCol] || '').trim();
+                const normId = window.normalizeCadetId(rawId);
+                const m1 = readMerit(row, merit1Col);
+                const m2 = readMerit(row, merit2Col);
+                const m3 = readMerit(row, merit3Col);
+
+                let status, statusClass, usable = true;
+                if (!rawName || !rawId) {
+                    status = 'Missing data'; statusClass = 'text-slate-400'; usable = false;
+                } else if (existingIds.has(normId)) {
+                    status = 'Already exists'; statusClass = 'text-amber-600 dark:text-amber-400'; usable = false;
+                } else if (seenInFile.has(normId)) {
+                    status = 'Duplicate in file'; statusClass = 'text-rose-600 dark:text-rose-400'; usable = false;
+                } else {
+                    status = 'Ready'; statusClass = 'text-emerald-600 dark:text-emerald-400'; usable = true;
+                    seenInFile.add(normId);
+                    validCount++;
+                }
+
+                const meritCell = (v) => v < 0
+                    ? `<span class="text-rose-600 dark:text-rose-400 font-semibold">${v}</span>`
+                    : (v > 0 ? `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">${v}</span>` : `<span class="text-slate-400">0</span>`);
+
+                return `
+                <tr data-row-index="${i}" class="${usable ? '' : 'opacity-50'}">
+                    <td class="p-2 text-center"><input type="checkbox" ${usable ? 'checked' : 'disabled'} class="bulk-import-row-check" onchange="updateBulkImportCount()"></td>
+                    <td class="p-2">${rawName || '<span class="italic text-slate-400">empty</span>'}</td>
+                    <td class="p-2 font-mono">${normId || '<span class="italic text-slate-400">empty</span>'}</td>
+                    <td class="p-2 text-center">${meritCell(m1)}</td>
+                    <td class="p-2 text-center">${meritCell(m2)}</td>
+                    <td class="p-2 text-center">${meritCell(m3)}</td>
+                    <td class="p-2 text-center font-semibold ${statusClass}">${status}</td>
+                </tr>`;
+            }).join('');
+
+            safeSetInnerHTML('bulk-import-preview-rows', rowsHtml);
+            document.getElementById('bulk-import-summary').innerText =
+                `${_bulkImportRows.length} row(s) found in file — ${validCount} ready to import.`;
+            window.updateBulkImportCount();
+        };
+
+        window.updateBulkImportCount = () => {
+            const checked = document.querySelectorAll('.bulk-import-row-check:checked').length;
+            const countEl = document.getElementById('bulk-import-confirm-count');
+            const btnEl = document.getElementById('bulk-import-confirm-btn');
+            if (countEl) countEl.innerText = checked;
+            if (btnEl) btnEl.disabled = checked === 0;
+        };
+
+        window.confirmBulkImport = async () => {
+            const btn = document.getElementById('bulk-import-confirm-btn');
+            const checkedRows = [...document.querySelectorAll('.bulk-import-row-check:checked')]
+                .map(cb => parseInt(cb.closest('tr').dataset.rowIndex, 10));
+
+            if (!checkedRows.length) return;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Importing...`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const nameCol = document.getElementById('bulk-import-name-col').value;
+            const idCol = document.getElementById('bulk-import-id-col').value;
+            const merit1Col = document.getElementById('bulk-import-merit1-col').value;
+            const merit2Col = document.getElementById('bulk-import-merit2-col').value;
+            const merit3Col = document.getElementById('bulk-import-merit3-col').value;
+            const classVal = parseInt(document.getElementById('bulk-import-class').value, 10) || 3;
+            const secVal = document.getElementById('bulk-import-section').value || 'Alpha';
+
+            const readMerit = (row, col) => {
+                if (!col) return 0;
+                const v = parseInt(row[col], 10);
+                return isNaN(v) ? 0 : v;
+            };
+
+            // Same checklist initialization as saveNewCadet, so imported
+            // cadets behave identically to ones added one at a time.
+            const profs = window.appSettings.checklistProfiles || defaultChecklistProfiles;
+            const buildChecklists = () => {
+                let checklists = {};
+                Object.keys(profs).forEach(pk => {
+                    const prof = profs[pk];
+                    checklists[pk] = {
+                        tech: Array(prof.tech ? prof.tech.length : 0).fill(false),
+                        soft: Array(prof.soft ? prof.soft.length : 0).fill(false)
+                    };
+                });
+                return checklists;
+            };
+
+            let successCount = 0, failCount = 0;
+            for (const i of checkedRows) {
+                const row = _bulkImportRows[i];
+                const name = String(row[nameCol] || '').trim().toUpperCase();
+                const studentId = window.normalizeCadetId(String(row[idCol] || '').trim());
+                if (!name || !studentId) continue;
+
+                const m1 = readMerit(row, merit1Col);
+                const m2 = readMerit(row, merit2Col);
+                const m3 = readMerit(row, merit3Col); // no record yet for most imports — defaults to 0 when no column is mapped
+
+                const nextId = `cadet_${Date.now()}_${i}`;
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
+                        id: nextId, classNum: classVal, academicYear: getVal('input-acad-year', "2025-2026"), section: secVal,
+                        studentId: studentId, email: '', gender: 'M', name: name,
+                        gwaSem1: 0, gwaSem2: 0, gwaSem3: 0, gwa: 0,
+                        meritsSem1: m1, meritsSem2: m2, meritsSem3: m3, individualBonus: 0,
+                        officer: false, logbook2026: {}, logbook: {}, checklists: buildChecklists(), incidents: [], starCadet: false, accessLogs: []
+                    })));
+                    successCount++;
+                } catch (err) {
+                    console.error(`Bulk import failed for row ${i} (${name}):`, err);
+                    failCount++;
+                }
+            }
+
+            window.logAuditActivity('Bulk Import', `Imported ${successCount} cadet(s) via Bulk Import${failCount ? ` (${failCount} failed)` : ''}`, 'System');
+
+            window.closeBulkImportModal();
+            const msg = failCount
+                ? `Imported ${successCount} cadet(s). ${failCount} failed — check your connection and try those rows again.`
+                : `Successfully imported ${successCount} cadet(s)!`;
+            if (window.customAlert) window.customAlert(msg); else alert(msg);
+        };
+
 
         // --- Core Application Boot System --- 
         let _bindEventsDone = false; // GUARD: prevents duplicate listeners if settingsRef fires more than once
