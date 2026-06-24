@@ -33,26 +33,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
-    <!-- Firebase App (Hosting + Analytics) -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyBtg153ugQ-TPWuPPQm280j8MnQ2Hz-s5I",
-        authDomain: "pumma-competency-dashboard.firebaseapp.com",
-        databaseURL: "https://pumma-competency-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "pumma-competency-dashboard",
-        storageBucket: "pumma-competency-dashboard.firebasestorage.app",
-        messagingSenderId: "818515996308",
-        appId: "1:818515996308:web:18e9ad670a788e580d0e81",
-        measurementId: "G-HJ9XXZ1XZ9"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-    </script>
-
     <script>
         // 1. Annihilate Right-Click (Context Menu)
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -1034,6 +1014,60 @@
                     <p class="text-[10px] text-slate-500 dark:text-slate-400 italic pl-1">CS = (Logbook x 30%) + (Events x 30%) + (Merits x 40%) | PT = (Mockboat x 70%) + (GWA x 30%) | FG = (CS x 60%) + (PT x 40%) — Max capped at 98</p>
                 </div>
 
+                <!-- EXCEL EXPORT BEHAVIOR NOTE -->
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl overflow-hidden">
+                    <div class="bg-[#406f27] px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="text-white w-4 h-4"></i>
+                        <h4 class="font-black text-white text-xs uppercase tracking-widest">Why the Excel Numbers Look Different from the Dashboard</h4>
+                    </div>
+                    <div class="p-4 space-y-3 text-[11px] text-emerald-900 dark:text-emerald-200">
+                        <p>When you click <strong>"Download Panpacific Excel"</strong> or <strong>"Load All Cadets → Download"</strong>, the CS and PT columns written to the file are <em>not</em> the same raw scores you see on this dashboard. This is intentional. Here is why:</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="bg-white dark:bg-slate-800 rounded-lg p-3 border border-emerald-200 dark:border-emerald-700">
+                                <div class="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Dashboard display (raw scores)</div>
+                                <div class="font-mono text-xs space-y-0.5">
+                                    <div>CS = <span class="text-blue-700 dark:text-blue-400 font-black">89.31</span> &nbsp;(out of 100)</div>
+                                    <div>PT = <span class="text-rose-700 dark:text-rose-400 font-black">91.28</span> &nbsp;(out of 100)</div>
+                                    <div class="border-t border-slate-200 dark:border-slate-700 mt-1.5 pt-1.5 text-red-600 font-black">If copied raw → 89 + 91 = 180 → #### ERROR</div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-slate-800 rounded-lg p-3 border border-emerald-200 dark:border-emerald-700">
+                                <div class="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Excel export (pre-weighted portions)</div>
+                                <div class="font-mono text-xs space-y-0.5">
+                                    <div>CS = <span class="text-blue-700 dark:text-blue-400 font-black">89.31 × 0.60</span> = <strong>53.59</strong></div>
+                                    <div>PT = <span class="text-rose-700 dark:text-rose-400 font-black">91.28 × 0.40</span> = <strong>36.51</strong></div>
+                                    <div class="border-t border-slate-200 dark:border-slate-700 mt-1.5 pt-1.5 text-emerald-700 dark:text-emerald-400 font-black">T = 53.59 + 36.51 = 90.10 ✓ (no error)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
+                            <div class="font-black text-amber-800 dark:text-amber-300 text-[10px] uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Why the university sheet works this way</div>
+                            <p class="text-amber-900 dark:text-amber-200">The university's Excel grade sheet uses a formula that literally adds <code class="bg-white/50 dark:bg-black/20 px-1 rounded">= CS + PT</code>. Its column header labels "Class Standing (60%)" and "Periodical Test (40%)" mean it expects each column to already contain the <em>weighted portion</em> — not the full raw score. By pre-multiplying CS × 0.60 and PT × 0.40 before writing to the file, the dashboard ensures the university sheet's formula always produces a valid T (max ≈ 98.0) and the FG cell never shows <strong>####</strong> or an error, no matter how high the cadet's scores are.</p>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2 border border-blue-200 dark:border-blue-800">
+                                <div class="text-blue-700 dark:text-blue-400 font-black text-xs mb-0.5">CS column in Excel</div>
+                                <div class="font-mono font-black">raw CS × 0.60</div>
+                                <div class="text-slate-500 mt-0.5">Max value ≈ 58.8</div>
+                            </div>
+                            <div class="bg-rose-50 dark:bg-rose-900/20 rounded-lg p-2 border border-rose-200 dark:border-rose-800">
+                                <div class="text-rose-700 dark:text-rose-400 font-black text-xs mb-0.5">PT column in Excel</div>
+                                <div class="font-mono font-black">raw PT × 0.40</div>
+                                <div class="text-slate-500 mt-0.5">Max value ≈ 39.2</div>
+                            </div>
+                            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2 border border-amber-200 dark:border-amber-800">
+                                <div class="text-amber-700 dark:text-amber-400 font-black text-xs mb-0.5">T column (auto-sum)</div>
+                                <div class="font-mono font-black">CS + PT</div>
+                                <div class="text-slate-500 mt-0.5">Max value ≈ 98 ✓</div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 italic">The FG (Final Grade) column is not affected — it is always the correctly rounded term grade and is the same value shown on the dashboard.</p>
+                    </div>
+                </div>
+
                 <!-- Full Rubrics Table -->
                 <div>
                     <h4 class="font-bold text-[#003366] dark:text-blue-400 text-sm mb-3 uppercase tracking-widest flex items-center gap-2"><i data-lucide="table" class="w-4 h-4 text-[#406f27]"></i> Official Assessment Rubrics</h4>
@@ -1306,6 +1340,122 @@
                     </div>
                 </div>
 
+                <!-- Admin Export Reference -->
+                <div class="bg-white dark:bg-slate-900 border-2 border-[#406f27] dark:border-green-700 rounded-xl overflow-hidden">
+                    <div class="bg-[#406f27] px-4 py-3 flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="text-white w-4 h-4"></i>
+                        <h4 class="font-black text-white text-sm uppercase tracking-wide">Admin Export Reference — Panpacific Excel File Explained</h4>
+                    </div>
+                    <div class="p-5 space-y-4 text-[11px] text-slate-700 dark:text-slate-300">
+                        <p class="italic text-slate-500 dark:text-slate-400">This section explains every value the "Download Panpacific Excel (.xlsx)" button writes into the university's official grade sheet. Intended for faculty, academic officers, and admins who need to verify, submit, or audit the downloaded file.</p>
+
+                        <!-- Why values look different -->
+                        <div class="border-l-4 border-amber-500 pl-4">
+                            <div class="font-black text-amber-700 dark:text-amber-400 text-xs uppercase tracking-wide mb-1">Why CS and PT in the Excel are smaller than on the dashboard</div>
+                            <p>The dashboard's CS and PT values are <strong>raw percentage scores (0–100)</strong>. The university's grade sheet template, however, uses a formula that simply adds <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded font-mono">= CS_cell + PT_cell</code>, expecting each column to hold the already-weighted portion. The system therefore pre-multiplies before writing:</p>
+                            <div class="mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-xs space-y-1">
+                                <div><span class="text-blue-700 dark:text-blue-400">CS written to Excel</span> = raw dashboard CS × <strong>0.60</strong> &nbsp;&nbsp;→ max ≈ 58.8</div>
+                                <div><span class="text-rose-700 dark:text-rose-400">PT written to Excel</span> = raw dashboard PT × <strong>0.40</strong> &nbsp;&nbsp;→ max ≈ 39.2</div>
+                                <div class="border-t border-slate-200 dark:border-slate-700 pt-1 mt-1 text-emerald-700 dark:text-emerald-400">T (university formula adds them) = max ≈ 98 &nbsp;<strong>✓ No overflow, no #### error</strong></div>
+                            </div>
+                            <p class="mt-1.5 text-slate-500 dark:text-slate-400">This matches the intent of the university sheet's own column labels — "Class Standing (60%)" and "Periodical Test (40%)" — without requiring any change to the university template.</p>
+                        </div>
+
+                        <!-- Column-by-column guide -->
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <div class="font-black text-blue-700 dark:text-blue-400 text-xs uppercase tracking-wide mb-2">Column-by-Column Guide (per term: Prelim / Midterm / Semi-Final / Final)</div>
+                            <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                                <table class="w-full text-[10px] text-left">
+                                    <thead class="bg-[#003366] text-white">
+                                        <tr>
+                                            <th class="p-2 border-r border-blue-800">Column</th>
+                                            <th class="p-2 border-r border-blue-800">What's written</th>
+                                            <th class="p-2 border-r border-blue-800">Formula / Source</th>
+                                            <th class="p-2">Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                        <tr class="bg-blue-50 dark:bg-blue-900/20">
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">CS</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">Pre-weighted class standing</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">raw CS × 0.60</td>
+                                            <td class="p-2 text-slate-500">Smaller than dashboard value. Max ≈ 58.8. Do not edit manually.</td>
+                                        </tr>
+                                        <tr class="bg-rose-50 dark:bg-rose-900/20">
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">PT</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">Pre-weighted periodical test</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">raw PT × 0.40</td>
+                                            <td class="p-2 text-slate-500">Smaller than dashboard value. Max ≈ 39.2. Do not edit manually.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">T</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">Term total (university formula)</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">= CS + PT (in Excel)</td>
+                                            <td class="p-2 text-slate-500">Computed inside the Excel template. Always ≤ 98. Matches dashboard T column.</td>
+                                        </tr>
+                                        <tr class="bg-amber-50 dark:bg-amber-900/20">
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">FG</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">Final Grade (rounded)</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">ROUND(T, 0)</td>
+                                            <td class="p-2 text-slate-500">Identical to the FG shown on the dashboard. This is the grade on record.</td>
+                                        </tr>
+                                        <tr class="bg-emerald-50 dark:bg-emerald-900/20">
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">SG</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">Semestral Grade (summary sheet only)</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">Average of 4 × FG</td>
+                                            <td class="p-2 text-slate-500">Appears only on the "Grade Sheet" summary tab. Pass = SG ≥ 75.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 font-black border-r border-slate-200 dark:border-slate-700">Remarks</td>
+                                            <td class="p-2 border-r border-slate-200 dark:border-slate-700">P (Passed) or F (Failed)</td>
+                                            <td class="p-2 font-mono border-r border-slate-200 dark:border-slate-700">FG ≥ 75 → "P"</td>
+                                            <td class="p-2 text-slate-500">Per-term remarks. SG remarks use the same rule on the summary sheet.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Sheets in the workbook -->
+                        <div class="border-l-4 border-emerald-500 pl-4">
+                            <div class="font-black text-emerald-700 dark:text-emerald-400 text-xs uppercase tracking-wide mb-2">Sheets Inside the Downloaded Workbook</div>
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-2 text-[10px]">
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="font-black text-blue-700 dark:text-blue-400 mb-1">PRELIM</div>
+                                    <div class="text-slate-500">Per-cadet CS, PT, T, FG for the Prelim term only</div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="font-black text-violet-700 dark:text-violet-400 mb-1">MIDTERM</div>
+                                    <div class="text-slate-500">Per-cadet CS, PT, T, FG for the Midterm term only</div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="font-black text-amber-700 dark:text-amber-400 mb-1">SEMI-FINAL</div>
+                                    <div class="text-slate-500">Per-cadet CS, PT, T, FG for the Semi-Final term only</div>
+                                </div>
+                                <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="font-black text-emerald-700 dark:text-emerald-400 mb-1">FINALS</div>
+                                    <div class="text-slate-500">Per-cadet CS, PT, T, FG for the Final term only</div>
+                                </div>
+                                <div class="bg-[#406f27]/10 dark:bg-green-900/20 rounded-lg p-2.5 border border-[#406f27]/30 dark:border-green-700 text-center">
+                                    <div class="font-black text-[#406f27] dark:text-green-400 mb-1">Grade Sheet</div>
+                                    <div class="text-slate-500">Summary of all four terms side-by-side + SG + Remarks. <strong>Submit this sheet to the registrar.</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- What to do if numbers seem off -->
+                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
+                            <div class="font-black text-amber-800 dark:text-amber-300 text-[10px] uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i data-lucide="help-circle" class="w-3.5 h-3.5"></i> What to do if a number looks wrong in the Excel</div>
+                            <ul class="space-y-1 text-amber-900 dark:text-amber-200 text-[10px] list-disc pl-4">
+                                <li><strong>CS and PT columns look low</strong> — This is correct. They are the weighted portions (×0.60 and ×0.40). Verify the FG column instead, which is the grade on record.</li>
+                                <li><strong>T or FG shows #### or an error</strong> — Do not manually edit CS or PT cells. Instead, re-download the file; the system will recalculate fresh. If the error persists, check that the cadet's CS/PT in the dashboard are not null/zero.</li>
+                                <li><strong>SG is blank or zero</strong> — The cadet has no grade data for one or more terms. Enter the missing term scores in the dashboard first, then re-download.</li>
+                                <li><strong>Remarks column is blank</strong> — FG was not computed (no CS and PT data for that term). Not an export error.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Term Dissection -->
                 <div>
 
@@ -1386,7 +1536,32 @@
                                     <div class="text-[10px] leading-relaxed">FG is capped at <strong class="text-[#F2A900]">98</strong> (the system's absolute ceiling) and floored at <strong>0</strong>. A negative merit balance subtracts directly from FG <em>after</em> rounding (Merit Override Penalty — see Rubrics tab), so T and FG can legitimately differ by more than just rounding once a penalty applies.</div>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-blue-200 mt-2.5 pt-2 border-t border-white/20">CS is itself the dashboard's full Base Rating converted to a percentage (Academic 10% + Leadership 25% + Patriotism 25% + Soft Skills 25% + Technical 15%, see Rubrics tab). <strong>T is the WEIGHTED BLEND of CS (60%) and PT (40%), never a plain sum</strong> — weighting first guarantees T can never exceed 98, since CS and PT are each already capped at 98 individually. A plain CS+PT sum is what was causing "####" overflow errors in the university's own template whenever PT was nonzero (e.g. CS 98.00 + PT 93.30 = 191.3, an invalid percentage); the weighted-blend formula above eliminates that error entirely while still matching the template's intended Class Standing 60% / Periodical Test 40% split shown in its header.</p>
+                            <p class="text-[10px] text-blue-200 mt-2.5 pt-2 border-t border-white/20">CS is itself the dashboard's full Base Rating converted to a percentage (Academic 10% + Leadership 25% + Patriotism 25% + Soft Skills 25% + Technical 15%, see Rubrics tab). <strong>T is the WEIGHTED BLEND of CS (60%) and PT (40%), never a plain sum</strong> — weighting first guarantees T can never exceed 98, since CS and PT are each already capped at 98 individually.</p>
+
+                        <!-- EXPORT BEHAVIOR EXPLAINER (inside formula blue box) -->
+                        <div class="mt-3 pt-3 border-t border-white/20 space-y-2">
+                            <div class="text-[10px] font-black text-[#F2A900] uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="download" class="w-3.5 h-3.5"></i> How the Excel Export Writes CS &amp; PT — Admin Reference</div>
+                            <p class="text-[10px] text-blue-200">The university's Excel template uses a plain <code class="bg-black/20 px-1 rounded">= CS + PT</code> sum. Its column headers "Class Standing (60%)" and "Periodical Test (40%)" mean it expects each cell to already contain the <em>pre-weighted portion</em>, not the raw 0–100 score. If the raw score (e.g. CS 89, PT 91) were copied directly, the sum would be 180 — which Excel displays as <strong class="text-red-400">####</strong> or an overflow error.</p>
+                            <p class="text-[10px] text-blue-200">To prevent this, the "Download Panpacific Excel" function automatically multiplies before writing:</p>
+                            <div class="grid grid-cols-3 gap-2 text-center text-[10px] mt-1">
+                                <div class="bg-white/10 rounded-lg p-2 border border-white/20">
+                                    <div class="text-blue-300 font-black text-[9px] uppercase mb-1">CS written to Excel</div>
+                                    <div class="font-mono font-black">raw CS × 0.60</div>
+                                    <div class="text-slate-400 text-[9px] mt-0.5">e.g. 89.31 → <strong class="text-white">53.59</strong></div>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2 border border-white/20">
+                                    <div class="text-rose-300 font-black text-[9px] uppercase mb-1">PT written to Excel</div>
+                                    <div class="font-mono font-black">raw PT × 0.40</div>
+                                    <div class="text-slate-400 text-[9px] mt-0.5">e.g. 91.28 → <strong class="text-white">36.51</strong></div>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2 border border-white/20">
+                                    <div class="text-emerald-300 font-black text-[9px] uppercase mb-1">T (university formula)</div>
+                                    <div class="font-mono font-black">= CS + PT</div>
+                                    <div class="text-slate-400 text-[9px] mt-0.5">53.59 + 36.51 = <strong class="text-[#F2A900]">90.10 ✓</strong></div>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-blue-200 mt-1">The FG (Final Grade) column is unaffected — it is always the correctly rounded term grade, identical to what the dashboard displays. The CS and PT columns in the Excel will look smaller than the dashboard values; this is correct and expected. Do not adjust them manually.</p>
+                        </div>
                         </div>
 
                         <!-- LOOKUP ROW -->
