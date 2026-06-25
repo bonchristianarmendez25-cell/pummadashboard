@@ -2375,7 +2375,7 @@
         </div>
     </div>
 
-    <div id="sys-dialog-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4 no-print">
+    <div id="sys-dialog-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[200] p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col transform transition-all scale-95 opacity-0" id="sys-dialog-box">
             <div class="p-4 bg-brand-blue border-b border-brand-blue-hover flex items-center gap-2">
                 <i data-lucide="bell" class="text-brand-green w-4 h-4" id="sys-dialog-icon"></i>
@@ -7808,41 +7808,48 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         window.applyBulkAction = async () => {
             const typ = getVal('bulk-action-type');
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
-            
             const bClass = getVal('bulk-target-class', 'ALL');
-            const bSec = getVal('bulk-target-section', 'ALL').toUpperCase();
-            
-            const filtered = window.cadets.filter(c => {
-               const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
-               const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
-               const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
-               return classMatch && secMatch && acadMatch;
-            });
+            const bSec   = (getVal('bulk-target-section', 'ALL') || 'ALL').toUpperCase();
 
-            if (filtered.length === 0) { alert("No cadets match your selected filters."); return; }
+            let filtered;
+            try {
+                filtered = window.cadets.filter(c => {
+                    const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
+                    const secMatch   = bSec   === 'ALL' ? true : (c.section || '').toUpperCase() === bSec;
+                    const acadMatch  = c.academicYear === targetAcadYear || !c.academicYear;
+                    return classMatch && secMatch && acadMatch;
+                });
+            } catch (filterErr) {
+                console.error('Bulk filter error:', filterErr);
+                alert('Filter error: ' + filterErr.message); return;
+            }
+
+            if (!filtered || filtered.length === 0) {
+                alert("No cadets match your selected filters."); return;
+            }
 
             if (typ === 'delete') {
-                const confirmed = await customConfirm(`EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} cadet record(s). This cannot be undone.\n\nCadets targeted:\n${filtered.slice(0,5).map(c=>` • ${c.name}`).join('\n')}${filtered.length > 5 ? `\n  … and ${filtered.length - 5} more` : ''}`);
+                // ── Close the bulk modal FIRST so its backdrop never blocks the confirm dialog ──
+                window.closeBulkModal();
+
+                const confirmed = await customConfirm(
+                    `EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} cadet record(s). This cannot be undone.\n\nCadets targeted:\n${filtered.slice(0, 5).map(c => ` • ${c.name}`).join('\n')}${filtered.length > 5 ? `\n  … and ${filtered.length - 5} more` : ''}`
+                );
                 if (!confirmed) return;
 
                 const verify = await customPrompt('Type "DELETE" (all caps) to confirm permanent deletion:', 'Type DELETE here');
                 if (!verify || verify.trim().toUpperCase() !== 'DELETE') {
-                    alert('Deletion cancelled — confirmation text did not match.');
-                    return;
+                    alert('Deletion cancelled — confirmation text did not match.'); return;
                 }
 
-                // ── Show a live progress indicator in the button ──────────
-                const execBtn = document.getElementById('btn-execute-bulk');
-                const origLabel = execBtn ? execBtn.innerHTML : '';
-                const CHUNK = 400; // Firestore batch hard limit is 500; 400 is safe
+                const CHUNK = 400;
                 const chunks = [];
                 for (let i = 0; i < filtered.length; i += CHUNK) chunks.push(filtered.slice(i, i + CHUNK));
 
                 let deletedCount = 0;
-                let errorCount = 0;
+                let errorCount   = 0;
 
                 for (let ci = 0; ci < chunks.length; ci++) {
-                    if (execBtn) execBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Deleting… ${deletedCount}/${filtered.length}`;
                     try {
                         const batch = writeBatch(db);
                         chunks[ci].forEach(c => batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id)));
@@ -7854,43 +7861,39 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     }
                 }
 
-                if (execBtn) { execBtn.innerHTML = origLabel; lucide.createIcons(); }
-
-                // ── Optimistically remove deleted cadets from local array ──
+                // Optimistically remove deleted cadets from local array
                 const deletedIds = new Set(filtered.map(c => c.id));
                 window.cadets = (window.cadets || []).filter(c => !deletedIds.has(c.id));
                 if (window.selectedCadetId && deletedIds.has(window.selectedCadetId)) {
                     window.cancelEvaluation?.();
                 }
                 window.renderTable?.();
-
                 window.logAuditActivity?.('Bulk Delete', `Deleted ${deletedCount} cadet(s)${errorCount ? `, ${errorCount} failed` : ''}`, `${deletedCount} cadets`);
 
                 if (errorCount > 0) {
-                    alert(`⚠️ Partial delete: ${deletedCount} cadet(s) deleted successfully, but ${errorCount} failed.\n\nThe page will refresh to reflect the current state. Check your internet connection and retry if needed.`);
+                    alert(`⚠️ Partial delete: ${deletedCount} deleted, ${errorCount} failed.\nCheck your internet connection and retry the remaining cadets.`);
                 } else {
                     alert(`✓ Successfully deleted ${deletedCount} cadet(s).`);
                 }
 
             } else {
-                // ── Bulk Merits ───────────────────────────────────────────
+                // ── Bulk Merits ───────────────────────────────────────────────────
                 const pts = parseInt(getVal('bulk-points-input', 0));
                 if (pts === 0 || isNaN(pts)) { alert("Enter valid points (non-zero number)."); return; }
                 const sem = getVal('bulk-sem-select', '3');
 
-                // Chunk into batches of 400 to stay under Firestore's 500-op limit
                 const CHUNK = 400;
                 const chunks = [];
                 for (let i = 0; i < filtered.length; i += CHUNK) chunks.push(filtered.slice(i, i + CHUNK));
 
                 let updatedCount = 0;
-                let errorCount = 0;
+                let errorCount   = 0;
 
                 for (let ci = 0; ci < chunks.length; ci++) {
                     try {
                         const batch = writeBatch(db);
                         chunks[ci].forEach(c => {
-                            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id);
+                            const ref       = doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id);
                             const fieldName = `meritsSem${sem}`;
                             const currentVal = parseInt(c[fieldName]) || 0;
                             batch.update(ref, { [fieldName]: currentVal + pts });
@@ -7904,12 +7907,12 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 }
 
                 if (errorCount > 0) {
-                    alert(`⚠️ Partial update: ${updatedCount} cadet(s) updated, ${errorCount} failed. Check your connection and retry.`);
+                    alert(`⚠️ Partial update: ${updatedCount} updated, ${errorCount} failed. Check your connection and retry.`);
                 } else {
                     alert(`✓ Applied ${pts > 0 ? '+' + pts : pts} merits to ${updatedCount} cadet(s) in Sem ${sem}.`);
                 }
+                window.closeBulkModal();
             }
-            window.closeBulkModal();
         };
 
         window.openAnalyticsModal = () => {
