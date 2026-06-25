@@ -2375,7 +2375,7 @@
         </div>
     </div>
 
-    <div id="sys-dialog-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[200] p-4 no-print">
+    <div id="sys-dialog-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col transform transition-all scale-95 opacity-0" id="sys-dialog-box">
             <div class="p-4 bg-brand-blue border-b border-brand-blue-hover flex items-center gap-2">
                 <i data-lucide="bell" class="text-brand-green w-4 h-4" id="sys-dialog-icon"></i>
@@ -7808,48 +7808,41 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         window.applyBulkAction = async () => {
             const typ = getVal('bulk-action-type');
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            
             const bClass = getVal('bulk-target-class', 'ALL');
-            const bSec   = (getVal('bulk-target-section', 'ALL') || 'ALL').toUpperCase();
+            const bSec = getVal('bulk-target-section', 'ALL').toUpperCase();
+            
+            const filtered = window.cadets.filter(c => {
+               const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
+               const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
+               const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
+               return classMatch && secMatch && acadMatch;
+            });
 
-            let filtered;
-            try {
-                filtered = window.cadets.filter(c => {
-                    const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
-                    const secMatch   = bSec   === 'ALL' ? true : (c.section || '').toUpperCase() === bSec;
-                    const acadMatch  = c.academicYear === targetAcadYear || !c.academicYear;
-                    return classMatch && secMatch && acadMatch;
-                });
-            } catch (filterErr) {
-                console.error('Bulk filter error:', filterErr);
-                alert('Filter error: ' + filterErr.message); return;
-            }
-
-            if (!filtered || filtered.length === 0) {
-                alert("No cadets match your selected filters."); return;
-            }
+            if (filtered.length === 0) { alert("No cadets match your selected filters."); return; }
 
             if (typ === 'delete') {
-                // ── Close the bulk modal FIRST so its backdrop never blocks the confirm dialog ──
-                window.closeBulkModal();
-
-                const confirmed = await customConfirm(
-                    `EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} cadet record(s). This cannot be undone.\n\nCadets targeted:\n${filtered.slice(0, 5).map(c => ` • ${c.name}`).join('\n')}${filtered.length > 5 ? `\n  … and ${filtered.length - 5} more` : ''}`
-                );
+                const confirmed = await customConfirm(`EXTREME WARNING: You are about to PERMANENTLY DELETE ${filtered.length} cadet record(s). This cannot be undone.\n\nCadets targeted:\n${filtered.slice(0,5).map(c=>` • ${c.name}`).join('\n')}${filtered.length > 5 ? `\n  … and ${filtered.length - 5} more` : ''}`);
                 if (!confirmed) return;
 
                 const verify = await customPrompt('Type "DELETE" (all caps) to confirm permanent deletion:', 'Type DELETE here');
                 if (!verify || verify.trim().toUpperCase() !== 'DELETE') {
-                    alert('Deletion cancelled — confirmation text did not match.'); return;
+                    alert('Deletion cancelled — confirmation text did not match.');
+                    return;
                 }
 
-                const CHUNK = 400;
+                // ── Show a live progress indicator in the button ──────────
+                const execBtn = document.getElementById('btn-execute-bulk');
+                const origLabel = execBtn ? execBtn.innerHTML : '';
+                const CHUNK = 400; // Firestore batch hard limit is 500; 400 is safe
                 const chunks = [];
                 for (let i = 0; i < filtered.length; i += CHUNK) chunks.push(filtered.slice(i, i + CHUNK));
 
                 let deletedCount = 0;
-                let errorCount   = 0;
+                let errorCount = 0;
 
                 for (let ci = 0; ci < chunks.length; ci++) {
+                    if (execBtn) execBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Deleting… ${deletedCount}/${filtered.length}`;
                     try {
                         const batch = writeBatch(db);
                         chunks[ci].forEach(c => batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id)));
@@ -7861,39 +7854,43 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                     }
                 }
 
-                // Optimistically remove deleted cadets from local array
+                if (execBtn) { execBtn.innerHTML = origLabel; lucide.createIcons(); }
+
+                // ── Optimistically remove deleted cadets from local array ──
                 const deletedIds = new Set(filtered.map(c => c.id));
                 window.cadets = (window.cadets || []).filter(c => !deletedIds.has(c.id));
                 if (window.selectedCadetId && deletedIds.has(window.selectedCadetId)) {
                     window.cancelEvaluation?.();
                 }
                 window.renderTable?.();
+
                 window.logAuditActivity?.('Bulk Delete', `Deleted ${deletedCount} cadet(s)${errorCount ? `, ${errorCount} failed` : ''}`, `${deletedCount} cadets`);
 
                 if (errorCount > 0) {
-                    alert(`⚠️ Partial delete: ${deletedCount} deleted, ${errorCount} failed.\nCheck your internet connection and retry the remaining cadets.`);
+                    alert(`⚠️ Partial delete: ${deletedCount} cadet(s) deleted successfully, but ${errorCount} failed.\n\nThe page will refresh to reflect the current state. Check your internet connection and retry if needed.`);
                 } else {
                     alert(`✓ Successfully deleted ${deletedCount} cadet(s).`);
                 }
 
             } else {
-                // ── Bulk Merits ───────────────────────────────────────────────────
+                // ── Bulk Merits ───────────────────────────────────────────
                 const pts = parseInt(getVal('bulk-points-input', 0));
                 if (pts === 0 || isNaN(pts)) { alert("Enter valid points (non-zero number)."); return; }
                 const sem = getVal('bulk-sem-select', '3');
 
+                // Chunk into batches of 400 to stay under Firestore's 500-op limit
                 const CHUNK = 400;
                 const chunks = [];
                 for (let i = 0; i < filtered.length; i += CHUNK) chunks.push(filtered.slice(i, i + CHUNK));
 
                 let updatedCount = 0;
-                let errorCount   = 0;
+                let errorCount = 0;
 
                 for (let ci = 0; ci < chunks.length; ci++) {
                     try {
                         const batch = writeBatch(db);
                         chunks[ci].forEach(c => {
-                            const ref       = doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id);
+                            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id);
                             const fieldName = `meritsSem${sem}`;
                             const currentVal = parseInt(c[fieldName]) || 0;
                             batch.update(ref, { [fieldName]: currentVal + pts });
@@ -7907,12 +7904,12 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 }
 
                 if (errorCount > 0) {
-                    alert(`⚠️ Partial update: ${updatedCount} updated, ${errorCount} failed. Check your connection and retry.`);
+                    alert(`⚠️ Partial update: ${updatedCount} cadet(s) updated, ${errorCount} failed. Check your connection and retry.`);
                 } else {
                     alert(`✓ Applied ${pts > 0 ? '+' + pts : pts} merits to ${updatedCount} cadet(s) in Sem ${sem}.`);
                 }
-                window.closeBulkModal();
             }
+            window.closeBulkModal();
         };
 
         window.openAnalyticsModal = () => {
@@ -9111,48 +9108,74 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     }
 
     async function initChat() {
-        // Wait for db and appId to be available
-        if (typeof db === 'undefined' || typeof appId === 'undefined') {
+        // Wait for db and appId to be available (retry every 500ms)
+        if (typeof db === 'undefined' || !db || typeof appId === 'undefined') {
             setTimeout(initChat, 500);
             return;
         }
+        // Prevent double-init
+        if (chatListener) return;
+
         chatReady = true;
-        window._chatMyId = `user_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+        window._chatMyId = window._chatMyId || `user_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
         renderQuickEmojiBar();
+
+        const countEl = document.getElementById('chat-online-count');
+        if (countEl) countEl.textContent = 'Connecting…';
 
         // Post system join message
         const { role, name } = getChatSender();
         if (role !== 'system') postSystemMessage(`${name} has joined the ship's comms ⚓`);
 
-        // Listen for new messages
-        const { collection, onSnapshot, query, orderBy, limit } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-        const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
-        const q = query(chatRef, orderBy('timestamp', 'asc'), limit(CHAT_MAX_MESSAGES));
+        try {
+            // Use the already-imported Firestore functions from the top-level import
+            // to avoid the race condition caused by a second dynamic import() call.
+            const { collection: _col, onSnapshot: _on, query: _q, orderBy: _ob, limit: _lim } =
+                await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
 
-        chatListener = onSnapshot(q, (snap) => {
-            const prev = chatMessages.length;
-            chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const chatRef = _col(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            const q = _q(chatRef, _ob('timestamp', 'asc'), _lim(CHAT_MAX_MESSAGES));
 
-            // Update online count (rough estimate from recent messages)
-            const recentSenders = new Set(
-                chatMessages.filter(m => {
-                    const ts = m.timestamp?.toDate ? m.timestamp.toDate() : new Date(m.timestamp || 0);
-                    return Date.now() - ts.getTime() < 5 * 60 * 1000;
-                }).map(m => m.senderId)
-            );
-            const countEl = document.getElementById('chat-online-count');
-            if (countEl) countEl.textContent = `${recentSenders.size} active in last 5 min`;
+            chatListener = _on(q, (snap) => {
+                const prev = chatMessages.length;
+                chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            renderChat();
+                // Update online count from senders active in last 5 min
+                const recentSenders = new Set(
+                    chatMessages.filter(m => {
+                        const ts = m.timestamp?.toDate ? m.timestamp.toDate() : new Date(m.timestamp || 0);
+                        return Date.now() - ts.getTime() < 5 * 60 * 1000;
+                    }).map(m => m.senderId)
+                );
+                if (countEl) countEl.textContent = recentSenders.size > 0
+                    ? `${recentSenders.size} active in last 5 min`
+                    : 'All hands on deck ⚓';
 
-            // Unread badge
-            if (!chatOpen && chatMessages.length > prev && prev > 0) {
-                chatUnread += chatMessages.length - prev;
-                const badge = document.getElementById('chat-unread-badge');
-                if (badge) { badge.textContent = chatUnread > 9 ? '9+' : chatUnread; badge.classList.remove('hidden'); }
-                if (chatSoundOn) playChime();
-            }
-        });
+                renderChat();
+
+                // Unread badge
+                if (!chatOpen && chatMessages.length > prev && prev > 0) {
+                    chatUnread += chatMessages.length - prev;
+                    const badge = document.getElementById('chat-unread-badge');
+                    if (badge) { badge.textContent = chatUnread > 9 ? '9+' : chatUnread; badge.classList.remove('hidden'); }
+                    if (chatSoundOn) playChime();
+                }
+            }, (err) => {
+                // onSnapshot error callback — show in the status bar
+                console.error('Chat snapshot error:', err);
+                if (countEl) countEl.textContent = '⚠️ Connection error — retrying…';
+                chatListener = null;
+                chatReady = false;
+                setTimeout(initChat, 3000); // retry after 3s
+            });
+
+        } catch (initErr) {
+            console.error('Chat init failed:', initErr);
+            if (countEl) countEl.textContent = '⚠️ Failed to connect. Tap to retry.';
+            countEl?.addEventListener('click', () => { chatReady = false; chatListener = null; initChat(); }, { once: true });
+            chatReady = false;
+            chatListener = null;
+        }
     }
 
     async function postSystemMessage(text) {
@@ -9337,25 +9360,47 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     async function fetchGifs(query) {
         if (!GIPHY_API_KEY || GIPHY_API_KEY === 'PASTE_YOUR_GIPHY_API_KEY_HERE') return { error: 'no_key' };
         const endpoint = query
-            ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`
-            : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=20&rating=g`;
+            ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=18&rating=g`
+            : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=18&rating=g`;
         try {
             const res = await fetch(endpoint);
             if (!res.ok) return { error: `http_${res.status}` };
             const json = await res.json();
             return { gifs: (json.data || []).map(g => ({
-                preview: g.images?.fixed_height_small?.url || g.images?.fixed_height?.url,
+                // preview = animated downsampled GIF (small file, still animated — cadets can see what they're picking)
+                preview: g.images?.fixed_height_downsampled?.url
+                       || g.images?.preview_gif?.url
+                       || g.images?.fixed_height_small?.url
+                       || g.images?.fixed_height?.url,
+                // full = full-quality GIF that gets sent in the chat
                 full: g.images?.fixed_height?.url || g.images?.original?.url,
-                title: g.title || 'GIF'
+                title: g.title || 'GIF',
+                width:  parseInt(g.images?.fixed_height_downsampled?.width  || g.images?.fixed_height?.width  || 200),
+                height: parseInt(g.images?.fixed_height_downsampled?.height || g.images?.fixed_height?.height || 200),
             })) };
         } catch (e) { return { error: 'network' }; }
     }
 
     function renderGifGrid(container, gifs) {
-        if (!gifs.length) { container.innerHTML = `<p class="text-[10px] text-slate-400 text-center py-6 col-span-2">No GIFs found — try another search.</p>`; return; }
-        container.innerHTML = gifs.map(g =>
-            `<button onclick="sendGif('${g.full.replace(/'/g, "\\'")}')" class="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 hover:opacity-80 transition bg-slate-100 dark:bg-slate-900" title="${escapeHTML(g.title)}"><img src="${g.preview}" loading="lazy" class="w-full h-20 object-cover"></button>`
-        ).join('');
+        if (!gifs.length) {
+            container.innerHTML = `<p class="text-[10px] text-slate-400 text-center py-6 col-span-2">No GIFs found — try another search.</p>`;
+            return;
+        }
+        container.innerHTML = gifs.map(g => {
+            const safeUrl  = g.full.replace(/'/g, "\\'");
+            const safeTitle = escapeHTML(g.title);
+            return `<button onclick="sendGif('${safeUrl}')"
+                class="relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-green transition-all bg-slate-100 dark:bg-slate-900 group"
+                title="${safeTitle}">
+                <img src="${g.preview}" loading="lazy"
+                    class="w-full object-cover block"
+                    style="min-height:80px; max-height:110px;"
+                    onerror="this.src='https://via.placeholder.com/200x110/e2e8f0/94a3b8?text=GIF'">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white text-[10px] font-black bg-black/50 px-2 py-0.5 rounded-full transition-all">Send</span>
+                </div>
+            </button>`;
+        }).join('');
     }
 
     window.toggleGifPicker = (event) => {
@@ -9363,12 +9408,13 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         document.querySelectorAll('.chat-popover').forEach(el => el.remove());
         const picker = document.createElement('div');
         _gifPickerEl = picker;
-        picker.className = 'chat-popover absolute bottom-full mb-2 left-0 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl shadow-2xl p-2 w-72 max-h-80 flex flex-col';
+        picker.className = 'chat-popover absolute bottom-full mb-2 left-0 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-2xl shadow-2xl p-3 w-80 max-h-96 flex flex-col gap-2';
         picker.innerHTML = `
-            <input id="chat-gif-search" type="text" placeholder="Search GIFs…" class="w-full mb-2 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs dark:text-white focus:outline-none focus:border-brand-blue shrink-0">
-            <div id="chat-gif-grid" class="grid grid-cols-2 gap-2 overflow-y-auto custom-scrollbar flex-1">
-                <p class="text-[10px] text-slate-400 text-center py-6 col-span-2">Loading GIFs…</p>
-            </div>`;
+            <input id="chat-gif-search" type="text" placeholder="🔍 Search GIFs…" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg px-3 py-2 text-xs dark:text-white focus:outline-none focus:border-brand-green shrink-0">
+            <div id="chat-gif-grid" class="grid grid-cols-2 gap-2 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                <p class="text-[10px] text-slate-400 text-center py-6 col-span-2">Loading trending GIFs…</p>
+            </div>
+            <p class="text-[9px] text-slate-400 text-center shrink-0">Powered by Giphy · Tap to send</p>`;
         const wrap = event.currentTarget.closest('.p-3');
         (wrap || document.body).style.position = 'relative';
         (wrap || document.body).appendChild(picker);
