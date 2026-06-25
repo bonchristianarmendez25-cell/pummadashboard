@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "pumma-competency-dashboard",
     "public": ".",
     "ignore": [
       "firebase.json",
