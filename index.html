@@ -2775,6 +2775,14 @@
             db = getFirestore(app);
         }
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'pumma-2026-production';
+        // FIX (chat stuck on "Loading..."): db/appId live in this module's
+        // private scope. The Ship's Comms chat engine below runs in a SEPARATE
+        // <script type="module"> block, which has its own isolated scope — it
+        // can never see "db" or "appId" declared here, even though it's the
+        // same HTML file. Exposing them on window lets the chat module read
+        // them safely once Firebase has actually finished initializing.
+        window.db = db;
+        window.appId = appId;
 
         window.cadets = [];
         window.selectedCadetId = null;
@@ -8996,6 +9004,11 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     let typingTimer    = null;
     let lastTypingAt   = 0;
     let chatReady      = false;
+    // Local references to the Firestore db/appId, which live in a separate
+    // module's scope. Populated from window.db / window.appId once available
+    // (see initChat below, and the window.db/window.appId assignment near
+    // the top of the app's main module after Firebase initializes).
+    let db, appId;
 
     // Role badge config
     const ROLE_CONFIG = {
@@ -9108,11 +9121,15 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     }
 
     async function initChat() {
-        // Wait for db and appId to be available (retry every 500ms)
-        if (typeof db === 'undefined' || !db || typeof appId === 'undefined') {
+        // Wait for db and appId to be available on window (retry every 500ms).
+        // They're set by the main app module right after Firebase finishes
+        // initializing — see window.db / window.appId near the top of the file.
+        if (typeof window.db === 'undefined' || !window.db || typeof window.appId === 'undefined') {
             setTimeout(initChat, 500);
             return;
         }
+        db = window.db;
+        appId = window.appId;
         // Prevent double-init
         if (chatListener) return;
 
