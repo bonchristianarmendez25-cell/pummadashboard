@@ -2517,6 +2517,7 @@
     <div id="law-library-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[70] p-4 no-print">
         <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-7xl w-full h-[95vh] flex flex-col md:flex-row shadow-2xl overflow-hidden">
 
+            <!-- Sidebar -->
             <div class="w-full md:w-64 bg-slate-900 flex flex-col shrink-0 border-r border-slate-700">
                 <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
                     <h3 class="font-bold text-violet-400 text-sm flex items-center gap-2 uppercase tracking-wide">
@@ -2524,6 +2525,15 @@
                     </h3>
                     <button onclick="closeLawLibrary()" class="md:hidden text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
+
+                <!-- Read / Listen toggle -->
+                <div class="p-3 border-b border-slate-800 shrink-0">
+                    <div class="flex rounded-lg overflow-hidden border border-slate-700 text-[10px] font-bold">
+                        <button id="mode-btn-read" onclick="setLawMode('read')" class="flex-1 py-2 bg-violet-700 text-white transition flex items-center justify-center gap-1"><i data-lucide="file-text" class="w-3 h-3"></i> Read</button>
+                        <button id="mode-btn-listen" onclick="setLawMode('listen')" class="flex-1 py-2 bg-slate-800 text-slate-400 hover:bg-slate-700 transition flex items-center justify-center gap-1"><i data-lucide="headphones" class="w-3 h-3"></i> Listen</button>
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                     <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">The Big Four</div>
                     <button onclick="loadLawPdf('SOLAS')" id="btn-law-SOLAS" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">SOLAS <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
@@ -2531,15 +2541,105 @@
                     <button onclick="loadLawPdf('STCW')" id="btn-law-STCW" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">STCW <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
                     <button onclick="loadLawPdf('MLC')" id="btn-law-MLC" class="law-nav-btn w-full text-left px-3 py-3 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between group">MLC 2006 <i data-lucide="chevron-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition"></i></button>
                 </div>
-            </div>
 
-            <div class="flex-1 flex flex-col bg-slate-300 dark:bg-slate-950 relative">
-                <button onclick="closeLawLibrary()" class="hidden md:flex absolute top-4 right-6 text-slate-400 hover:text-rose-500 transition bg-white/10 hover:bg-white/90 p-2 rounded-full shadow-lg backdrop-blur-sm z-10"><i data-lucide="x" class="w-5 h-5"></i></button>
-                <div class="flex-1 w-full h-full relative" id="law-pdf-container">
-                    <iframe id="law-pdf-viewer" src="" class="w-full h-full border-none shadow-inner bg-white" title="Maritime Law PDF Viewer"></iframe>
+                <!-- Now playing strip -->
+                <div id="law-now-playing" class="hidden p-3 bg-slate-950 border-t border-slate-800 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-end gap-0.5 h-4 shrink-0">
+                            <span class="w-1 bg-violet-400 rounded-full animate-bounce" style="height:40%;animation-delay:0s"></span>
+                            <span class="w-1 bg-violet-400 rounded-full animate-bounce" style="height:80%;animation-delay:0.1s"></span>
+                            <span class="w-1 bg-violet-400 rounded-full animate-bounce" style="height:60%;animation-delay:0.2s"></span>
+                            <span class="w-1 bg-violet-400 rounded-full animate-bounce" style="height:100%;animation-delay:0.3s"></span>
+                        </div>
+                        <p class="text-[9px] text-violet-300 font-semibold truncate flex-1" id="law-now-playing-title">Reading...</p>
+                    </div>
                 </div>
             </div>
 
+            <!-- Main area -->
+            <div class="flex-1 flex flex-col bg-slate-300 dark:bg-slate-950 relative overflow-hidden">
+                <button onclick="closeLawLibrary()" class="hidden md:flex absolute top-4 right-6 text-slate-400 hover:text-rose-500 transition bg-white/10 hover:bg-white/90 p-2 rounded-full shadow-lg backdrop-blur-sm z-10"><i data-lucide="x" class="w-5 h-5"></i></button>
+
+                <!-- PDF viewer (read mode) -->
+                <div id="law-pdf-container" class="flex-1 w-full h-full relative">
+                    <iframe id="law-pdf-viewer" src="" class="w-full h-full border-none shadow-inner bg-white" title="Maritime Law PDF Viewer"></iframe>
+                </div>
+
+                <!-- Audiobook panel (listen mode) -->
+                <div id="law-audiobook-panel" class="hidden flex-col h-full bg-slate-950 text-white overflow-hidden">
+
+                    <!-- Player header -->
+                    <div class="bg-gradient-to-r from-violet-900 to-slate-900 p-5 border-b border-slate-800 shrink-0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-violet-700 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                                <i data-lucide="headphones" class="w-7 h-7 text-white"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] text-violet-300 font-bold uppercase tracking-widest">Now Listening</p>
+                                <p class="font-bold text-white text-base leading-tight truncate" id="ab-doc-title">Select a document</p>
+                                <p class="text-xs text-slate-400 truncate" id="ab-section-title">Then pick a section below</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress bar -->
+                        <div class="mt-4">
+                            <div class="w-full bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                <div id="ab-progress-bar" class="bg-violet-400 h-full rounded-full transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] text-slate-500 mt-1">
+                                <span id="ab-time-current">0:00</span>
+                                <span id="ab-time-total">0:00</span>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex items-center justify-center gap-5 mt-4">
+                            <button onclick="abPrevSection()" class="text-slate-400 hover:text-white transition" title="Previous section"><i data-lucide="skip-back" class="w-5 h-5"></i></button>
+                            <button onclick="abTogglePlay()" id="ab-play-btn" class="w-12 h-12 bg-violet-600 hover:bg-violet-500 rounded-full flex items-center justify-center shadow-lg transition active:scale-95">
+                                <i data-lucide="play" class="w-5 h-5 text-white" id="ab-play-icon"></i>
+                            </button>
+                            <button onclick="abNextSection()" class="text-slate-400 hover:text-white transition" title="Next section"><i data-lucide="skip-forward" class="w-5 h-5"></i></button>
+                        </div>
+
+                        <!-- Speed + Voice -->
+                        <div class="flex items-center gap-3 mt-4 flex-wrap justify-center">
+                            <div class="flex items-center gap-1.5 bg-slate-800 rounded-lg px-2 py-1.5">
+                                <i data-lucide="gauge" class="w-3 h-3 text-slate-400"></i>
+                                <span class="text-[10px] text-slate-400">Speed</span>
+                                <select id="ab-speed" onchange="abSetSpeed(this.value)" class="bg-transparent text-violet-300 text-[10px] font-bold focus:outline-none cursor-pointer">
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-1.5 bg-slate-800 rounded-lg px-2 py-1.5">
+                                <i data-lucide="mic" class="w-3 h-3 text-slate-400"></i>
+                                <span class="text-[10px] text-slate-400">Voice</span>
+                                <select id="ab-voice" onchange="abSetVoice(this.value)" class="bg-transparent text-violet-300 text-[10px] font-bold focus:outline-none cursor-pointer max-w-[120px]">
+                                    <option value="">Default</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section list -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar">
+                        <div class="p-3 border-b border-slate-800">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pick a section to listen</p>
+                        </div>
+                        <div id="ab-sections-list" class="p-2 space-y-1">
+                            <p class="text-xs text-slate-500 text-center py-8 italic">← Select a document from the sidebar first</p>
+                        </div>
+                    </div>
+
+                    <!-- Live text display -->
+                    <div class="h-20 bg-slate-900 border-t border-slate-800 overflow-hidden p-3 shrink-0 flex items-center">
+                        <p id="ab-text-display" class="text-[11px] text-slate-400 leading-relaxed text-center italic w-full line-clamp-3">Text will appear here as it plays...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -4505,6 +4605,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.openLawLibrary = (defaultDoc = 'SOLAS') => {
             const m = document.getElementById('law-library-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window._lawMode = window._lawMode || 'read';
             window.loadLawPdf(defaultDoc);
             if(window.lucide) window.lucide.createIcons();
         };
@@ -4512,12 +4613,12 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.closeLawLibrary = () => {
             const m = document.getElementById('law-library-modal');
             if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
-            // Clear memory when closed to keep the dashboard fast
-            document.getElementById('law-pdf-viewer').src = ''; 
+            document.getElementById('law-pdf-viewer').src = '';
+            abStop();
         };
 
         window.loadLawPdf = (docKey) => {
-            // Update active button color in sidebar
+            window._currentLawDoc = docKey;
             document.querySelectorAll('.law-nav-btn').forEach(btn => {
                 btn.classList.remove('bg-violet-900/40', 'text-violet-400', 'border-l-4', 'border-violet-400');
                 btn.classList.add('text-slate-400');
@@ -4527,12 +4628,277 @@ window.logAdminSettingsActivity = async (action, details) => {
                 activeBtn.classList.add('bg-violet-900/40', 'text-violet-400', 'border-l-4', 'border-violet-400');
                 activeBtn.classList.remove('text-slate-400');
             }
-
             const viewer = document.getElementById('law-pdf-viewer');
             if (window.lawDocuments[docKey]) {
-                // Removed the "docs/" folder requirement. It now looks directly in your main folder!
                 viewer.src = `${window.lawDocuments[docKey]}#view=FitH&toolbar=1`;
             }
+            if (window._lawMode === 'listen') abLoadSections(docKey);
+        };
+
+        // ══════════════════════════════════════════════════════
+        // AUDIOBOOK ENGINE — Maritime Law Listen Mode
+        // ══════════════════════════════════════════════════════
+        window._lawMode        = 'read';
+        window._abSpeech       = null;
+        window._abCurrentSection = -1;
+        window._abPlaying      = false;
+        window._abSpeed        = 1;
+        window._abVoice        = null;
+        window._abSections     = [];
+        window._abStartTime    = 0;
+        window._abTimer        = null;
+
+        window.abContent = {
+            SOLAS: {
+                title: 'SOLAS — Safety of Life at Sea',
+                sections: [
+                    { id:'s1', title:'Chapter I — General Provisions', text:'Chapter I of SOLAS covers the general provisions and definitions applicable to the Convention. The Convention applies to ships engaged on international voyages. The following types of ships on international voyages are covered: passenger ships including passenger high-speed craft; cargo ships including cargo high-speed craft of 500 gross tonnage and upwards; mobile offshore drilling units; and cargo ships of less than 500 gross tonnage. The chapter defines terms including Administration, Convention, International voyage, and Passenger ship. Surveys and certification requirements are established, requiring that the structure, machinery, and equipment of ships be subject to surveys by officers of the Administration or surveyors nominated for the purpose.' },
+                    { id:'s2', title:'Chapter II-1 — Construction and Stability', text:'Chapter II-1 deals with the construction of ships, their subdivision into watertight compartments, and their stability. Ships must be designed and built to meet damage stability standards. Watertight integrity must be maintained throughout the ship. The chapter requires ships to maintain positive stability throughout the flooding of any single compartment. Double bottoms are required for cargo ships over 50 meters. Ships must have watertight bulkheads extending from the bottom to the bulkhead deck. Flooding assumptions and damage stability calculations must demonstrate the ship can survive in a damaged condition.' },
+                    { id:'s3', title:'Chapter II-2 — Fire Protection', text:'Chapter II-2 covers fire protection, fire detection, and fire extinction. The objectives are to prevent the occurrence of fire and explosion, to reduce the risk to life caused by fire, to reduce the risk of damage caused by fire to the ship, the cargo and the environment, and to contain, control, and suppress fire and explosion in the compartment of origin. The chapter requires fire safety systems and appliances including smoke detectors, fire alarms, fire extinguishers, fire pumps, and fire hoses throughout the ship. Fixed fire detection and fire alarm systems must be installed. Ships must have fire dampers, fire doors, and fire insulation to prevent spread of fire.' },
+                    { id:'s4', title:'Chapter III — Life-Saving Appliances', text:'Chapter III requires ships to carry sufficient lifesaving appliances for all persons on board. Requirements include: lifeboat capacity for the total number of persons on each side of the ship; liferafts for all persons; lifejackets for every person on board plus additional for persons on watch and infants; immersion suits; rescue boats; line-throwing appliances; emergency position-indicating radio beacons; search and rescue transponders; and pyrotechnic signals. Life-saving appliances must be maintained in good working order and drills must be conducted regularly.' },
+                    { id:'s5', title:'Chapter IV — Radiocommunications', text:'Chapter IV applies to all ships required to carry radio installations. It establishes the Global Maritime Distress and Safety System known as GMDSS. Ships are required to carry radio equipment capable of transmitting and receiving distress alerts and maritime safety information. Ships must be fitted with equipment for digital selective calling, NAVTEX, emergency position-indicating radio beacons, two-way VHF radiotelephone apparatus, and search and rescue radar transponders. The radio equipment must enable communication with shore-based authorities and rescue coordination centers.' },
+                    { id:'s6', title:'Chapter V — Safety of Navigation', text:'Chapter V applies to all ships on all voyages. It covers safety of navigation and requires ships to carry nautical charts and publications, magnetic compasses, gyrocompasses, automatic pilot systems, echo sounders, radar equipment, automatic radar plotting aids, automatic identification systems, voyage data recorders, and electronic chart display systems. The chapter requires reporting of dangers to navigation such as dangerous ice, derelicts, tropical storms, and any other direct danger to navigation. Masters are required to proceed to the assistance of persons in distress.' },
+                    { id:'s7', title:'Chapter IX — ISM Code', text:'Chapter IX implements the International Safety Management Code, also known as the ISM Code. The ISM Code provides an international standard for the safe management and operation of ships and for pollution prevention. Every Company must develop, implement, and maintain a Safety Management System or SMS. The SMS must include a safety and environmental protection policy, instructions and procedures to ensure safe operation, defined levels of authority, procedures for reporting accidents, procedures for preparing for emergency situations, and procedures for internal audits. Companies must be certified with a Document of Compliance, and individual ships must hold a Safety Management Certificate.' },
+                ]
+            },
+            MARPOL: {
+                title: 'MARPOL — Marine Pollution Prevention',
+                sections: [
+                    { id:'m1', title:'Annex I — Oil Pollution', text:'Annex I of MARPOL deals with the prevention of pollution by oil. It sets out regulations for controlling operational discharges of oil from ships. Any discharge of oil or oily mixtures into the sea is prohibited except when certain conditions are met. Outside special areas, oil tankers may discharge if the ship is proceeding en route, the instantaneous rate of discharge does not exceed 30 liters per nautical mile, the total quantity discharged does not exceed one fifteen-thousandth of the cargo carrying capacity, and the ship is more than 50 nautical miles from the nearest land. All ships of 400 gross tonnage and above must have an Oil Record Book.' },
+                    { id:'m2', title:'Annex II — Noxious Liquid Substances', text:'Annex II covers the control of pollution by noxious liquid substances carried in bulk. Substances are categorized into categories X, Y, and Z according to the hazard they present to marine resources, human health, amenities, or other legitimate uses of the sea. Category X substances present a major hazard and their discharge into the sea is prohibited. Prewash procedures are required before ballasting or cleaning of tanks that contained Category X substances. Discharge of Category Y and Z substances is permitted under strict conditions including minimum distance from land.' },
+                    { id:'m3', title:'Annex IV — Sewage Pollution', text:'Annex IV deals with the prevention of pollution by sewage from ships. New passenger ships are prohibited from discharging sewage unless the ship has in operation an approved sewage treatment plant or the ship is discharging comminuted and disinfected sewage at a distance of more than 3 nautical miles from the nearest land. Ships must be equipped with sewage treatment plants, sewage comminuting and disinfecting systems, or sewage holding tanks. Port reception facilities must be provided for sewage from ships.' },
+                    { id:'m4', title:'Annex V — Garbage Pollution', text:'Annex V regulates the disposal of garbage from ships. The discharge of all garbage into the sea is prohibited except as follows: food wastes may be discharged when the ship is 3 nautical miles from the nearest land; cargo residues not harmful to the marine environment may be discharged 12 nautical miles from the nearest land. The discharge of plastic is prohibited everywhere. Ships must carry a Garbage Management Plan and a Garbage Record Book. Port reception facilities must be provided for garbage from ships.' },
+                    { id:'m5', title:'Annex VI — Air Pollution', text:'Annex VI deals with the prevention of air pollution from ships. It sets limits on sulphur oxide and nitrogen oxide emissions from ship exhausts and prohibits deliberate emissions of ozone-depleting substances. The sulphur content of fuel oil used on board ships must not exceed 0.50 percent mass by mass globally. In Emission Control Areas, the sulphur content must not exceed 0.10 percent mass by mass. Ships must carry an International Air Pollution Prevention Certificate. Energy Efficiency Design Index and Ship Energy Efficiency Management Plans are required to address greenhouse gas emissions.' },
+                ]
+            },
+            STCW: {
+                title: 'STCW — Standards of Training, Certification and Watchkeeping',
+                sections: [
+                    { id:'t1', title:'Chapter I — General Provisions', text:'Chapter I contains mandatory provisions regarding certification, watchkeeping, and training standards. All seafarers must hold certificates issued by or under the authority of the Administration. Certificates must be written in or translated into English. The Administration may accept certificates of competency issued by another Party, but must issue its own endorsements attesting recognition. Companies must ensure that seafarers assigned to their ships hold appropriate certificates. The chapter also contains provisions regarding hours of rest, with seafarers being entitled to minimum rest periods of not less than 10 hours in any 24-hour period and 77 hours in any 7-day period.' },
+                    { id:'t2', title:'Chapter II — Master and Deck Department', text:'Chapter II covers certification requirements for officers of the navigational watch and masters on ships of 500 gross tonnage or more. Every officer in charge of a navigational watch must hold an appropriate certificate. Candidates for certification as officers in charge of a navigational watch must have approved seagoing service of not less than 12 months as part of an approved training program. Masters and chief mates on ships of 3000 gross tonnage or more must hold appropriate certificates. Training requirements include cargo handling, controlling the operation of the ship, ship maintenance, radio communications, navigation, and use of ECDIS.' },
+                    { id:'t3', title:'Chapter III — Engine Department', text:'Chapter III covers certification of officers in charge of an engineering watch in a manned engine-room or engineer officers in a periodically unmanned engine-room on ships powered by main propulsion machinery of 750 kilowatts or more. Candidates must have approved seagoing service as part of an approved training program. Chief engineer officers and second engineer officers on ships powered by main propulsion machinery of 3000 kilowatts or more must hold appropriate certificates. Training requirements include marine engineering, electrical and electronic engineering, maintenance and repair, and controlling the operation of the ship.' },
+                    { id:'t4', title:'Chapter VI — Emergency and Safety Functions', text:'Chapter VI covers basic safety training requirements for all seafarers. Before being assigned to shipboard duties, all persons employed on a seagoing ship must receive approved basic safety training including personal survival techniques, fire prevention and firefighting, elementary first aid, and personal safety and social responsibilities. Every candidate for certification must demonstrate competence to undertake the tasks, duties, and responsibilities listed in the appropriate competence tables. Advanced fire fighting training is required for persons designated to control fire-fighting operations.' },
+                    { id:'t5', title:'Chapter VIII — Watchkeeping', text:'Chapter VIII sets out standards regarding watchkeeping for the safety of navigation and for protection of the marine environment. Masters, officers, and ratings must comply with requirements including watch arrangements and principles to be observed in keeping a navigational watch. The officer in charge of the navigational watch must remain on the bridge and maintain a lookout at all times. The officer must be familiar with the location and operation of all safety and navigational equipment on board and must maintain situational awareness and follow proper navigation practices.' },
+                ]
+            },
+            MLC: {
+                title: 'MLC 2006 — Maritime Labour Convention',
+                sections: [
+                    { id:'l1', title:'Title 1 — Minimum Requirements', text:'Title 1 establishes minimum requirements for seafarers to work on a ship. Regulation 1.1 on minimum age prohibits the employment of any person below the age of 16 on board a ship. Regulation 1.2 on medical certificate requires that seafarers hold a valid medical certificate attesting that they are medically fit to perform their duties. Medical certificates must be issued by a duly qualified medical practitioner and have a period of validity not exceeding two years. Regulation 1.3 on training and qualifications requires that seafarers shall not work on a ship unless they are trained or certified as competent to perform their duties.' },
+                    { id:'l2', title:'Title 2 — Conditions of Employment', text:'Title 2 covers conditions of employment for seafarers. Regulation 2.1 requires that seafarers have a seafarers employment agreement signed by both the seafarer and the shipowner. The agreement must include the seafarers full name, date of birth, capacity in which the seafarer is employed, wages, the amount of paid annual leave, termination conditions, health and social security protection benefits, entitlement to repatriation, and reference to any applicable collective bargaining agreement. Regulation 2.2 covers wages including payment at regular intervals of not longer than one month.' },
+                    { id:'l3', title:'Title 3 — Accommodation and Food', text:'Title 3 establishes standards for accommodation, recreational facilities, food, and catering on ships. Regulation 3.1 requires that ships shall provide and maintain decent accommodation and recreational facilities for seafarers working and living on board. Accommodation must meet minimum space requirements for sleeping rooms, mess rooms, recreation rooms, and sanitary facilities. Ships must provide adequate lighting, heating, ventilation, and noise reduction. Regulation 3.2 covers food and catering, requiring ships to carry and serve food and drinking water of appropriate quality and nutritional value.' },
+                    { id:'l4', title:'Title 4 — Health Protection', text:'Title 4 covers health protection, medical care, welfare, and social security protection for seafarers. Regulation 4.1 requires that all seafarers shall have access to prompt and adequate medical care whilst working on board. Ships of 500 gross tonnage or more carrying 15 or more seafarers on a voyage of more than three days must have a qualified medical doctor on board. Ships not carrying a medical doctor must have a seafarer designated to take charge of medical care and first aid. Shipowners shall be liable for the cost of medical care including medical treatment and the supply of necessary medicines for seafarers.' },
+                    { id:'l5', title:'Title 5 — Compliance and Enforcement', text:'Title 5 covers compliance and enforcement of the Convention. Each Member shall implement its responsibilities under the Convention with respect to ships that fly its flag. Ships of 500 gross tonnage or above engaged in international voyages must be certified. The Maritime Labour Certificate confirms that the working and living conditions of seafarers on the ship meet the requirements of the Convention. The Declaration of Maritime Labour Compliance documents the national requirements implementing the Convention and the measures adopted by the shipowner. Port states may inspect ships in their ports and detain ships if serious deficiencies are found.' },
+                ]
+            }
+        };
+
+        window.setLawMode = (mode) => {
+            window._lawMode = mode;
+            const readBtn   = document.getElementById('mode-btn-read');
+            const listenBtn = document.getElementById('mode-btn-listen');
+            const pdfCont   = document.getElementById('law-pdf-container');
+            const abPanel   = document.getElementById('law-audiobook-panel');
+
+            if (mode === 'read') {
+                readBtn?.classList.add('bg-violet-700','text-white');
+                readBtn?.classList.remove('bg-slate-800','text-slate-400');
+                listenBtn?.classList.remove('bg-violet-700','text-white');
+                listenBtn?.classList.add('bg-slate-800','text-slate-400');
+                pdfCont?.classList.remove('hidden');
+                abPanel?.classList.add('hidden');
+                abPanel?.classList.remove('flex');
+                abStop();
+            } else {
+                listenBtn?.classList.add('bg-violet-700','text-white');
+                listenBtn?.classList.remove('bg-slate-800','text-slate-400');
+                readBtn?.classList.remove('bg-violet-700','text-white');
+                readBtn?.classList.add('bg-slate-800','text-slate-400');
+                pdfCont?.classList.add('hidden');
+                abPanel?.classList.remove('hidden');
+                abPanel?.classList.add('flex');
+                abPanel.style.flexDirection = 'column';
+                if (window._currentLawDoc) abLoadSections(window._currentLawDoc);
+                abPopulateVoices();
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.abLoadSections = (docKey) => {
+            const data = window.abContent[docKey];
+            if (!data) return;
+            window._abSections = data.sections;
+            window._abCurrentSection = -1;
+            const titleEl = document.getElementById('ab-doc-title');
+            if (titleEl) titleEl.textContent = data.title;
+            const secEl = document.getElementById('ab-section-title');
+            if (secEl) secEl.textContent = 'Pick a section below to start listening';
+            const list = document.getElementById('ab-sections-list');
+            if (!list) return;
+            list.innerHTML = data.sections.map((s, i) => `
+                <button onclick="abSelectSection(${i})" id="ab-sec-${i}"
+                    class="w-full text-left px-3 py-3 rounded-lg hover:bg-slate-800 transition group flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-full bg-slate-800 group-hover:bg-violet-700 flex items-center justify-center text-[10px] font-bold text-slate-400 group-hover:text-white shrink-0 transition">${i+1}</span>
+                    <span class="text-xs text-slate-300 group-hover:text-white transition leading-tight">${s.title}</span>
+                    <i data-lucide="play" class="w-3 h-3 text-slate-600 group-hover:text-violet-400 ml-auto shrink-0 transition"></i>
+                </button>
+            `).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.abSelectSection = (idx) => {
+            abStop();
+            window._abCurrentSection = idx;
+            const s = window._abSections[idx];
+            if (!s) return;
+            document.querySelectorAll('[id^="ab-sec-"]').forEach(el => {
+                el.classList.remove('bg-violet-900/40','border-l-2','border-violet-500');
+            });
+            const activeEl = document.getElementById(`ab-sec-${idx}`);
+            if (activeEl) activeEl.classList.add('bg-violet-900/40','border-l-2','border-violet-500');
+            const secTitle = document.getElementById('ab-section-title');
+            if (secTitle) secTitle.textContent = s.title;
+            abPlay(s);
+        };
+
+        window.abPlay = (section) => {
+            if (!window.speechSynthesis) { alert('Text-to-speech is not supported in this browser. Please try Chrome or Edge.'); return; }
+            abStop();
+            const utt = new SpeechSynthesisUtterance(section.text);
+            utt.rate  = parseFloat(window._abSpeed || 1);
+            utt.pitch = 0.95;
+            utt.volume = 1;
+            if (window._abVoice) utt.voice = window._abVoice;
+            window._abSpeech  = utt;
+            window._abPlaying = true;
+            window._abStartTime = Date.now();
+            const icon = document.getElementById('ab-play-icon');
+            if (icon) { icon.setAttribute('data-lucide','pause'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+            const np = document.getElementById('law-now-playing');
+            const npTitle = document.getElementById('law-now-playing-title');
+            if (np) np.classList.remove('hidden');
+            if (npTitle) npTitle.textContent = section.title;
+            const wordCount = section.text.split(' ').length;
+            const estSecs = Math.round(wordCount / (parseFloat(window._abSpeed || 1) * 2.5));
+            const totalEl = document.getElementById('ab-time-total');
+            if (totalEl) totalEl.textContent = abFormatTime(estSecs);
+            clearInterval(window._abTimer);
+            window._abTimer = setInterval(() => {
+                if (!window._abPlaying) return;
+                const elapsed = (Date.now() - window._abStartTime) / 1000;
+                const pct = Math.min((elapsed / estSecs) * 100, 99);
+                const bar = document.getElementById('ab-progress-bar');
+                if (bar) bar.style.width = pct + '%';
+                const cur = document.getElementById('ab-time-current');
+                if (cur) cur.textContent = abFormatTime(elapsed);
+            }, 500);
+            utt.onboundary = (e) => {
+                if (e.name !== 'word') return;
+                const textDisplay = document.getElementById('ab-text-display');
+                if (textDisplay) {
+                    const start = Math.max(0, e.charIndex - 100);
+                    const snippet = section.text.substring(start, e.charIndex + 180);
+                    textDisplay.textContent = (start > 0 ? '...' : '') + snippet + '...';
+                    textDisplay.classList.remove('italic');
+                }
+            };
+            utt.onend = () => {
+                window._abPlaying = false;
+                clearInterval(window._abTimer);
+                const icon2 = document.getElementById('ab-play-icon');
+                if (icon2) { icon2.setAttribute('data-lucide','play'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+                const bar2 = document.getElementById('ab-progress-bar');
+                if (bar2) bar2.style.width = '100%';
+                setTimeout(() => {
+                    if (window._abCurrentSection < window._abSections.length - 1) {
+                        abNextSection();
+                    } else {
+                        const np2 = document.getElementById('law-now-playing');
+                        if (np2) np2.classList.add('hidden');
+                        const textDisplay2 = document.getElementById('ab-text-display');
+                        if (textDisplay2) { textDisplay2.textContent = '✅ All sections complete!'; textDisplay2.classList.add('italic'); }
+                    }
+                }, 1500);
+            };
+            utt.onerror = (e) => {
+                console.warn('Speech error:', e);
+                window._abPlaying = false;
+                clearInterval(window._abTimer);
+            };
+            window.speechSynthesis.speak(utt);
+        };
+
+        window.abStop = () => {
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            window._abPlaying = false;
+            clearInterval(window._abTimer);
+            const icon = document.getElementById('ab-play-icon');
+            if (icon) { icon.setAttribute('data-lucide','play'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+        };
+
+        window.abTogglePlay = () => {
+            if (window._abCurrentSection < 0) {
+                alert('Please select a section from the list below to start listening.');
+                return;
+            }
+            if (window._abPlaying) {
+                window.speechSynthesis.pause();
+                window._abPlaying = false;
+                const icon = document.getElementById('ab-play-icon');
+                if (icon) { icon.setAttribute('data-lucide','play'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+            } else if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+                window._abPlaying = true;
+                const icon = document.getElementById('ab-play-icon');
+                if (icon) { icon.setAttribute('data-lucide','pause'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+            } else {
+                abSelectSection(window._abCurrentSection);
+            }
+        };
+
+        window.abNextSection = () => {
+            const next = window._abCurrentSection + 1;
+            if (next < window._abSections.length) abSelectSection(next);
+        };
+
+        window.abPrevSection = () => {
+            const prev = window._abCurrentSection - 1;
+            if (prev >= 0) abSelectSection(prev);
+        };
+
+        window.abSetSpeed = (val) => {
+            window._abSpeed = parseFloat(val);
+            if (window._abPlaying && window._abCurrentSection >= 0) {
+                abSelectSection(window._abCurrentSection);
+            }
+        };
+
+        window.abSetVoice = (val) => {
+            const voices = window.speechSynthesis.getVoices();
+            window._abVoice = voices.find(v => v.name === val) || null;
+            if (window._abPlaying && window._abCurrentSection >= 0) {
+                abSelectSection(window._abCurrentSection);
+            }
+        };
+
+        window.abPopulateVoices = () => {
+            const sel = document.getElementById('ab-voice');
+            if (!sel || !window.speechSynthesis) return;
+            const populate = () => {
+                const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+                if (voices.length === 0) return;
+                sel.innerHTML = '<option value="">Default</option>' +
+                    voices.map(v => `<option value="${v.name}">${v.name.replace('Microsoft','').replace('Google','').trim()}</option>`).join('');
+            };
+            populate();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = populate;
+            }
+        };
+
+        window.abFormatTime = (secs) => {
+            const s = Math.max(0, Math.floor(secs));
+            return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
         };
         
        // --- REGIMENTAL APPRAISAL CONVERSION ENGINE ---
