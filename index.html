@@ -8824,5 +8824,380 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             }
         };
     </script>
+    <!-- ═══════════════════════════════════════════════════════════
+         PUMMA SHIP CHAT — Floating Global Messenger
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="pumma-chat-root" class="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-2 no-print">
+
+        <!-- Unread badge + bubble button -->
+        <button id="chat-toggle-btn" onclick="togglePummaChat()"
+            class="relative w-14 h-14 rounded-full bg-brand-blue hover:bg-blue-800 text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+            title="PUMMA Ship Chat">
+            <i data-lucide="anchor" class="w-6 h-6" id="chat-btn-icon"></i>
+            <span id="chat-unread-badge"
+                class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden shadow-md animate-bounce">0</span>
+        </button>
+
+        <!-- Chat Panel -->
+        <div id="pumma-chat-panel"
+            class="hidden flex-col w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
+            style="height:480px; max-height:80vh;">
+
+            <!-- Header -->
+            <div class="bg-brand-blue text-white px-4 py-3 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="anchor" class="w-4 h-4 opacity-80"></i>
+                    <div>
+                        <p class="font-bold text-sm leading-tight">Ship's Comms</p>
+                        <p class="text-[10px] opacity-70" id="chat-online-count">Loading...</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleChatSound()" id="chat-sound-btn" title="Toggle sound"
+                        class="opacity-70 hover:opacity-100 transition"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                    <button onclick="togglePummaChat()"
+                        class="opacity-70 hover:opacity-100 transition"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+
+            <!-- Messages area -->
+            <div id="chat-messages-area"
+                class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-slate-900 custom-scrollbar">
+                <div class="text-center text-[10px] text-slate-400 py-4 flex flex-col items-center gap-1">
+                    <i data-lucide="anchor" class="w-5 h-5 opacity-30"></i>
+                    <span>Welcome to Ship's Comms — all hands on deck!</span>
+                </div>
+            </div>
+
+            <!-- Typing indicator -->
+            <div id="chat-typing-indicator" class="px-4 py-1 text-[10px] text-slate-400 hidden shrink-0 italic"></div>
+
+            <!-- Input area -->
+            <div class="p-3 border-t border-brand-creamBorder dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+                <!-- Emoji quick bar -->
+                <div class="flex gap-1 mb-2 overflow-x-auto scrollbar-hide">
+                    ${['⚓','🚢','🌊','📡','🧭','⛵','🌏','👋','💪','✅','❗','😄'].map(e =>
+                        `<button onclick="appendEmoji('${e}')" class="text-base hover:scale-125 transition-transform shrink-0">${e}</button>`
+                    ).join('')}
+                </div>
+                <div class="flex gap-2 items-end">
+                    <textarea id="chat-input" rows="1" maxlength="300"
+                        placeholder="Send a message..."
+                        onkeydown="handleChatKey(event)"
+                        oninput="autoResizeChatInput(this); triggerTyping();"
+                        class="flex-1 resize-none bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-black dark:text-white focus:outline-none focus:border-brand-blue transition max-h-20 overflow-y-auto"></textarea>
+                    <button onclick="sendChatMessage()"
+                        class="bg-brand-blue hover:bg-blue-800 text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition active:scale-95 shadow-sm">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] text-slate-400 mt-1 text-right" id="chat-char-count">0 / 300</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+    // ── PUMMA Ship Chat Engine ───────────────────────────────────────
+    // Uses the same Firestore db and appId already initialized in the app
+    // Waits for them to be ready before attaching listeners
+
+    const CHAT_POLL_INTERVAL = 3000; // ms between Firestore reads
+    const CHAT_MAX_MESSAGES  = 80;   // keep last 80 in memory
+    const CHAT_COLLECTION    = 'chat';
+
+    let chatOpen       = false;
+    let chatSoundOn    = true;
+    let chatUnread     = 0;
+    let chatMessages   = [];
+    let chatListener   = null;
+    let typingTimer    = null;
+    let lastTypingAt   = 0;
+    let chatReady      = false;
+
+    // Role badge config
+    const ROLE_CONFIG = {
+        admin:    { label: 'INSTRUCTOR', color: 'bg-brand-blue text-white',       icon: '⚓' },
+        cadet:    { label: 'CADET',      color: 'bg-slate-600 text-white',         icon: '⛵' },
+        observer: { label: 'OBSERVER',   color: 'bg-emerald-600 text-white',       icon: '🧭' },
+        system:   { label: 'SYSTEM',     color: 'bg-amber-500 text-white',         icon: '📡' },
+    };
+
+    function getChatSender() {
+        const role = window.currentUserRole || 'system';
+        let name = 'Anonymous';
+        if (role === 'admin') {
+            name = window.currentInstructorName || window.appSettings?.instructors?.[0]?.name || 'Instructor';
+        } else if (role === 'cadet') {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            name = c ? c.name : 'Cadet';
+        } else if (role === 'observer') {
+            name = window.currentObserverName || 'Observer';
+        }
+        return { role, name };
+    }
+
+    function formatTime(ts) {
+        if (!ts) return '';
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function buildMessageHTML(msg) {
+        const cfg = ROLE_CONFIG[msg.role] || ROLE_CONFIG.system;
+        const sender = getChatSender();
+        const isMe = msg.senderId === window._chatMyId;
+        const reactions = msg.reactions || {};
+        const reactionHTML = Object.entries(reactions).length
+            ? `<div class="flex flex-wrap gap-1 mt-1">${Object.entries(reactions).map(([emoji, uids]) =>
+                `<button onclick="reactToMessage('${msg.id}','${emoji}')"
+                    class="text-[11px] bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-full px-2 py-0.5 hover:bg-slate-100 transition font-semibold">${emoji} ${uids.length}</button>`
+              ).join('')}</div>` : '';
+
+        return `
+        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} gap-0.5 group" data-msg-id="${msg.id}">
+            ${!isMe ? `<div class="flex items-center gap-1.5 mb-0.5">
+                <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400">${msg.senderName}</span>
+                <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full ${cfg.color}">${cfg.icon} ${cfg.label}</span>
+            </div>` : ''}
+            <div class="relative max-w-[85%]">
+                <div class="${isMe
+                    ? 'bg-brand-blue text-white rounded-2xl rounded-tr-sm'
+                    : 'bg-white dark:bg-slate-700 text-brand-black dark:text-white border border-slate-200 dark:border-slate-600 rounded-2xl rounded-tl-sm'
+                } px-3 py-2 text-xs shadow-sm leading-relaxed break-words">
+                    ${msg.text}
+                </div>
+                <!-- Reaction picker trigger -->
+                <button onclick="showReactionPicker('${msg.id}', this)"
+                    class="absolute -bottom-2 ${isMe ? 'left-1' : 'right-1'} opacity-0 group-hover:opacity-100 transition bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow-sm hover:scale-110">
+                    😊
+                </button>
+            </div>
+            ${reactionHTML}
+            <span class="text-[9px] text-slate-400 mt-0.5">${formatTime(msg.timestamp)}</span>
+        </div>`;
+    }
+
+    function renderChat() {
+        const area = document.getElementById('chat-messages-area');
+        if (!area) return;
+        const wasAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 60;
+
+        if (chatMessages.length === 0) {
+            area.innerHTML = `<div class="text-center text-[10px] text-slate-400 py-4 flex flex-col items-center gap-1">
+                <i data-lucide="anchor" class="w-5 h-5 opacity-30"></i>
+                <span>No messages yet — break the silence, sailor!</span></div>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
+        area.innerHTML = chatMessages.map(buildMessageHTML).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (wasAtBottom) area.scrollTop = area.scrollHeight;
+    }
+
+    async function initChat() {
+        // Wait for db and appId to be available
+        if (typeof db === 'undefined' || typeof appId === 'undefined') {
+            setTimeout(initChat, 500);
+            return;
+        }
+        chatReady = true;
+        window._chatMyId = `user_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+
+        // Post system join message
+        const { role, name } = getChatSender();
+        if (role !== 'system') postSystemMessage(`${name} has joined the ship's comms ⚓`);
+
+        // Listen for new messages
+        const { collection, onSnapshot, query, orderBy, limit } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+        const q = query(chatRef, orderBy('timestamp', 'asc'), limit(CHAT_MAX_MESSAGES));
+
+        chatListener = onSnapshot(q, (snap) => {
+            const prev = chatMessages.length;
+            chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // Update online count (rough estimate from recent messages)
+            const recentSenders = new Set(
+                chatMessages.filter(m => {
+                    const ts = m.timestamp?.toDate ? m.timestamp.toDate() : new Date(m.timestamp || 0);
+                    return Date.now() - ts.getTime() < 5 * 60 * 1000;
+                }).map(m => m.senderId)
+            );
+            const countEl = document.getElementById('chat-online-count');
+            if (countEl) countEl.textContent = `${recentSenders.size} active in last 5 min`;
+
+            renderChat();
+
+            // Unread badge
+            if (!chatOpen && chatMessages.length > prev && prev > 0) {
+                chatUnread += chatMessages.length - prev;
+                const badge = document.getElementById('chat-unread-badge');
+                if (badge) { badge.textContent = chatUnread > 9 ? '9+' : chatUnread; badge.classList.remove('hidden'); }
+                if (chatSoundOn) playChime();
+            }
+        });
+    }
+
+    async function postSystemMessage(text) {
+        if (!chatReady) return;
+        try {
+            const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            await addDoc(chatRef, { text, role: 'system', senderName: 'System', senderId: 'system', timestamp: serverTimestamp(), reactions: {} });
+        } catch(e) { console.warn('Chat system msg failed:', e); }
+    }
+
+    window.sendChatMessage = async () => {
+        if (!chatReady) { alert('Chat not ready yet, please wait.'); return; }
+        const input = document.getElementById('chat-input');
+        const text = input?.value?.trim();
+        if (!text) return;
+
+        const { role, name } = getChatSender();
+        if (!role || role === 'system') { alert('Please log in first to send messages.'); return; }
+
+        input.value = '';
+        autoResizeChatInput(input);
+        document.getElementById('chat-char-count').textContent = '0 / 300';
+
+        try {
+            const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            await addDoc(chatRef, {
+                text,
+                role,
+                senderName: name,
+                senderId: window._chatMyId,
+                timestamp: serverTimestamp(),
+                reactions: {}
+            });
+        } catch(e) {
+            console.error('Send message failed:', e);
+            alert('Failed to send message. Check your connection.');
+        }
+    };
+
+    window.reactToMessage = async (msgId, emoji) => {
+        if (!chatReady) return;
+        try {
+            const { doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const msgRef = doc(db, 'artifacts', appId, 'public', CHAT_COLLECTION, msgId);
+            const snap = await getDoc(msgRef);
+            if (!snap.exists()) return;
+            const reactions = snap.data().reactions || {};
+            const uids = reactions[emoji] || [];
+            const myId = window._chatMyId;
+            if (uids.includes(myId)) {
+                reactions[emoji] = uids.filter(u => u !== myId);
+                if (reactions[emoji].length === 0) delete reactions[emoji];
+            } else {
+                reactions[emoji] = [...uids, myId];
+            }
+            await updateDoc(msgRef, { reactions });
+        } catch(e) { console.warn('Reaction failed:', e); }
+    };
+
+    window.showReactionPicker = (msgId, btn) => {
+        // Remove any existing picker
+        document.querySelectorAll('.reaction-picker-popup').forEach(el => el.remove());
+        const emojis = ['👍','❤️','😂','😮','😢','🔥','⚓','💪','✅','👏'];
+        const picker = document.createElement('div');
+        picker.className = 'reaction-picker-popup fixed z-[9999] bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl shadow-2xl p-2 flex gap-1 flex-wrap';
+        picker.style.cssText = 'max-width:200px';
+        picker.innerHTML = emojis.map(e =>
+            `<button class="text-xl hover:scale-125 transition-transform" onclick="reactToMessage('${msgId}','${e}'); this.closest('.reaction-picker-popup').remove();">${e}</button>`
+        ).join('');
+        // Position near button
+        const rect = btn.getBoundingClientRect();
+        picker.style.top  = `${rect.top  - 60}px`;
+        picker.style.left = `${Math.min(rect.left, window.innerWidth - 220)}px`;
+        document.body.appendChild(picker);
+        // Auto close on outside click
+        setTimeout(() => document.addEventListener('click', function h(e) {
+            if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', h); }
+        }), 100);
+    };
+
+    window.togglePummaChat = () => {
+        const panel = document.getElementById('pumma-chat-panel');
+        const icon  = document.getElementById('chat-btn-icon');
+        chatOpen = !chatOpen;
+        if (chatOpen) {
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            chatUnread = 0;
+            const badge = document.getElementById('chat-unread-badge');
+            if (badge) badge.classList.add('hidden');
+            if (icon) icon.setAttribute('data-lucide', 'x');
+            setTimeout(() => {
+                const area = document.getElementById('chat-messages-area');
+                if (area) area.scrollTop = area.scrollHeight;
+                document.getElementById('chat-input')?.focus();
+            }, 100);
+            if (!chatReady) initChat();
+        } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('flex');
+            if (icon) icon.setAttribute('data-lucide', 'anchor');
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    window.toggleChatSound = () => {
+        chatSoundOn = !chatSoundOn;
+        const btn = document.getElementById('chat-sound-btn');
+        if (btn) btn.innerHTML = chatSoundOn
+            ? '<i data-lucide="volume-2" class="w-4 h-4"></i>'
+            : '<i data-lucide="volume-x" class="w-4 h-4"></i>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    window.appendEmoji = (emoji) => {
+        const input = document.getElementById('chat-input');
+        if (input) { input.value += emoji; input.focus(); autoResizeChatInput(input); }
+    };
+
+    window.handleChatKey = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+    };
+
+    window.autoResizeChatInput = (el) => {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+        document.getElementById('chat-char-count').textContent = `${el.value.length} / 300`;
+    };
+
+    window.triggerTyping = () => {
+        // Simple local debounce — not broadcast to keep it lightweight
+        lastTypingAt = Date.now();
+    };
+
+    function playChime() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.setValueAtTime(880, ctx.currentTime);
+            o.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+            g.gain.setValueAtTime(0.15, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            o.start(ctx.currentTime);
+            o.stop(ctx.currentTime + 0.4);
+        } catch(e) {}
+    }
+
+    // Auto-init chat when user logs in
+    const _origAuthOverlayHide = () => {};
+    const _chatInitObserver = new MutationObserver(() => {
+        const overlay = document.getElementById('auth-overlay');
+        if (overlay && overlay.classList.contains('hidden') && !chatReady) {
+            setTimeout(initChat, 1000);
+        }
+    });
+    const overlay = document.getElementById('auth-overlay');
+    if (overlay) _chatInitObserver.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    </script>
 </body>
     
