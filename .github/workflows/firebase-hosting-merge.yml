@@ -13,7 +13,7 @@ jobs:
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUMMA_COMPETENCY_DASHBOARD }}' > /tmp/sa.json
           npx firebase-tools@latest deploy --only hosting \
             --project pumma-competency-dashboard \
-            --token "" \
             --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/sa.json
+          GOOGLE_CLOUD_PROJECT: pumma-competency-dashboard
