@@ -5100,6 +5100,15 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(inp) inp.addEventListener('input',e=>updateMorseOutput(e.target.value));
         }
         // ── END VISUAL CARDS ────────────────────────────────────────────────
+        // Expose ROR audio/card functions to global scope (required because this
+        // script runs as type="module" which has isolated scope — onclick attributes
+        // look up functions on window, so we must assign them explicitly here).
+        window.getRorAudioCtx   = getRorAudioCtx;
+        window.playBlast        = playBlast;
+        window.playMorseStr     = playMorseStr;
+        window.playMorseInput   = playMorseInput;
+        window.updateMorseOutput= updateMorseOutput;
+        window.initMorseEncoder = initMorseEncoder;
 
 // --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
         // Updated to perfectly match your exact GitHub file names
