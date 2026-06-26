@@ -4633,10 +4633,12 @@ window.logAdminSettingsActivity = async (action, details) => {
              desc:'Single masthead white, red port sidelight, green starboard sidelight + stern white.'},
             {cat:'Power Vessels',title:'Vessel at Anchor',rule:'Rule 30(a)',
              night:lightSvg([{color:'white'},{color:'white'}]),day:shapeSvg([{type:'ball'}]),
-             desc:'Forward white all-round (higher) + aft white all-round (lower). Day: one black ball forward.'},
+             desc:'Forward white all-round (higher) + aft white all-round (lower). Day: one black ball forward.',
+             sound:{type:'anchor',label:'🔔 Bell — Vessel at Anchor',rule:'Rule 35(g)'}},
             {cat:'Power Vessels',title:'Vessel Aground',rule:'Rule 30(d)',
              night:lightSvg([{color:'red'},{color:'red'},{color:'white'},{color:'white'}]),day:shapeSvg([{type:'ball'},{type:'ball'},{type:'ball'}]),
-             desc:'Two red all-round lights + anchor lights. Day: three black balls in vertical line.'},
+             desc:'Two red all-round lights + anchor lights. Day: three black balls in vertical line.',
+             sound:{type:'aground',label:'🔔 Bell — Vessel Aground',rule:'Rule 35(h)'}},
             {cat:'Sailing & Special',title:'Sailing Vessel Underway',rule:'Rule 25(a)',
              night:lightSvg([{color:'red'},{color:'green'}]),day:null,
              desc:'Red port, green starboard, white stern. No masthead white light. No engine = no masthead.'},
@@ -4689,6 +4691,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                             ${card.day?`<div class="flex flex-col items-center gap-1"><div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">☀️ Day</div>${card.day}</div>`:''}
                         </div>
                         <div class="px-4 pb-3 text-[10px] text-slate-400 leading-relaxed">${card.desc}</div>
+                        ${card.sound?`<div class="px-4 pb-3 flex items-center gap-2 border-t border-slate-800 pt-2">
+                            <span class="text-[9px] bg-amber-900/40 text-amber-400 font-black px-2 py-0.5 rounded border border-amber-800">${card.sound.rule}</span>
+                            <span class="text-[10px] text-amber-300 font-semibold">${card.sound.label}</span>
+                            <button onclick="playBell('${card.sound.type}',this)" class="ml-auto text-[9px] bg-slate-700 hover:bg-amber-700 text-white px-2 py-1 rounded font-bold transition flex items-center gap-1 disabled:opacity-50">▶ Play</button>
+                        </div>`:''}
                     </div>`;
                 });
                 h+=`</div></div>`;
@@ -4768,9 +4775,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                 {sig:'• •',      label:'2 Short Blasts',         meaning:'I am altering my course to PORT',                                   rule:'Rule 34(a)',color:'text-red-400'},
                 {sig:'• • •',    label:'3 Short Blasts',         meaning:'I am operating astern propulsion',                                  rule:'Rule 34(a)',color:'text-yellow-400'},
                 {sig:'• • • • •',label:'5+ Short Blasts',        meaning:'Danger / doubt signal — vessels in sight of one another',          rule:'Rule 34(d)',color:'text-orange-400'},
-                {sig:'– •',      label:'2 Prolonged + 1 Short',  meaning:'Overtaking vessel intends to pass on your STARBOARD side',         rule:'Rule 34(c)',color:'text-blue-400'},
-                {sig:'– • •',    label:'2 Prolonged + 2 Short',  meaning:'Overtaking vessel intends to pass on your PORT side',              rule:'Rule 34(c)',color:'text-violet-400'},
+                {sig:'– –',      label:'2 Prolonged Blasts',     meaning:'Intend to overtake on STARBOARD side (narrow channel)',            rule:'Rule 34(c)',color:'text-blue-400'},
+                {sig:'– – •',    label:'2 Prolonged + 1 Short',  meaning:'Overtaking vessel intends to pass on your STARBOARD side',         rule:'Rule 34(c)',color:'text-blue-400'},
+                {sig:'– – • •',  label:'2 Prolonged + 2 Short',  meaning:'Overtaking vessel intends to pass on your PORT side',              rule:'Rule 34(c)',color:'text-violet-400'},
                 {sig:'– • – •',  label:'1 Prolonged 1 Short 1 Prolonged 1 Short', meaning:'Overtaken vessel agrees to the overtaking manoeuvre', rule:'Rule 34(c)',color:'text-teal-400'},
+                {sig:'–',        label:'1 Prolonged Blast',      meaning:'Vessel nearing a BEND or blind area in a channel or fairway',      rule:'Rule 34(e)',color:'text-cyan-400'},
             ],
             rule35: [
                 {sig:'–',          label:'1 Prolonged Blast (every 2 min)',        meaning:'Power-driven vessel MAKING WAY through water',                         rule:'Rule 35(a)',color:'text-white'},
@@ -4781,6 +4790,14 @@ window.logAdminSettingsActivity = async (action, details) => {
                 {sig:'🔔 5 sec bell (every 1 min)',label:'Rapid Bell ~5 seconds',  meaning:'Vessel AT ANCHOR',                                                     rule:'Rule 35(g)',color:'text-amber-400'},
                 {sig:'🔔 3 + 🔔 5 + 3 strokes',label:'Bell Strokes + Rapid Bell', meaning:'Vessel AGROUND (3 distinct strokes before & after rapid ring)',        rule:'Rule 35(h)',color:'text-red-300'},
                 {sig:'• • • •',    label:'4 Short Blasts (additional)',             meaning:'PILOT VESSEL identity signal',                                         rule:'Rule 35(k)',color:'text-teal-400'},
+            ],
+            rule36: [
+                {sig:'• • •',  label:'3 Short Blasts',   meaning:'SOS whistle component (S) — supplement to distress signals',       rule:'Rule 37 / Annex IV',color:'text-red-500'},
+                {sig:'– – –',  label:'3 Prolonged Blasts (O)',meaning:'SOS whistle component (O) — supplement to distress signals',  rule:'Rule 37 / Annex IV',color:'text-red-500'},
+                {sig:'• – •',  label:'Short–Long–Short',  meaning:'Vessel requiring assistance — any sound signal at intervals',      rule:'Annex IV',color:'text-orange-400'},
+                {sig:'– • – •',label:'Repeated sound signal every 1 min',meaning:'Fog signal indicating distress (firing of gun or explosive)',rule:'Annex IV',color:'text-orange-400'},
+                {sig:'– –',    label:'2 Prolonged Blasts',meaning:'Composite unit (pushing + pushed ahead rigidly connected) — power-driven, underway, stopped',rule:'Rule 35(f)',color:'text-slate-300'},
+                {sig:'– • • •',label:'1 Prolonged + 3 Short',meaning:'Pilot vessel identity (in addition to whistle/bell signals per 35(a)/(b)/(g))',rule:'Rule 35(k)',color:'text-purple-400'},
             ],
         };
         function blastViz(sig){
@@ -4864,6 +4881,45 @@ window.logAdminSettingsActivity = async (action, details) => {
                 });
             })();
         }
+        // Bell audio for ROR cards — distinct from whistle playBlast
+        async function playBell(type, btnEl){
+            const ctx = getRorAudioCtx();
+            if(!ctx){alert('Web Audio not supported in this browser.');return;}
+            await ctx.resume();
+            function ringBell(t,vol=0.4){
+                // Realistic ship bell: fundamental 880Hz + harmonics with fast decay
+                [880,1320,1760,2200].forEach((f,i)=>{
+                    const o=ctx.createOscillator(), g=ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.value=f; o.type='sine';
+                    const v=vol/(i+1);
+                    g.gain.setValueAtTime(v,t);
+                    g.gain.exponentialRampToValueAtTime(0.001,t+1.0);
+                    o.start(t); o.stop(t+1.05);
+                });
+            }
+            let totalMs=0;
+            if(type==='anchor'){
+                // Rule 35(g): rapid bell ringing for ~5 seconds every 1 min
+                // Demo: 7 bell strokes closely spaced (~0.6s apart) = ~4.8s
+                for(let i=0;i<7;i++) ringBell(ctx.currentTime+0.1+i*0.65);
+                totalMs=5200;
+            } else if(type==='aground'){
+                // Rule 35(h): 3 separate strokes BEFORE, rapid ~5s ring, 3 strokes AFTER
+                // Demo: 3 slow strokes, pause, 6 rapid, pause, 3 slow strokes
+                let t=ctx.currentTime+0.1;
+                for(let i=0;i<3;i++){ringBell(t,0.5); t+=0.9;} // 3 distinct strokes
+                t+=0.5; // short pause
+                for(let i=0;i<6;i++){ringBell(t,0.35); t+=0.55;} // rapid ring
+                t+=0.5; // short pause
+                for(let i=0;i<3;i++){ringBell(t,0.5); t+=0.9;} // 3 distinct strokes after
+                totalMs=Math.ceil((t-ctx.currentTime)*1000)+200;
+            }
+            if(btnEl){
+                btnEl.disabled=true; btnEl.textContent='🔔 Ringing…';
+                setTimeout(()=>{ btnEl.disabled=false; btnEl.textContent='▶ Play'; }, totalMs);
+            }
+        }
         function buildSoundSigs(){
             function table(rows,title,icon){
                 return `<div class="mb-6">
@@ -4899,6 +4955,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             </div>
             ${table(SOUND_DATA.rule34,'Rule 34 — Manoeuvring Signals (Vessels in Sight)','🔊')}
             ${table(SOUND_DATA.rule35,'Rule 35 — Restricted Visibility Signals','🌫️')}
+            ${table(SOUND_DATA.rule36,'Rule 36–37 / Annex IV — Distress & Special Signals','🆘')}
             </div>`;
         }
 
@@ -4913,16 +4970,35 @@ window.logAdminSettingsActivity = async (action, details) => {
             '6':'-....','7':'--...','8':'---..','9':'----.',
         };
         const MORSE_MARITIME=[
-            {code:'SOS',morse:'··· ––– ···',meaning:'International distress signal',color:'text-red-400',urgent:true},
-            {code:'CQD',morse:'–·–· ––· –··',meaning:'Legacy distress call (superseded by SOS)',color:'text-orange-400'},
+            // ── Distress & Emergency ──
+            {code:'SOS',morse:'··· ––– ···',meaning:'International distress signal — save our souls',color:'text-red-400',urgent:true},
+            {code:'CQD',morse:'–·–· ––· –··',meaning:'Legacy distress call (superseded by SOS in 1908)',color:'text-orange-400'},
+            {code:'MAYDAY',morse:'–– ·– –·· ·– ··–·',meaning:'Voice distress call phonetic (from French: m\'aidez — help me)',color:'text-red-300',urgent:true},
+            {code:'PAN PAN',morse:'.--. .- -. / .--. .- -.',meaning:'Urgency signal — person/vessel in urgent need but not immediate danger',color:'text-orange-300'},
+            {code:'SECURITE',morse:'... . -.-. ..- .-. .. - .',meaning:'Safety call — important navigational or meteorological warning',color:'text-yellow-300'},
+            {code:'TTT',morse:'- - -',meaning:'Safety signal preceding a navigational/meteorological warning',color:'text-yellow-400'},
+            // ── General Procedure ──
             {code:'CQ',morse:'–·–· ––·',meaning:'General call to all stations',color:'text-teal-400'},
             {code:'DE',morse:'–·· ·',meaning:'This is / from (precedes vessel identity)',color:'text-slate-300'},
             {code:'K',morse:'–·–',meaning:'Invitation to transmit / I wish to communicate',color:'text-blue-400'},
             {code:'AR',morse:'·– –·',meaning:'End of message',color:'text-slate-400'},
             {code:'BT',morse:'–···–',meaning:'Break / separator between parts of message',color:'text-slate-400'},
+            {code:'AS',morse:'·–···',meaning:'Wait / standby',color:'text-slate-400'},
+            {code:'IMI',morse:'·· –– ··',meaning:'Repeat / say again (? — international interrogative)',color:'text-slate-300'},
+            {code:'R',morse:'·–·',meaning:'Received / Roger — message received and understood',color:'text-green-400'},
+            {code:'SK',morse:'···–·–',meaning:'End of contact / clear',color:'text-slate-400'},
             {code:'NC',morse:'–· –·–·',meaning:'International Code distress signal (flag N+C)',color:'text-red-400'},
+            // ── Q-Codes (Maritime) ──
             {code:'QRB',morse:'––· ·–· –···',meaning:'What is your distance from my station?',color:'text-purple-400'},
             {code:'QTH',morse:'––· –  ····',meaning:'What is your position?',color:'text-purple-400'},
+            {code:'QRM',morse:'––· ·–· ––',meaning:'I am being interfered with / Are you being interfered with?',color:'text-purple-300'},
+            {code:'QRN',morse:'––· ·–· –·',meaning:'I am troubled by static/natural interference',color:'text-purple-300'},
+            {code:'QRT',morse:'––· ·–· –',meaning:'Stop sending / I am stopping transmission',color:'text-red-300'},
+            {code:'QRX',morse:'––· ·–· –·–·',meaning:'Wait / When will you call me again?',color:'text-blue-300'},
+            {code:'QSY',morse:'––· ···– –·–·',meaning:'Change to another frequency',color:'text-blue-400'},
+            {code:'QSO',morse:'––· ···– ––·',meaning:'Can you communicate with ... direct?',color:'text-teal-300'},
+            {code:'QNH',morse:'––· –· ····',meaning:'Altimeter/barometric pressure reduced to sea level',color:'text-cyan-400'},
+            {code:'QSP',morse:'––· ···– ·–··',meaning:'Will you relay to ... free of charge?',color:'text-teal-300'},
         ];
         function dotDash(mc){
             return mc.split('').map(c=>
@@ -4963,22 +5039,34 @@ window.logAdminSettingsActivity = async (action, details) => {
             <div>
                 <div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">⚓ Critical Maritime Morse Signals</div>
                 <div class="space-y-2">
-                ${MORSE_MARITIME.map(m=>{
-                    // FIX: convert unicode morse (·–) to ASCII (.-) with proper inter-letter
-                    // double-space so playMorseStr handles gaps at the correct ITU timing.
-                    const letters = m.morse.replace(/·/g,'.').replace(/–/g,'-').split(' ').filter(Boolean);
-                    const asciiMorse = letters.join('  ');
-                    const vizMorse   = letters.join(' ');
-                    return `<div class="bg-slate-900 border ${m.urgent?'border-red-700/60':'border-slate-700'} rounded-xl p-3 hover:border-teal-500/30 transition">
-                    <div class="flex items-center justify-between gap-2 mb-1.5">
-                        <div class="flex items-center gap-3">
-                            <span class="font-black text-base ${m.color} w-16 shrink-0">${m.code}</span>
-                            <div class="flex items-center gap-0.5">${dotDash(vizMorse)}</div>
-                        </div>
-                        <button onclick="const b=this;b.disabled=true;b.textContent='♪…';playMorseStr('${asciiMorse}');setTimeout(()=>{b.disabled=false;b.textContent='▶ Play';},3500);" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition shrink-0 disabled:opacity-50">▶ Play</button>
-                    </div>
-                    <div class="text-[10px] text-slate-400">${m.meaning}</div>
-                </div>`;}).join('')}
+                ${(()=>{
+                    const groups=[
+                        {label:'🆘 Distress & Emergency',codes:['SOS','CQD','MAYDAY','PAN PAN','SECURITE','TTT']},
+                        {label:'📡 Procedure Signals',codes:['CQ','DE','K','AR','BT','AS','IMI','R','SK','NC']},
+                        {label:'📶 Q-Codes',codes:['QRB','QTH','QRM','QRN','QRT','QRX','QSY','QSO','QNH','QSP']},
+                    ];
+                    return groups.map(g=>{
+                        const items=MORSE_MARITIME.filter(m=>g.codes.includes(m.code));
+                        return `<div class="mb-4">
+                        <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">${g.label}</div>
+                        <div class="space-y-1.5">
+                        ${items.map(m=>{
+                            const letters = m.morse.replace(/·/g,'.').replace(/–/g,'-').split(' ').filter(Boolean);
+                            const asciiMorse = letters.join('  ');
+                            const vizMorse   = letters.join(' ');
+                            return `<div class="bg-slate-900 border ${m.urgent?'border-red-700/60':'border-slate-700'} rounded-xl p-3 hover:border-teal-500/30 transition">
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-black text-base ${m.color} w-20 shrink-0">${m.code}</span>
+                                    <div class="flex items-center gap-0.5 flex-wrap">${dotDash(vizMorse)}</div>
+                                </div>
+                                <button onclick="const b=this;b.disabled=true;b.textContent='♪…';playMorseStr('${asciiMorse}');setTimeout(()=>{b.disabled=false;b.textContent='▶ Play';},3500);" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition shrink-0 disabled:opacity-50">▶ Play</button>
+                            </div>
+                            <div class="text-[10px] text-slate-400">${m.meaning}</div>
+                        </div>`;}).join('')}
+                        </div></div>`;
+                    }).join('');
+                })()}
                 </div>
             </div>
 
