@@ -2484,7 +2484,7 @@
 
             <div class="flex-1 flex flex-col bg-brand-creamBg dark:bg-slate-950 relative">
                 <button onclick="closeColregsModal()" class="hidden md:block absolute top-4 right-4 text-slate-400 hover:text-brand-blue dark:hover:text-teal-400 transition bg-white dark:bg-slate-800 p-1 rounded-md shadow-sm border border-brand-creamBorder dark:border-slate-700"><i data-lucide="x" class="w-4 h-4"></i></button>
-                <div class="p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar" id="colregs-content">
+                <div class="p-6 md:p-10 flex-1 overflow-y-auto custom-scrollbar bg-slate-950" id="colregs-content">
                     </div>
             </div>
 
@@ -4667,7 +4667,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             let h=`<div class="space-y-8 pb-6">
             <div><h2 class="text-2xl font-black text-teal-400 mb-1">ROR Visual Cards</h2>
             <p class="text-slate-400 text-sm mb-3">Lights &amp; Shapes — Night &amp; Day · COLREGs 1972</p>
-            <div class="flex gap-3 flex-wrap text-[11px] bg-slate-900 rounded-lg p-3 border border-slate-700">
+            <div class="flex gap-3 flex-wrap text-[11px] bg-slate-900 rounded-lg p-3 border border-slate-700 text-slate-200">
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-500"></span>White</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>Red</span>
                 <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>Green</span>
@@ -4792,13 +4792,19 @@ window.logAdminSettingsActivity = async (action, details) => {
                 return `<span class="text-[10px] text-slate-400">${p}</span>`;
             }).join('')}</div>`;
         }
-        function playBlast(sig, btnEl){
-            // FIX 6: Handle browsers that auto-suspend AudioContext (mobile/Safari)
-            if(!window.AudioContext && !window.webkitAudioContext){alert('Web Audio not supported in this browser.');return;}
-            const ctx=new (window.AudioContext||window.webkitAudioContext)();
-            const resume = ctx.state==='suspended' ? ctx.resume() : Promise.resolve();
-
-            resume.then(()=>{
+        // Shared AudioContext — avoids limits and ensures resume works on mobile/Safari
+        window._rorAudioCtx = null;
+        function getRorAudioCtx(){
+            if(!window.AudioContext && !window.webkitAudioContext) return null;
+            if(!window._rorAudioCtx || window._rorAudioCtx.state==='closed')
+                window._rorAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+            return window._rorAudioCtx;
+        }
+        async function playBlast(sig, btnEl){
+            const ctx = getRorAudioCtx();
+            if(!ctx){alert('Web Audio not supported in this browser.');return;}
+            await ctx.resume(); // always await — unlocks both new and suspended contexts
+            (()=>{
                 // FIX 1: sig now has space-separated tokens so split works correctly
                 // e.g. '• •' → ['•','•'], '– • •' → ['–','•','•']
                 const parts=sig.replace(/🔔[^+(]*/g,'B').split(' ').filter(p=>p&&p!=='+');
@@ -4856,7 +4862,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     });
                     t+=dur+gap;
                 });
-            });
+            })();
         }
         function buildSoundSigs(){
             function table(rows,title,icon){
@@ -5013,13 +5019,11 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(disp) disp.textContent=morse||'';
             if(dots) dots.innerHTML=words.map(w=>w.split('').map(c=>t[c]?dotDash(t[c]):'<span class="text-red-500">?</span>').join('<span class="text-slate-600 mx-1">·</span>')).join('<span class="text-slate-500 mx-2 font-bold">/</span>')||'';
         }
-        function playMorseStr(morseStr){
-            // FIX 6: Resume suspended AudioContext (mobile browsers auto-suspend it)
-            if(!window.AudioContext&&!window.webkitAudioContext){alert('Web Audio not supported.');return;}
-            const ctx=new(window.AudioContext||window.webkitAudioContext)();
-            const resume = ctx.state==='suspended' ? ctx.resume() : Promise.resolve();
-
-            resume.then(()=>{
+        async function playMorseStr(morseStr){
+            const ctx = getRorAudioCtx();
+            if(!ctx){alert('Web Audio not supported.');return;}
+            await ctx.resume();
+            (()=>{
                 // FIX 3: unit=0.08 was too fast (inaudible blur). 
                 // ITU standard at 5 WPM = 0.24s/unit. We use 0.12s for a clear, educational speed.
                 const unit=0.12, freq=600;
@@ -5077,7 +5081,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     // only if this wasn't already handled by spaces inside the token
                     if(!token.includes(' ')) t += unit*2;
                 });
-            });
+            })();
         }
         function playMorseInput(){
             const val=document.getElementById('morse-input')?.value||'';
