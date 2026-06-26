@@ -4547,6 +4547,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             { id: "a1", title: "Annex I: Lights & Shapes", part: "Annexes", text: rHtml("Annex I", `POSITIONING AND TECHNICAL DETAILS OF LIGHTS AND SHAPES<br><br><i>Note: This Annex contains highly technical tables and formulas specifying the exact vertical and horizontal positioning, spacing, colour specifications, and intensity formulas for navigation lights, as well as the exact dimensional sizes for day shapes (Balls, Cones, Cylinders, Diamonds). Please consult the official IMO publication for specific engineering and mathematical reference tables.</i>`) },
             { id: "a2", title: "Annex II: Fishing Signals", part: "Annexes", text: rHtml("Annex II", `ADDITIONAL SIGNALS FOR FISHING VESSELS FISHING IN CLOSE PROXIMITY<br><br><b>1. General</b><br>The lights mentioned herein shall, if exhibited in pursuance of Rule 26(d), be placed where they can best be seen. They shall be at least 0.9 metre apart but at a lower level than lights prescribed in Rule 26(b)(i) and (c)(i).<br><br><b>2. Signals for trawlers</b><br>(a) Vessels of 20 m or more in length when engaged in trawling, whether using demersal or pelagic gear shall exhibit:<br>(i) when shooting their nets: two white lights in a vertical line;<br>(ii) when hauling their nets: one white light over one red light in a vertical line;<br>(iii) when the net has come fast upon an obstruction two red lights in a vertical line.<br><br>(b) Each vessel of 20 m or more in length engaged in pair trawling shall exhibit:<br>(i) by night, a searchlight directed forward and in the direction of the other vessel of the pair;<br>(ii) when shooting or hauling their nets or when their nets have come fast upon an obstruction, the lights prescribed in 2(a) above.<br><br><b>3. Signals for purse seiners</b><br>Vessels engaged in fishing with purse seine gear may exhibit two yellow lights in a vertical line. These lights shall flash alternately every second and with equal light and occultation duration.`) },
             { id: "a3", title: "Annex III: Sound Appliances", part: "Annexes", text: rHtml("Annex III", `TECHNICAL DETAILS OF SOUND SIGNAL APPLIANCES<br><br><i>Note: This Annex contains the technical engineering tables dictating the exact fundamental frequencies (70-700Hz), limits, directional properties, sound pressure intensities, and construction material standards for whistles, bells, and gongs required by maritime law. Please consult the official IMO publication for specific engineering and mathematical reference tables.</i>`) },
+            { id: "ror-nightday", title: "Lights \u0026 Shapes — Night \u0026 Day", part: "ROR Visual Cards", text: '__ROR_CARDS__' },
+            { id: "flags-int", title: "International Maritime Flags", part: "ROR Visual Cards", text: '__FLAGS__' },
             { id: "a4", title: "Annex IV: Distress Signals", part: "Annexes", text: rHtml("Annex IV: Distress Signals", `<b>1. The following signals, used or exhibited either together or separately, indicate distress and need of assistance:</b><br>(a) a gun or other explosive signals fired at intervals of about a minute;<br>(b) a continuous sounding with any fog-signalling apparatus;<br>(c) rockets or shells, throwing red stars fired one at a time at short intervals;<br>(d) a signal made by any signalling method consisting of the group ...---... (SOS) in the Morse Code;<br>(e) a signal sent by radiotelephony consisting of the spoken word "MAYDAY";<br>(f) the International Code Signal of distress indicated by N.C.;<br>(g) a signal consisting of a square flag having above or below it a ball or anything resembling a ball;<br>(h) flames on the vessel (as from a burning tar barrel, oil barrel, etc.);<br>(i) a rocket parachute flare or a hand-flare showing a red light;<br>(j) a smoke signal giving off orange-coloured smoke;<br>(k) slowly and repeatedly raising and lowering arms outstretched to each side;<br>(l) a distress alert by means of digital selective calling (DSC);<br>(m) a ship-to-shore distress alert transmitted by the ship's Inmarsat or other mobile satellite service provider ship earth station;<br>(n) signals transmitted by emergency position-indicating radio beacons;<br>(o) approved signals transmitted by radiocommunications systems, including survival craft radar transponders.<br><br><b>2.</b> The use or exhibition of any of the foregoing signals, except for the purpose of indicating distress and need of assistance and the use of other signals which may be confused with any of the above signals, is prohibited.`) }
         ];
 
@@ -4587,13 +4589,289 @@ window.logAdminSettingsActivity = async (action, details) => {
                 activeBtn.classList.remove('text-slate-400');
             }
 
+            const el = document.getElementById('colregs-content');
+            if (!el) return;
+
+            if (id === 'ror-nightday') { el.innerHTML = buildRorCards(); el.scrollTo(0,0); if(window.lucide) window.lucide.createIcons(); return; }
+            if (id === 'flags-int')   { el.innerHTML = buildIntFlags();  el.scrollTo(0,0); if(window.lucide) window.lucide.createIcons(); return; }
+
             const rule = window.colregsDatabase.find(r => r.id === id);
-            const content = document.getElementById('colregs-content');
-            if (content && rule) {
-                content.innerHTML = rule.text;
-                content.scrollTo(0, 0); 
-            }
+            if (rule) { el.innerHTML = rule.text; el.scrollTo(0, 0); }
         };
+
+        // ── ROR CARDS — Lights & Shapes ─────────────────────────────────────
+        function lightSvg(lights) {
+            // lights: array of {y, color, shape:'circle'|'diamond', label?}
+            // Draws a vertical mast with lights on a dark background
+            const rows = lights.length;
+            const h = Math.max(120, rows * 38 + 20);
+            let circles = lights.map((l, i) => {
+                const cy = 18 + i * 38;
+                const fill = l.color === 'white' ? '#ffffff' : l.color === 'red' ? '#ef4444' : l.color === 'green' ? '#22c55e' : l.color === 'yellow' ? '#facc15' : '#94a3b8';
+                const glow = l.color === 'white' ? '#ffffff' : fill;
+                if (l.shape === 'diamond') {
+                    return `<polygon points="${40},${cy-10} ${50},${cy} ${40},${cy+10} ${30},${cy}" fill="${fill}" filter="url(#glow_${i})"/>`;
+                }
+                return `<circle cx="40" cy="${cy}" r="9" fill="${fill}" filter="url(#glow_${i})"/>`;
+            }).join('');
+            let defs = lights.map((l,i) => {
+                const c = l.color==='white'?'#fff': l.color==='red'?'#ef4444': l.color==='green'?'#22c55e': l.color==='yellow'?'#facc15':'#94a3b8';
+                return `<filter id="glow_${i}"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+            }).join('');
+            return `<svg width="80" height="${h}" viewBox="0 0 80 ${h}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="80" height="${h}" rx="8" fill="#0f172a"/>
+                <line x1="40" y1="0" x2="40" y2="${h}" stroke="#334155" stroke-width="2"/>
+                <defs>${defs}</defs>${circles}</svg>`;
+        }
+
+        function shapeSvg(shapes) {
+            // shapes: array of {type:'ball'|'cone'|'diamond'|'cylinder', inverted?}
+            const rows = shapes.length;
+            const h = Math.max(120, rows * 42 + 20);
+            let items = shapes.map((s, i) => {
+                const cy = 20 + i * 42;
+                if (s.type === 'ball') return `<circle cx="40" cy="${cy}" r="14" fill="#111827" stroke="#f1f5f9" stroke-width="2"/>`;
+                if (s.type === 'cone') return s.inverted
+                    ? `<polygon points="40,${cy+14} 26,${cy-14} 54,${cy-14}" fill="#111827" stroke="#f1f5f9" stroke-width="2"/>`
+                    : `<polygon points="40,${cy-14} 26,${cy+14} 54,${cy+14}" fill="#111827" stroke="#f1f5f9" stroke-width="2"/>`;
+                if (s.type === 'diamond') return `<polygon points="40,${cy-16} 56,${cy} 40,${cy+16} 24,${cy}" fill="#111827" stroke="#f1f5f9" stroke-width="2"/>`;
+                if (s.type === 'cylinder') return `<ellipse cx="40" cy="${cy-10}" rx="14" ry="5" fill="#111827" stroke="#f1f5f9" stroke-width="2"/><rect x="26" y="${cy-10}" width="28" height="20" fill="#111827" stroke="#f1f5f9" stroke-width="2"/><ellipse cx="40" cy="${cy+10}" rx="14" ry="5" fill="#1e293b" stroke="#f1f5f9" stroke-width="2"/>`;
+                return '';
+            }).join('');
+            return `<svg width="80" height="${h}" viewBox="0 0 80 ${h}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="80" height="${h}" rx="8" fill="#1e293b"/>
+                <line x1="40" y1="0" x2="40" y2="${h}" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3"/>${items}</svg>`;
+        }
+
+        const ROR_CARDS = [
+            // ── POWER VESSELS ──────────────────────────────────────────────
+            { cat:'Power Vessels', title:'Power Vessel Underway', rule:'Rule 23(a)',
+              night: lightSvg([{y:0,color:'white'},{y:1,color:'white'},{y:2,color:'red'},{y:3,color:'green'}]),
+              day:   null,
+              desc:'Masthead light (forward), second masthead light (aft, higher), red port sidelight, green starboard sidelight, stern white light (not shown on mast).' },
+            { cat:'Power Vessels', title:'Power Vessel <50m Underway', rule:'Rule 23(b)',
+              night: lightSvg([{y:0,color:'white'},{y:1,color:'red'},{y:2,color:'green'}]),
+              day:   null,
+              desc:'Single masthead white light, red port sidelight, green starboard sidelight. Vessels under 50m may combine into one masthead light.' },
+            { cat:'Power Vessels', title:'Vessel Aground', rule:'Rule 30(d)',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'red'},{y:2,color:'white'},{y:3,color:'red'},{y:4,color:'green'}]),
+              day:   shapeSvg([{type:'ball'},{type:'ball'},{type:'ball'}]),
+              desc:'Two red all-round lights (vertical) in addition to anchor lights. Day: Three black balls in a vertical line.' },
+            { cat:'Power Vessels', title:'Vessel at Anchor', rule:'Rule 30(a)',
+              night: lightSvg([{y:0,color:'white'},{y:1,color:'white'}]),
+              day:   shapeSvg([{type:'ball'}]),
+              desc:'Vessel ≥50m: forward white all-round light (higher) + aft white all-round light (lower). Day: one black ball forward.' },
+
+            // ── SAILING & NUC ───────────────────────────────────────────────
+            { cat:'Sailing & Special', title:'Sailing Vessel Underway', rule:'Rule 25(a)',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'green'}]),
+              day:   null,
+              desc:'Red port sidelight, green starboard sidelight, white stern light. No masthead white light. Optional: combined red/green lantern at masthead.' },
+            { cat:'Sailing & Special', title:'Vessel Not Under Command (NUC)', rule:'Rule 27(a)',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'red'},{y:2,color:'white'},{y:3,color:'red'},{y:4,color:'green'}]),
+              day:   shapeSvg([{type:'ball'},{type:'ball'}]),
+              desc:'Two red all-round lights (vertical). When making way: also sidelights and stern light. Day: two black balls in vertical line.' },
+            { cat:'Sailing & Special', title:'Vessel Restricted in Ability to Manoeuvre (RAM)', rule:'Rule 27(b)',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'white'},{y:2,color:'red'},{y:3,color:'red'},{y:4,color:'green'}]),
+              day:   shapeSvg([{type:'ball'},{type:'diamond'},{type:'ball'}]),
+              desc:'Red-white-red all-round lights (vertical). Day: ball-diamond-ball in vertical line.' },
+            { cat:'Sailing & Special', title:'Vessel Constrained by Draught', rule:'Rule 28',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'red'},{y:2,color:'red'},{y:3,color:'white'},{y:4,color:'red'},{y:5,color:'green'}]),
+              day:   shapeSvg([{type:'cylinder'}]),
+              desc:'Three red all-round lights in vertical line in addition to normal underway lights. Day: black cylinder.' },
+
+            // ── FISHING ─────────────────────────────────────────────────────
+            { cat:'Fishing Vessels', title:'Fishing Vessel (Trawling)', rule:'Rule 26(b)',
+              night: lightSvg([{y:0,color:'green'},{y:1,color:'white'},{y:2,color:'red'},{y:3,color:'green'}]),
+              day:   shapeSvg([{type:'cone',inverted:false},{type:'cone',inverted:true}]),
+              desc:'Green over white all-round lights. When making way: sidelights and stern light. Day: two cones apex together (hourglass shape).' },
+            { cat:'Fishing Vessels', title:'Fishing Vessel (Not Trawling)', rule:'Rule 26(c)',
+              night: lightSvg([{y:0,color:'red'},{y:1,color:'white'},{y:2,color:'red'},{y:3,color:'green'}]),
+              day:   shapeSvg([{type:'cone',inverted:false},{type:'cone',inverted:false}]),
+              desc:'Red over white all-round lights. When making way: sidelights and stern light. Day: two cones apex upward in vertical line.' },
+
+            // ── PILOT & HOVERCRAFT ──────────────────────────────────────────
+            { cat:'Special Vessels', title:'Pilot Vessel on Duty', rule:'Rule 29',
+              night: lightSvg([{y:0,color:'white'},{y:1,color:'red'},{y:2,color:'white'},{y:3,color:'red'},{y:4,color:'green'}]),
+              day:   null,
+              desc:'White over red all-round lights at masthead. When underway: also sidelights and stern light. When at anchor: anchor light in addition.' },
+            { cat:'Special Vessels', title:'Hovercraft (non-displacement)', rule:'Rule 23(b)',
+              night: lightSvg([{y:0,color:'yellow'},{y:1,color:'white'},{y:2,color:'red'},{y:3,color:'green'}]),
+              day:   null,
+              desc:'Yellow flashing all-round light in addition to normal power vessel lights when in non-displacement mode.' },
+            { cat:'Special Vessels', title:'Vessel Towing (tow >200m)', rule:'Rule 24(a)',
+              night: lightSvg([{y:0,color:'white'},{y:1,color:'white'},{y:2,color:'white'},{y:3,color:'red'},{y:4,color:'green'}]),
+              day:   shapeSvg([{type:'diamond'}]),
+              desc:'Three white masthead lights (vertical) instead of two. Day: diamond shape where tow exceeds 200m. Yellow towing light above stern light.' },
+        ];
+
+        function buildRorCards() {
+            const cats = [...new Set(ROR_CARDS.map(c => c.cat))];
+            let html = `<div class="space-y-8 pb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-teal-400 mb-1">ROR Visual Cards</h2>
+                    <p class="text-slate-400 text-sm">Lights &amp; Shapes — Night &amp; Day · COLREGs 1972</p>
+                    <div class="flex gap-3 mt-3 flex-wrap text-[11px]">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-600"></span>White</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>Red</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>Green</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>Yellow/Amber</span>
+                        <span class="flex items-center gap-1.5 ml-4 text-slate-500">●&nbsp;Black shapes = Day signals</span>
+                    </div>
+                </div>`;
+
+            cats.forEach(cat => {
+                const cards = ROR_CARDS.filter(c => c.cat === cat);
+                html += `<div>
+                    <div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">${cat}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">`;
+
+                cards.forEach(card => {
+                    html += `<div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden hover:border-teal-500/50 transition-colors">
+                        <div class="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-slate-800">
+                            <span class="text-[9px] bg-teal-900/60 text-teal-400 font-black px-2 py-0.5 rounded border border-teal-800">${card.rule}</span>
+                            <span class="text-white text-xs font-bold">${card.title}</span>
+                        </div>
+                        <div class="flex gap-4 px-4 py-3 items-end">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">🌙 Night</div>
+                                ${card.night || '<div class="w-20 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-[10px]">—</div>'}
+                            </div>
+                            ${card.day ? `<div class="flex flex-col items-center gap-1">
+                                <div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">☀️ Day</div>
+                                ${card.day}
+                            </div>` : ''}
+                        </div>
+                        <div class="px-4 pb-3 text-[10px] text-slate-400 leading-relaxed">${card.desc}</div>
+                    </div>`;
+                });
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        // ── INTERNATIONAL MARITIME FLAGS ─────────────────────────────────────
+        const INT_FLAGS = [
+            // Alphabet flags
+            { id:'A', name:'Alpha', meaning:'Diver down; keep clear', phonetic:'AL-fah',
+              svg:`<rect width="60" height="40" fill="white"/><polygon points="60,0 60,40 30,20" fill="#003087"/>` },
+            { id:'B', name:'Bravo', meaning:'Dangerous cargo (explosives/flammables)', phonetic:'BRAH-voh',
+              svg:`<rect width="60" height="40" fill="#cc0000"/>` },
+            { id:'C', name:'Charlie', meaning:'Yes / Affirmative', phonetic:'CHAR-lee',
+              svg:`<rect width="60" height="8" fill="#003087"/><rect y="8" width="60" height="8" fill="white"/><rect y="16" width="60" height="8" fill="#cc0000"/><rect y="24" width="60" height="8" fill="white"/><rect y="32" width="60" height="8" fill="#003087"/>` },
+            { id:'D', name:'Delta', meaning:'Keep clear; manoeuvring with difficulty', phonetic:'DELL-tah',
+              svg:`<rect width="20" height="40" fill="#003087"/><rect x="20" width="20" height="40" fill="#f5f5f5"/><rect x="40" width="20" height="40" fill="#cc0000"/>` },
+            { id:'E', name:'Echo', meaning:'Altering course to starboard', phonetic:'ECK-oh',
+              svg:`<rect width="60" height="20" fill="#003087"/><rect y="20" width="60" height="20" fill="#cc0000"/>` },
+            { id:'F', name:'Foxtrot', meaning:'I am disabled; communicate with me', phonetic:'FOKS-trot',
+              svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 60,0 60,40 0,40" fill="white"/><polygon points="30,5 55,20 30,35 5,20" fill="#cc0000"/>` },
+            { id:'G', name:'Golf', meaning:'I require a pilot', phonetic:'GOLF',
+              svg:`<rect width="60" height="8" fill="#f5d800"/><rect y="8" width="60" height="8" fill="#003087"/><rect y="16" width="60" height="8" fill="#f5d800"/><rect y="24" width="60" height="8" fill="#003087"/><rect y="32" width="60" height="8" fill="#f5d800"/>` },
+            { id:'H', name:'Hotel', meaning:'Pilot on board', phonetic:'HOH-tell',
+              svg:`<rect width="30" height="40" fill="white"/><rect x="30" width="30" height="40" fill="#cc0000"/>` },
+            { id:'I', name:'India', meaning:'Altering course to port', phonetic:'IN-dee-ah',
+              svg:`<rect width="60" height="40" fill="#f5d800"/><circle cx="30" cy="20" r="8" fill="#202020"/>` },
+            { id:'J', name:'Juliet', meaning:'On fire / dangerous cargo; keep clear', phonetic:'JEW-lee-ett',
+              svg:`<rect width="20" height="40" fill="#003087"/><rect x="20" width="20" height="40" fill="#f5f5f5"/><rect x="40" width="20" height="40" fill="#003087"/>` },
+            { id:'K', name:'Kilo', meaning:'I wish to communicate with you', phonetic:'KEY-loh',
+              svg:`<rect width="30" height="40" fill="#f5d800"/><rect x="30" width="30" height="40" fill="#003087"/>` },
+            { id:'L', name:'Lima', meaning:'Stop your vessel immediately', phonetic:'LEE-mah',
+              svg:`<rect width="60" height="40" fill="#f5f5f5"/>
+              <rect x="20" width="20" height="20" fill="#202020"/><rect y="20" width="20" height="20" fill="#202020"/>
+              <rect x="40" y="20" width="20" height="20" fill="#202020"/>` },
+            { id:'M', name:'Mike', meaning:'My vessel is stopped; making no way', phonetic:'MIKE',
+              svg:`<rect width="60" height="40" fill="white"/><polygon points="20,0 40,40 60,0" fill="#003087"/>` },
+            { id:'N', name:'November', meaning:'No / Negative', phonetic:'NO-vem-ber',
+              svg:`<rect width="60" height="40" fill="#003087"/>
+              <rect x="0" y="0" width="30" height="20" fill="#f5f5f5"/><rect x="30" y="20" width="30" height="20" fill="#f5f5f5"/>` },
+            { id:'O', name:'Oscar', meaning:'Man overboard', phonetic:'OSS-cah',
+              svg:`<rect width="30" height="40" fill="#cc0000"/><rect x="30" width="30" height="40" fill="#f5d800"/>` },
+            { id:'P', name:'Papa', meaning:'About to depart; all aboard', phonetic:'PAH-pah',
+              svg:`<rect width="60" height="40" fill="#003087"/><rect x="15" y="10" width="30" height="20" fill="white"/>` },
+            { id:'Q', name:'Quebec', meaning:'Ship is healthy; request free pratique', phonetic:'KEH-beck',
+              svg:`<rect width="60" height="40" fill="#f5d800"/>` },
+            { id:'R', name:'Romeo', meaning:'(No special meaning — used in combinations)', phonetic:'ROW-me-oh',
+              svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="15" y="10" width="30" height="20" fill="#f5d800"/><rect x="23" y="3" width="14" height="34" fill="#f5d800"/>` },
+            { id:'S', name:'Sierra', meaning:'My engines are going astern', phonetic:'SEE-air-ah',
+              svg:`<rect width="60" height="40" fill="white"/><rect x="15" y="10" width="30" height="20" fill="#003087"/>` },
+            { id:'T', name:'Tango', meaning:'Keep clear; engaged in trawling', phonetic:'TANG-go',
+              svg:`<rect width="20" height="40" fill="#cc0000"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#003087"/>` },
+            { id:'U', name:'Uniform', meaning:'You are standing into danger', phonetic:'YOU-nee-form',
+              svg:`<rect width="60" height="40" fill="white"/>
+              <polygon points="0,0 30,20 0,40" fill="#cc0000"/><polygon points="60,0 30,20 60,40" fill="#cc0000"/>` },
+            { id:'V', name:'Victor', meaning:'I require assistance', phonetic:'VIK-tah',
+              svg:`<rect width="60" height="40" fill="white"/>
+              <line x1="0" y1="0" x2="60" y2="40" stroke="#cc0000" stroke-width="5"/>
+              <line x1="60" y1="0" x2="0" y2="40" stroke="#cc0000" stroke-width="5"/>` },
+            { id:'W', name:'Whiskey', meaning:'I require medical assistance', phonetic:'WISS-key',
+              svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="18" y="12" width="24" height="16" fill="white"/><rect x="26" y="5" width="8" height="30" fill="white"/>` },
+            { id:'X', name:'X-ray', meaning:'Stop your intention; watch for my signals', phonetic:'ECKS-ray',
+              svg:`<rect width="60" height="40" fill="white"/><rect x="0" y="18" width="60" height="4" fill="#003087"/><rect x="28" y="0" width="4" height="40" fill="#003087"/>` },
+            { id:'Y', name:'Yankee', meaning:'I am dragging my anchor', phonetic:'YANG-key',
+              svg:`<rect width="60" height="40" fill="#f5d800"/>
+              <line x1="0" y1="0" x2="60" y2="40" stroke="#cc0000" stroke-width="4"/>
+              <line x1="60" y1="0" x2="0" y2="40" stroke="#cc0000" stroke-width="4"/>` },
+            { id:'Z', name:'Zulu', meaning:'I require a tug / distress ashore', phonetic:'ZOO-loo',
+              svg:`<rect width="60" height="40" fill="#003087"/>
+              <polygon points="0,0 60,0 0,40" fill="#f5d800"/>
+              <polygon points="60,0 60,40 0,40" fill="#cc0000"/>` },
+            // Numerals
+            { id:'0', name:'Numeral Zero', meaning:'0', phonetic:'NA-dah', num:true,
+              svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="5" y="5" width="50" height="30" rx="2" fill="#cc0000"/>
+              <text x="30" y="28" font-family="monospace" font-size="22" font-weight="bold" fill="white" text-anchor="middle">0</text>` },
+            { id:'1', name:'Numeral One', meaning:'1', phonetic:'WUN', num:true,
+              svg:`<rect width="60" height="40" fill="white"/><rect x="28" y="4" width="4" height="32" fill="#003087"/>` },
+            // Substitutes / Repeaters
+            { id:'sub1', name:'1st Substitute', meaning:'Repeats the first flag in any group', phonetic:'Sub-1', sub:true,
+              svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 60,0 30,40" fill="#003087"/>` },
+            { id:'sub2', name:'2nd Substitute', meaning:'Repeats the second flag in any group', phonetic:'Sub-2', sub:true,
+              svg:`<rect width="60" height="40" fill="#f5d800"/><polygon points="0,0 60,0 30,40" fill="#cc0000"/>` },
+            { id:'sub3', name:'3rd Substitute', meaning:'Repeats the third flag in any group', phonetic:'Sub-3', sub:true,
+              svg:`<rect width="60" height="40" fill="#cc0000"/><polygon points="0,0 60,0 30,40" fill="white"/>` },
+            { id:'ans', name:'Answering Pennant', meaning:'Message received and understood (Code/Answer pennant)', phonetic:'ANS', sub:true,
+              svg:`<rect width="60" height="40" fill="#cc0000"/>
+              <polygon points="0,0 60,0 60,20 0,20" fill="#f5f5f5" opacity="0.3"/>` },
+        ];
+
+        function buildIntFlags() {
+            const alpha  = INT_FLAGS.filter(f => !f.num && !f.sub);
+            const subs   = INT_FLAGS.filter(f => f.sub);
+
+            function flagGrid(flags, label) {
+                return `<div class="mb-6">
+                    <div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">${label}</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    ${flags.map(f => `
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-2 hover:border-teal-500/50 transition-colors group">
+                            <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" class="rounded shadow-lg border border-slate-600">${f.svg}</svg>
+                            <div class="text-center">
+                                <div class="text-teal-400 font-black text-base leading-none">${f.id}</div>
+                                <div class="text-white text-[10px] font-bold mt-0.5">${f.name}</div>
+                                <div class="text-slate-500 text-[9px] italic mt-0.5">"${f.phonetic}"</div>
+                                <div class="text-slate-300 text-[10px] mt-1 leading-snug">${f.meaning}</div>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+
+            return `<div class="space-y-6 pb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-teal-400 mb-1">International Maritime Signal Flags</h2>
+                    <p class="text-slate-400 text-sm mb-3">Each flag has an individual meaning when flown alone. In combination, refer to the International Code of Signals (ICS).</p>
+                    <div class="bg-slate-900 border border-teal-800/40 rounded-lg px-4 py-2.5 text-[11px] text-teal-300 flex items-start gap-2">
+                        <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                        <span>Phonetic alphabet shown in brackets matches NATO/ICAO pronunciation used in bridge communications.</span>
+                    </div>
+                </div>
+                ${flagGrid(alpha, 'Alphabet Flags (A – Z)')}
+                ${flagGrid(subs, 'Substitutes & Special Pennants')}
+            </div>`;
+        }
+        // ── END ROR / FLAGS ─────────────────────────────────────────────────
 
 // --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
         // Updated to perfectly match your exact GitHub file names
