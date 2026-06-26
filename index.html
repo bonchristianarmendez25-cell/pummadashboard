@@ -4881,39 +4881,36 @@ window.logAdminSettingsActivity = async (action, details) => {
                 });
             })();
         }
-        // Bell audio for ROR cards — distinct from whistle playBlast
+        // Bell audio — uses the same oscillator pattern as the working bell in playBlast
         async function playBell(type, btnEl){
             const ctx = getRorAudioCtx();
             if(!ctx){alert('Web Audio not supported in this browser.');return;}
             await ctx.resume();
-            function ringBell(t,vol=0.4){
-                // Realistic ship bell: fundamental 880Hz + harmonics with fast decay
-                [880,1320,1760,2200].forEach((f,i)=>{
-                    const o=ctx.createOscillator(), g=ctx.createGain();
+            // Identical to playBlast 'B' handler — proven to work
+            function ringStroke(t){
+                for(let i=0;i<6;i++){
+                    const o=ctx.createOscillator(); const g=ctx.createGain();
                     o.connect(g); g.connect(ctx.destination);
-                    o.frequency.value=f; o.type='sine';
-                    const v=vol/(i+1);
-                    g.gain.setValueAtTime(v,t);
-                    g.gain.exponentialRampToValueAtTime(0.001,t+1.0);
-                    o.start(t); o.stop(t+1.05);
-                });
+                    o.frequency.value=880+(i*40); o.type='sine';
+                    g.gain.setValueAtTime(0.35, t+i*0.15);
+                    g.gain.exponentialRampToValueAtTime(0.001, t+i*0.15+0.25);
+                    o.start(t+i*0.15); o.stop(t+i*0.15+0.28);
+                }
             }
-            let totalMs=0;
+            let t = ctx.currentTime + 0.08;
+            let totalMs = 0;
             if(type==='anchor'){
-                // Rule 35(g): rapid bell ringing for ~5 seconds every 1 min
-                // Demo: 7 bell strokes closely spaced (~0.6s apart) = ~4.8s
-                for(let i=0;i<7;i++) ringBell(ctx.currentTime+0.1+i*0.65);
-                totalMs=5200;
+                // Rule 35(g): rapid ringing ~5 sec — 8 strokes, 0.6s apart
+                for(let i=0;i<8;i++){ ringStroke(t); t+=0.6; }
+                totalMs = Math.ceil((t - ctx.currentTime)*1000) + 300;
             } else if(type==='aground'){
-                // Rule 35(h): 3 separate strokes BEFORE, rapid ~5s ring, 3 strokes AFTER
-                // Demo: 3 slow strokes, pause, 6 rapid, pause, 3 slow strokes
-                let t=ctx.currentTime+0.1;
-                for(let i=0;i<3;i++){ringBell(t,0.5); t+=0.9;} // 3 distinct strokes
-                t+=0.5; // short pause
-                for(let i=0;i<6;i++){ringBell(t,0.35); t+=0.55;} // rapid ring
-                t+=0.5; // short pause
-                for(let i=0;i<3;i++){ringBell(t,0.5); t+=0.9;} // 3 distinct strokes after
-                totalMs=Math.ceil((t-ctx.currentTime)*1000)+200;
+                // Rule 35(h): 3 distinct strokes, rapid ring, 3 distinct strokes
+                for(let i=0;i<3;i++){ ringStroke(t); t+=1.0; }  // 3 slow strokes
+                t+=0.4;                                            // pause
+                for(let i=0;i<7;i++){ ringStroke(t); t+=0.55; } // rapid ring
+                t+=0.4;                                            // pause
+                for(let i=0;i<3;i++){ ringStroke(t); t+=1.0; }  // 3 slow strokes after
+                totalMs = Math.ceil((t - ctx.currentTime)*1000) + 300;
             }
             if(btnEl){
                 btnEl.disabled=true; btnEl.textContent='🔔 Ringing…';
