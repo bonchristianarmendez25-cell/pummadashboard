@@ -4933,7 +4933,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="text-[9px] bg-teal-900/50 text-teal-400 px-2 py-0.5 rounded border border-teal-800">${r.rule}</span>
-                            ${!r.sig.includes('🔔')&&!r.sig.includes('sec')&&!r.sig.includes('strokes')?`<button onclick="playBlast('${r.sig}',this)" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition flex items-center gap-1 disabled:opacity-50">▶ Play</button>`:''}
+                            ${r.sig.includes('5 sec')?`<button onclick="playBell('anchor',this)" class="text-[9px] bg-slate-700 hover:bg-amber-700 text-white px-2 py-1 rounded font-bold transition flex items-center gap-1 disabled:opacity-50">🔔 Play</button>`:r.sig.includes('strokes')?`<button onclick="playBell('aground',this)" class="text-[9px] bg-slate-700 hover:bg-amber-700 text-white px-2 py-1 rounded font-bold transition flex items-center gap-1 disabled:opacity-50">🔔 Play</button>`:`<button onclick="playBlast('${r.sig}',this)" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition flex items-center gap-1 disabled:opacity-50">▶ Play</button>`}
                         </div>
                     </div>
                     <div class="text-[11px] text-slate-300">${r.meaning}</div>
