@@ -4763,23 +4763,24 @@ window.logAdminSettingsActivity = async (action, details) => {
         // ═══════════════════════════════════════════════════════════════════
         const SOUND_DATA = {
             rule34: [
-                {sig:'•',label:'1 Short Blast',meaning:'I am altering my course to STARBOARD',rule:'Rule 34(a)',color:'text-green-400'},
-                {sig:'••',label:'2 Short Blasts',meaning:'I am altering my course to PORT',rule:'Rule 34(a)',color:'text-red-400'},
-                {sig:'•••',label:'3 Short Blasts',meaning:'I am operating astern propulsion',rule:'Rule 34(a)',color:'text-yellow-400'},
-                {sig:'••••• ',label:'5+ Short Blasts',meaning:'Danger / doubt signal — vessels in sight of one another',rule:'Rule 34(d)',color:'text-orange-400'},
-                {sig:'– •',label:'1 Long + 1 Short',meaning:'Overtaking vessel intends to pass on your STARBOARD side',rule:'Rule 34(c)',color:'text-blue-400'},
-                {sig:'– ••',label:'1 Long + 2 Short',meaning:'Overtaking vessel intends to pass on your PORT side',rule:'Rule 34(c)',color:'text-violet-400'},
-                {sig:'– – •',label:'2 Long + 1 Short',meaning:'Overtaken vessel agrees to the overtaking manoeuvre',rule:'Rule 34(c)',color:'text-teal-400'},
+                // FIX: each • must be space-separated so split(' ') yields individual tokens
+                {sig:'•',        label:'1 Short Blast',          meaning:'I am altering my course to STARBOARD',                              rule:'Rule 34(a)',color:'text-green-400'},
+                {sig:'• •',      label:'2 Short Blasts',         meaning:'I am altering my course to PORT',                                   rule:'Rule 34(a)',color:'text-red-400'},
+                {sig:'• • •',    label:'3 Short Blasts',         meaning:'I am operating astern propulsion',                                  rule:'Rule 34(a)',color:'text-yellow-400'},
+                {sig:'• • • • •',label:'5+ Short Blasts',        meaning:'Danger / doubt signal — vessels in sight of one another',          rule:'Rule 34(d)',color:'text-orange-400'},
+                {sig:'– •',      label:'2 Prolonged + 1 Short',  meaning:'Overtaking vessel intends to pass on your STARBOARD side',         rule:'Rule 34(c)',color:'text-blue-400'},
+                {sig:'– • •',    label:'2 Prolonged + 2 Short',  meaning:'Overtaking vessel intends to pass on your PORT side',              rule:'Rule 34(c)',color:'text-violet-400'},
+                {sig:'– • – •',  label:'1 Prolonged 1 Short 1 Prolonged 1 Short', meaning:'Overtaken vessel agrees to the overtaking manoeuvre', rule:'Rule 34(c)',color:'text-teal-400'},
             ],
             rule35: [
-                {sig:'–',label:'1 Prolonged Blast (every 2 min)',meaning:'Power-driven vessel MAKING WAY through water',rule:'Rule 35(a)',color:'text-white'},
-                {sig:'– –',label:'2 Prolonged Blasts (every 2 min)',meaning:'Power-driven vessel UNDERWAY but STOPPED — no way on',rule:'Rule 35(b)',color:'text-slate-300'},
-                {sig:'– • •',label:'1 Prolonged + 2 Short (every 2 min)',meaning:'Sailing vessel, NUC, RAM, CBD, Fishing, Towing/Pushing',rule:'Rule 35(c)',color:'text-teal-300'},
-                {sig:'– • • •',label:'1 Prolonged + 3 Short (every 2 min)',meaning:'Manned vessel being towed (last in tow)',rule:'Rule 35(e)',color:'text-blue-300'},
-                {sig:'• – •',label:'1 Short + 1 Long + 1 Short (optional)',meaning:'Warning signal — vessel at anchor',rule:'Rule 35(g)',color:'text-yellow-300'},
-                {sig:'🔔 5 sec bell (every 1 min)',label:'Rapid Bell ~5 seconds',meaning:'Vessel AT ANCHOR',rule:'Rule 35(g)',color:'text-amber-400'},
-                {sig:'🔔 3 + 🔔 5 + 3 strokes',label:'Bell Strokes + Rapid Bell',meaning:'Vessel AGROUND (3 distinct strokes before & after rapid ring)',rule:'Rule 35(h)',color:'text-red-300'},
-                {sig:'• • • • (identity)',label:'4 Short Blasts (additional)',meaning:'PILOT VESSEL identity signal',rule:'Rule 35(k)',color:'text-teal-400'},
+                {sig:'–',          label:'1 Prolonged Blast (every 2 min)',        meaning:'Power-driven vessel MAKING WAY through water',                         rule:'Rule 35(a)',color:'text-white'},
+                {sig:'– –',        label:'2 Prolonged Blasts (every 2 min)',       meaning:'Power-driven vessel UNDERWAY but STOPPED — no way on',                 rule:'Rule 35(b)',color:'text-slate-300'},
+                {sig:'– • •',      label:'1 Prolonged + 2 Short (every 2 min)',    meaning:'Sailing vessel, NUC, RAM, CBD, Fishing, Towing/Pushing',               rule:'Rule 35(c)',color:'text-teal-300'},
+                {sig:'– • • •',    label:'1 Prolonged + 3 Short (every 2 min)',    meaning:'Manned vessel being towed (last in tow)',                              rule:'Rule 35(e)',color:'text-blue-300'},
+                {sig:'• – •',      label:'1 Short + 1 Long + 1 Short (optional)',  meaning:'Warning signal — vessel at anchor',                                    rule:'Rule 35(g)',color:'text-yellow-300'},
+                {sig:'🔔 5 sec bell (every 1 min)',label:'Rapid Bell ~5 seconds',  meaning:'Vessel AT ANCHOR',                                                     rule:'Rule 35(g)',color:'text-amber-400'},
+                {sig:'🔔 3 + 🔔 5 + 3 strokes',label:'Bell Strokes + Rapid Bell', meaning:'Vessel AGROUND (3 distinct strokes before & after rapid ring)',        rule:'Rule 35(h)',color:'text-red-300'},
+                {sig:'• • • •',    label:'4 Short Blasts (additional)',             meaning:'PILOT VESSEL identity signal',                                         rule:'Rule 35(k)',color:'text-teal-400'},
             ],
         };
         function blastViz(sig){
@@ -4792,33 +4793,69 @@ window.logAdminSettingsActivity = async (action, details) => {
             }).join('')}</div>`;
         }
         function playBlast(sig, btnEl){
+            // FIX 6: Handle browsers that auto-suspend AudioContext (mobile/Safari)
             if(!window.AudioContext && !window.webkitAudioContext){alert('Web Audio not supported in this browser.');return;}
             const ctx=new (window.AudioContext||window.webkitAudioContext)();
-            const parts=sig.replace(/🔔[^(]*/g,'B').split(' ').filter(Boolean);
-            let t=ctx.currentTime+0.05;
-            const shortDur=0.25, longDur=0.9, gap=0.18;
-            const freq=320;
-            if(btnEl){btnEl.disabled=true;setTimeout(()=>{btnEl.disabled=false;},3000);}
-            parts.forEach(p=>{
-                if(p==='B'){
-                    // Bell simulation — short rapid ring
-                    for(let i=0;i<5;i++){
-                        const o=ctx.createOscillator();const g=ctx.createGain();
-                        o.connect(g);g.connect(ctx.destination);
-                        o.frequency.value=880;o.type='sine';
-                        g.gain.setValueAtTime(0.4,t+i*0.12);g.gain.exponentialRampToValueAtTime(0.001,t+i*0.12+0.1);
-                        o.start(t+i*0.12);o.stop(t+i*0.12+0.1);
-                    }
-                    t+=0.7;return;
+            const resume = ctx.state==='suspended' ? ctx.resume() : Promise.resolve();
+
+            resume.then(()=>{
+                // FIX 1: sig now has space-separated tokens so split works correctly
+                // e.g. '• •' → ['•','•'], '– • •' → ['–','•','•']
+                const parts=sig.replace(/🔔[^+(]*/g,'B').split(' ').filter(p=>p&&p!=='+');
+                let t=ctx.currentTime+0.08;
+
+                // FIX 2: Corrected durations — short blast ~1s, prolonged ~3.5s (shortened for demo clarity)
+                // Real COLREGs: short=~1s, prolonged=4-6s. We use 0.9s / 3.2s for interactive demo.
+                const shortDur=0.9, longDur=3.2, gap=0.35;
+
+                // FIX 5: Ship whistle frequency — IMO Annex III: 70-700Hz fundamental.
+                // 480Hz (B4) gives a clear mid-range whistle tone, distinct from bell (880Hz)
+                const freq=480;
+
+                // Compute total duration to disable button correctly
+                let totalDur = 0;
+                parts.forEach(p=>{
+                    if(p==='B') totalDur+=1.2;
+                    else totalDur += (p==='–'?longDur:shortDur) + gap;
+                });
+                if(btnEl){
+                    btnEl.disabled=true;
+                    btnEl.textContent='♪ Playing…';
+                    setTimeout(()=>{ btnEl.disabled=false; btnEl.textContent='▶ Play'; }, (totalDur+0.3)*1000);
                 }
-                let dur=p==='–'?longDur:shortDur;
-                const o=ctx.createOscillator();const g=ctx.createGain();
-                o.connect(g);g.connect(ctx.destination);
-                o.frequency.value=freq;o.type='sine';
-                g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.6,t+0.02);
-                g.gain.setValueAtTime(0.6,t+dur-0.03);g.gain.linearRampToValueAtTime(0,t+dur);
-                o.start(t);o.stop(t+dur+0.01);
-                t+=dur+gap;
+
+                parts.forEach(p=>{
+                    if(p==='B'){
+                        // Bell — realistic bell harmonic with decay
+                        for(let i=0;i<6;i++){
+                            const o=ctx.createOscillator();const g=ctx.createGain();
+                            o.connect(g);g.connect(ctx.destination);
+                            o.frequency.value=880+(i*40);o.type='sine';
+                            g.gain.setValueAtTime(0.35,t+i*0.15);
+                            g.gain.exponentialRampToValueAtTime(0.001,t+i*0.15+0.25);
+                            o.start(t+i*0.15);o.stop(t+i*0.15+0.28);
+                        }
+                        t+=1.2; return;
+                    }
+
+                    // FIX 2: Use corrected durations
+                    const dur = p==='–' ? longDur : shortDur;
+
+                    // Ship whistle: fundamental + overtone for realistic timbre
+                    [freq, freq*1.5, freq*2].forEach((f,hi)=>{
+                        const o=ctx.createOscillator(); const g=ctx.createGain();
+                        o.connect(g); g.connect(ctx.destination);
+                        o.frequency.value=f; o.type='sine';
+                        const vol = hi===0 ? 0.55 : hi===1 ? 0.20 : 0.08;
+                        // Attack-sustain-release envelope for natural whistle feel
+                        g.gain.setValueAtTime(0,t);
+                        g.gain.linearRampToValueAtTime(vol, t+0.06);      // fast attack
+                        g.gain.setValueAtTime(vol, t+dur-0.08);            // sustain
+                        g.gain.linearRampToValueAtTime(0, t+dur);          // release
+                        o.start(t); o.stop(t+dur+0.02);
+                    });
+                    t+=dur+gap;
+                });
             });
         }
         function buildSoundSigs(){
@@ -4920,17 +4957,22 @@ window.logAdminSettingsActivity = async (action, details) => {
             <div>
                 <div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">⚓ Critical Maritime Morse Signals</div>
                 <div class="space-y-2">
-                ${MORSE_MARITIME.map(m=>`
-                <div class="bg-slate-900 border ${m.urgent?'border-red-700/60':'border-slate-700'} rounded-xl p-3 hover:border-teal-500/30 transition">
+                ${MORSE_MARITIME.map(m=>{
+                    // FIX: convert unicode morse (·–) to ASCII (.-) with proper inter-letter
+                    // double-space so playMorseStr handles gaps at the correct ITU timing.
+                    const letters = m.morse.replace(/·/g,'.').replace(/–/g,'-').split(' ').filter(Boolean);
+                    const asciiMorse = letters.join('  ');
+                    const vizMorse   = letters.join(' ');
+                    return `<div class="bg-slate-900 border ${m.urgent?'border-red-700/60':'border-slate-700'} rounded-xl p-3 hover:border-teal-500/30 transition">
                     <div class="flex items-center justify-between gap-2 mb-1.5">
                         <div class="flex items-center gap-3">
                             <span class="font-black text-base ${m.color} w-16 shrink-0">${m.code}</span>
-                            <div class="flex items-center gap-0.5">${dotDash(m.morse.replace(/·/g,'.').replace(/–/g,'-').replace(/ /g,' '))}</div>
+                            <div class="flex items-center gap-0.5">${dotDash(vizMorse)}</div>
                         </div>
-                        <button onclick="playMorseStr('${m.morse.replace(/·/g,'.').replace(/–/g,'-').replace(/ /g,' ')}')" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition shrink-0">▶ Play</button>
+                        <button onclick="const b=this;b.disabled=true;b.textContent='♪…';playMorseStr('${asciiMorse}');setTimeout(()=>{b.disabled=false;b.textContent='▶ Play';},3500);" class="text-[9px] bg-slate-700 hover:bg-teal-700 text-white px-2 py-1 rounded font-bold transition shrink-0 disabled:opacity-50">▶ Play</button>
                     </div>
                     <div class="text-[10px] text-slate-400">${m.meaning}</div>
-                </div>`).join('')}
+                </div>`;}).join('')}
                 </div>
             </div>
 
@@ -4972,28 +5014,81 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(dots) dots.innerHTML=words.map(w=>w.split('').map(c=>t[c]?dotDash(t[c]):'<span class="text-red-500">?</span>').join('<span class="text-slate-600 mx-1">·</span>')).join('<span class="text-slate-500 mx-2 font-bold">/</span>')||'';
         }
         function playMorseStr(morseStr){
+            // FIX 6: Resume suspended AudioContext (mobile browsers auto-suspend it)
             if(!window.AudioContext&&!window.webkitAudioContext){alert('Web Audio not supported.');return;}
             const ctx=new(window.AudioContext||window.webkitAudioContext)();
-            const unit=0.08, freq=600;
-            let t=ctx.currentTime+0.05;
-            morseStr.split('').forEach(c=>{
-                if(c==='.'||c==='-'){
-                    const dur=c==='.'?unit:unit*3;
-                    const o=ctx.createOscillator();const g=ctx.createGain();
-                    o.connect(g);g.connect(ctx.destination);
-                    o.frequency.value=freq;o.type='sine';
-                    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.5,t+0.01);
-                    g.gain.setValueAtTime(0.5,t+dur-0.01);g.gain.linearRampToValueAtTime(0,t+dur);
-                    o.start(t);o.stop(t+dur+0.01);
-                    t+=dur+unit;
-                } else if(c===' '){t+=unit*2;}
+            const resume = ctx.state==='suspended' ? ctx.resume() : Promise.resolve();
+
+            resume.then(()=>{
+                // FIX 3: unit=0.08 was too fast (inaudible blur). 
+                // ITU standard at 5 WPM = 0.24s/unit. We use 0.12s for a clear, educational speed.
+                const unit=0.12, freq=600;
+                let t=ctx.currentTime+0.08;
+
+                // FIX 4: Proper ITU Morse timing:
+                //   dit      = 1 unit
+                //   dah      = 3 units
+                //   element gap (between dit/dah within same letter) = 1 unit (built into loop below)
+                //   letter gap (space between letters) = 3 units total → add 2 extra after element gap
+                //   word gap  = 7 units total → add 4 extra after letter gap (or 6 extra after element gap)
+                //
+                // morseStr format from MORSE_MARITIME after replace: '... --- ...'
+                //   single space = between elements of same letter (we don't use this — each letter is joined)
+                //   but playMorseStr is also called with raw strings like '· – ·'
+                //
+                // We handle both ASCII (. -) and unicode (· –) for safety
+                const normalized = morseStr
+                    .replace(/·/g,'.').replace(/–/g,'-').replace(/—/g,'-');
+
+                // Split into tokens: letters separated by ' ', words by '  ' or ' / '
+                const tokens = normalized.split(/( {2,}|\/)/).filter(Boolean);
+
+                tokens.forEach(token=>{
+                    if(/^\s+$/.test(token)||token==='/'){
+                        // FIX 4: word gap = 7 units; letter gaps already contributed 1 unit
+                        // so we add 6 more units here
+                        t += unit*6;
+                        return;
+                    }
+                    // Each token is a single letter's morse (e.g. '...' or '-.-')
+                    // or a full sequence like '... --- ...' — handle both
+                    const chars = token.split('');
+                    chars.forEach((c,idx)=>{
+                        if(c==='.'||c==='-'){
+                            const dur = c==='.' ? unit : unit*3;
+                            const o=ctx.createOscillator(); const g=ctx.createGain();
+                            o.connect(g); g.connect(ctx.destination);
+                            o.frequency.value=freq; o.type='sine';
+                            // Clean keying envelope
+                            g.gain.setValueAtTime(0,t);
+                            g.gain.linearRampToValueAtTime(0.5, t+0.008);
+                            g.gain.setValueAtTime(0.5, t+dur-0.008);
+                            g.gain.linearRampToValueAtTime(0, t+dur);
+                            o.start(t); o.stop(t+dur+0.01);
+                            t += dur + unit; // inter-element gap = 1 unit
+                        } else if(c===' '){
+                            // FIX 4: inter-letter gap = 3 units total.
+                            // We already added 1 unit from last element, so add 2 more.
+                            t += unit*2;
+                        }
+                        // ignore other chars
+                    });
+                    // After each letter token, add inter-letter gap (2 extra units)
+                    // only if this wasn't already handled by spaces inside the token
+                    if(!token.includes(' ')) t += unit*2;
+                });
             });
         }
         function playMorseInput(){
             const val=document.getElementById('morse-input')?.value||'';
             if(!val.trim()) return;
-            const t=MORSE_TABLE;
-            const morseStr=val.toUpperCase().split('').map(c=>t[c]||'').join(' ');
+            const tbl=MORSE_TABLE;
+            // FIX: proper ITU spacing — letters separated by 2 spaces (inter-letter gap),
+            // words separated by 3 spaces (word gap). playMorseStr handles the rest.
+            const words=val.toUpperCase().split(' ');
+            const morseStr=words
+                .map(word=>word.split('').map(c=>tbl[c]||'').filter(Boolean).join('  '))
+                .join('   ');
             playMorseStr(morseStr);
         }
         function initMorseEncoder(){
