@@ -1087,7 +1087,7 @@
             <div id="matrix-tab-rubrics" class="p-6 space-y-6">
                 <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-3">
                     <i data-lucide="info" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
-                    <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> Your Final Grade = <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong>. CS reflects your daily consistency; PT reflects your competency execution. Both are built from five regimental components tracked in this dashboard. <strong class="text-red-700 dark:text-red-400">A negative merit balance then directly subtracts from this total — see Merit Override Penalty below.</strong></div>
+                    <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> The official university grade sheet expresses your Final Grade as <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong> — CS for daily consistency, PT for competency execution. The <strong>live "Specific Grade %"</strong> on this dashboard is computed from the same five regimental components, but combined with the different weights shown in Step 6 of the walkthrough below (Academic 10% / Leadership 25% / Patriotism 25% / Soft Skills 25% / Technical 15%) and converted through the Rating → Percent table — it is not a simple re-expression of the 60/40 split, so don't expect a hand-entered CS/PT pair to reproduce the dashboard number exactly. <strong class="text-red-700 dark:text-red-400">A negative merit balance then directly subtracts from this total — see Merit Override Penalty below.</strong></div>
                 </div>
 
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
@@ -1105,7 +1105,7 @@
                         <div class="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl p-3 text-center"><div class="text-2xl font-black text-rose-700 dark:text-rose-400">70%</div><div class="text-[10px] font-bold text-rose-600 dark:text-rose-300 uppercase tracking-wider mt-1">Mockboat Duty</div><div class="text-[9px] text-slate-500 mt-1">of Periodical Test</div></div>
                         <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-center"><div class="text-2xl font-black text-emerald-700 dark:text-emerald-400">30%</div><div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-300 uppercase tracking-wider mt-1">Academic / GWA</div><div class="text-[9px] text-slate-500 mt-1">of Periodical Test</div></div>
                     </div>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 italic pl-1">CS = (Logbook x 30%) + (Events x 30%) + (Merits x 40%) | PT = (Mockboat x 70%) + (GWA x 30%) | FG = (CS x 60%) + (PT x 40%) — Max capped at 98</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 italic pl-1">Official term/export view: CS = (Logbook x 30%) + (Events x 30%) + (Merits x 40%) | PT = (Mockboat x 70%) + (GWA x 30%) | FG = (CS x 60%) + (PT x 40%) — Max capped at 98. The live dashboard "Specific Grade %" instead uses the five-component Base Rating formula in Step 6 of the walkthrough below — see that section for the exact weights actually driving the Class Records table.</p>
                 </div>
 
                 <!-- EXCEL EXPORT BEHAVIOR NOTE -->
@@ -1347,7 +1347,7 @@
                         <div class="border-l-4 border-slate-500 pl-4">
                             <div class="font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wide mb-1">Step 6 — Base Rating (weighted average of all five components, 1–5 scale)</div>
                             <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 font-mono text-[11px]">Base Rating = (Academic × 0.10) + (Leadership × 0.25) + (Patriotism × 0.25) + (Soft × 0.25) + (Technical × 0.15)</div>
-                            <p class="mt-1.5">Note: these five weights (10/25/25/25/15) operate on the underlying 1–5 rating scale and are mathematically equivalent to, but a different lens on, the CS/PT 60/40 percentage split shown in the rubrics tab and summary cards above — both views describe the same engine.</p>
+                            <p class="mt-1.5">Note: this is the formula that actually computes the live "Specific Grade %" shown on the Class Records table. It is <strong>not</strong> a re-expression of the CS/PT 60/40 split shown in the rubrics tab and summary cards above — the two use different effective weights per component (e.g. Technical sits at 15% here vs. an effective ~28% under "Mockboat = 70% of PT, PT = 40% of FG" in that framing). The CS/PT 60/40 view is the official university export/term-grade format; this five-component Base Rating is the dashboard's own live calculation. Treat them as two related but distinct views of performance, not two paths to an identical number.</p>
                         </div>
 
                         <!-- STEP 7 -->
@@ -2596,8 +2596,8 @@
                         </div>
 
                         <!-- Large live-text reading area — the main focus of the view -->
-                        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 flex items-center justify-center">
-                            <p id="ab-text-display" class="text-lg md:text-2xl text-slate-200 leading-relaxed md:leading-loose text-center max-w-3xl font-medium">Pick a section from the list to start listening — the text will read along here as it plays.</p>
+                        <div id="ab-text-scroll" class="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
+                            <p id="ab-text-display" class="text-lg md:text-2xl text-slate-200 leading-relaxed md:leading-loose text-center max-w-3xl font-medium mx-auto">Pick a section from the list to start listening — the text will read along here as it plays.</p>
                         </div>
 
                         <!-- Player controls + progress -->
@@ -6059,6 +6059,9 @@ window.logAdminSettingsActivity = async (action, details) => {
             textDisplay.classList.remove('text-center');
             textDisplay.classList.add('text-left');
             textDisplay.innerHTML = html;
+            // Always reset to the very top when new section starts
+            const scroller = document.getElementById('ab-text-scroll');
+            if (scroller) scroller.scrollTop = 0;
         };
         function escapeHTMLab(str) {
             return str.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -6107,7 +6110,14 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if (lastWordEl) lastWordEl.classList.remove('bg-violet-600','text-white','rounded');
                 if (wordEl) {
                     wordEl.classList.add('bg-violet-600','text-white','rounded');
-                    wordEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Scroll so current word sits ~25% from the top (not centered),
+                    // keeping already-read text above visible and unread text below.
+                    const scroller = document.getElementById('ab-text-scroll');
+                    if (scroller) {
+                        const wordTop = wordEl.offsetTop;
+                        const target = wordTop - (scroller.clientHeight * 0.25);
+                        scroller.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+                    }
                     lastWordEl = wordEl;
                 }
             };
@@ -10186,19 +10196,22 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const v4 = document.getElementById('auto-duty-val'); if(v4) v4.innerText = duty.toFixed(1) + '%';
             const v5 = document.getElementById('auto-gwa-val'); if(v5) v5.innerText = gwaPercent.toFixed(1) + '%';
 
-            // THE MATHEMATICAL CONVERSION (Capped at 98)
-            let cs = (logs * 0.3) + (events * 0.3) + (merits * 0.4);
-            if(cs > 98) cs = 98;
-            
-            let pt = (duty * 0.7) + (gwaPercent * 0.3);
-            if(pt > 98) pt = 98;
-            
-            let fg = (cs * 0.6) + (pt * 0.4);
-            
-            // Apply Manual or Star Bonuses to the final grade!
-            fg += (cadet.individualBonus || 0);
-            if (cadet.starCadet) fg += 2;
-            if(fg > 98) fg = 98; // Final Security Cap
+            // SINGLE SOURCE OF TRUTH: pin this tool's CS/PT/FG to the cadet's
+            // already-computed live dashboard numbers instead of re-deriving
+            // them from raw ratios. (Mirrors the convention already used by the
+            // Excel Converter fallback in _convComputeGrades.) cs is the live
+            // Specific Grade % — it already includes every component weight and
+            // every bonus (manual, auto-merit, Star Cadet), applied via the
+            // rating-based pipeline, AND the Merit Override Penalty. pt is the
+            // GWA/academic proxy, capped at 98 like everywhere else. fg is NOT
+            // recomputed and bonuses are NOT re-added here — doing so previously
+            // double-counted bonuses and let two cadets with different live
+            // ratings land on the identical 98% ceiling. fg now always exactly
+            // matches the Specific Grade % a cadet sees on the main dashboard at
+            // the moment this is locked.
+            let cs = parseFloat(cadet.specificGradePercent) || 0;
+            let pt = Math.min(98, parseFloat(cadet.gwa) || 0);
+            let fg = parseFloat(cadet.specificGradePercent) || 0;
 
             window.autoConvertedData = { cs, pt, fg };
 
