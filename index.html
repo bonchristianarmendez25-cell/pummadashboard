@@ -161,7 +161,7 @@
                 <button onclick="exportExcel()" class="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Export Excel"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export Excel</span></button>
                 <button onclick="exportAllPhotosZip()" id="export-photos-btn" class="bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 text-xs flex items-center gap-1.5 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed" title="Backup all evidence photos as a ZIP before they're auto-deleted after 1 year"><i data-lucide="archive" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export All Photos</span></button>
                 <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-1.5 font-semibold transition" title="Masterlist"><i data-lucide="printer" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Masterlist</span></button>
-                <button id="observer-view-toggle" onclick="toggleObserverView()" class="hidden bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Switch to Cadet View"><i data-lucide="eye" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Cadet View</span></button>
+                <button id="observer-view-toggle" onclick="observerOpenPicker()" class="hidden bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Switch to Cadet View"><i data-lucide="eye" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Cadet View</span></button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Sign Out"><i data-lucide="log-out" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Sign Out</span></button>
             </div>
             <div class="flex gap-4 items-center cadet-controls hidden">
@@ -172,19 +172,71 @@
         </div>
     </header>
 
-    <!-- Observer Cadet View Banner — only visible when isObserver switches to cadet mode -->
+    <!-- ══════════════════════════════════════════════════════════
+         OBSERVER CADET VIEW BANNER  (hidden unless in cadet mode)
+    ═══════════════════════════════════════════════════════════════ -->
     <div id="observer-cadet-bar" class="hidden sticky top-0 z-30 bg-emerald-700 dark:bg-emerald-800 text-white px-4 py-2 no-print shadow-md">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-3 text-xs font-semibold">
-            <span class="flex items-center gap-1.5 font-black uppercase tracking-wide text-emerald-100"><i data-lucide="eye" class="w-4 h-4"></i> Observer · Cadet View</span>
-            <span class="text-emerald-300 hidden sm:inline">|</span>
-            <span class="text-emerald-200">Viewing as:</span>
-            <select id="observer-cadet-select" onchange="observerSwitchCadet(this.value)" class="bg-emerald-800 dark:bg-emerald-900 border border-emerald-500 text-white rounded px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer max-w-[200px]"></select>
-            <span class="text-emerald-300 text-[10px] hidden md:inline italic">Read-only — all editing is disabled in this mode</span>
-            <div class="ml-auto flex items-center gap-2">
-                <button onclick="toggleObserverView()" class="bg-white text-emerald-800 hover:bg-emerald-50 active:scale-95 px-3 py-1.5 rounded font-black text-xs flex items-center gap-1.5 transition shadow-sm">
+            <span class="flex items-center gap-1.5 font-black uppercase tracking-wide text-emerald-100 shrink-0"><i data-lucide="eye" class="w-4 h-4"></i> Observer · Cadet View</span>
+            <span class="text-emerald-400 hidden sm:inline">|</span>
+            <span class="text-emerald-200 shrink-0">Viewing:</span>
+            <span id="observer-viewing-name" class="text-white font-black truncate max-w-[200px]">—</span>
+            <button onclick="observerOpenPicker()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 px-3 py-1 rounded-lg text-white text-[11px] font-bold transition active:scale-95">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Switch Cadet
+            </button>
+            <span class="text-emerald-300 text-[10px] hidden lg:inline italic">Read-only — editing disabled</span>
+            <div class="ml-auto">
+                <button onclick="observerBackToAdmin()" class="flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 px-3 py-1.5 rounded-lg font-black text-xs transition shadow-sm active:scale-95">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Back to Admin View
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DOTA 2-STYLE CADET PICKER MODAL
+    ═══════════════════════════════════════════════════════════════ -->
+    <div id="obs-picker-overlay" class="fixed inset-0 z-[200] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);">
+        <div class="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-700" style="background:linear-gradient(160deg,#0f1923 0%,#1a2636 100%);">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/60 shrink-0" style="background:rgba(255,255,255,0.04);">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="eye" class="w-5 h-5 text-emerald-400"></i>
+                    <div>
+                        <div class="text-white font-black uppercase tracking-widest text-sm">Select Cadet to View</div>
+                        <div class="text-slate-500 text-[10px] uppercase tracking-wide">Observer Mode — Read-Only</div>
+                    </div>
+                </div>
+                <button onclick="observerClosePicker()" class="text-slate-500 hover:text-white transition p-1.5 rounded-lg hover:bg-white/10"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Filters Row -->
+            <div class="px-5 py-3 border-b border-slate-700/40 shrink-0 flex flex-wrap gap-4 items-center" style="background:rgba(0,0,0,0.2);">
+                <!-- Class filter -->
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-500 text-[10px] uppercase tracking-widest font-bold shrink-0">Class</span>
+                    <div id="obs-class-tabs" class="flex gap-1 flex-wrap"></div>
+                </div>
+                <!-- Section filter -->
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-500 text-[10px] uppercase tracking-widest font-bold shrink-0">Section</span>
+                    <div id="obs-section-tabs" class="flex gap-1 flex-wrap"></div>
+                </div>
+                <!-- Search -->
+                <div class="ml-auto flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 min-w-[180px]">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
+                    <input id="obs-search" type="text" placeholder="Search cadet…" oninput="observerRenderGrid()" class="bg-transparent text-white text-xs placeholder-slate-600 outline-none w-full font-medium">
+                </div>
+            </div>
+
+            <!-- Cadet Count -->
+            <div class="px-5 pt-2 pb-1 shrink-0">
+                <span id="obs-count" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
+            </div>
+
+            <!-- Grid -->
+            <div id="obs-picker-grid" class="flex-1 overflow-y-auto px-5 pb-5 pt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 content-start"></div>
         </div>
     </div>
 
@@ -7445,101 +7497,232 @@ window.logAdminSettingsActivity = async (action, details) => {
             setTimeout(() => { location.reload(); }, 500);
         };
 
-        // ── Observer dual-view toggle ──────────────────────────────────────
-        // Allows Observer accounts to flip between full Admin dashboard and
-        // a read-only Cadet perspective for any cadet they choose.
+        // ══════════════════════════════════════════════════════════════
+        // OBSERVER DUAL-VIEW SYSTEM — Dota 2-style cadet picker
+        // ══════════════════════════════════════════════════════════════
 
-        window.toggleObserverView = () => {
+        window._obsPicker = { classFilter: null, sectionFilter: 'ALL' };
+
+        // Open the picker modal
+        window.observerOpenPicker = () => {
             if (!window.isObserverAccount) return;
+            const overlay = document.getElementById('obs-picker-overlay');
+            if (!overlay) return;
 
-            if (window.observerViewMode === 'admin') {
-                // ── Switch to Cadet View ──
-                const available = (window.cadets || []).filter(c => !c.isObserver)
-                    .sort((a, b) => a.name.localeCompare(b.name));
-                if (!available.length) { alert('No cadets available to view.'); return; }
+            // Build class filter chips from available cadets
+            const cadets = (window.cadets || []).filter(c => !c.isObserver);
+            const classes = [...new Set(cadets.map(c => c.classNum).filter(Boolean))]
+                .map(Number).sort((a, b) => a - b);
 
-                // Populate the banner dropdown
-                const sel = document.getElementById('observer-cadet-select');
-                if (sel) {
-                    sel.innerHTML = available.map(c =>
-                        `<option value="${c.id}">${c.name}${c.studentId ? ' · ' + c.studentId : ''}</option>`
-                    ).join('');
-                    // Pre-select currently selected cadet if any
-                    if (window.selectedCadetId && available.find(c => c.id === window.selectedCadetId)) {
-                        sel.value = window.selectedCadetId;
-                    }
-                }
+            const suffix = n => ({ 1:'st',2:'nd',3:'rd' }[n] || 'th');
+            const classEl = document.getElementById('obs-class-tabs');
+            if (classEl) {
+                classEl.innerHTML = classes.map(n =>
+                    `<button onclick="obsSetClass(${n})" data-cls="${n}"
+                        class="obs-cls-btn px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-wide border transition active:scale-95
+                        ${window._obsPicker.classFilter === n
+                            ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_10px_rgba(52,211,153,0.4)]'
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'}"
+                    >${n}${suffix(n)} Class</button>`
+                ).join('');
+            }
 
+            observerBuildSectionTabs();
+            observerRenderGrid();
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.getElementById('obs-search').value = '';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.observerClosePicker = () => {
+            const overlay = document.getElementById('obs-picker-overlay');
+            if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
+        };
+
+        window.obsSetClass = (n) => {
+            window._obsPicker.classFilter = (window._obsPicker.classFilter === n) ? null : n;
+            window._obsPicker.sectionFilter = 'ALL';
+            // Re-render class chips to reflect selection
+            document.querySelectorAll('.obs-cls-btn').forEach(btn => {
+                const active = Number(btn.dataset.cls) === window._obsPicker.classFilter;
+                btn.className = btn.className.replace(/(bg-emerald-500|border-emerald-400|text-white|shadow-\[.*?\]|bg-slate-800|border-slate-700|text-slate-400|hover:bg-slate-700|hover:text-white)/g, '').trim();
+                btn.className += active
+                    ? ' bg-emerald-500 border-emerald-400 text-white shadow-[0_0_10px_rgba(52,211,153,0.4)]'
+                    : ' bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white';
+            });
+            observerBuildSectionTabs();
+            observerRenderGrid();
+        };
+
+        window.obsSetSection = (sec) => {
+            window._obsPicker.sectionFilter = sec;
+            document.querySelectorAll('.obs-sec-btn').forEach(btn => {
+                const active = btn.dataset.sec === sec;
+                btn.className = btn.className.replace(/(bg-blue-500|border-blue-400|text-white|bg-slate-800|border-slate-700|text-slate-400|hover:bg-slate-700|hover:text-white)/g, '').trim();
+                btn.className += active
+                    ? ' bg-blue-500 border-blue-400 text-white'
+                    : ' bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white';
+            });
+            observerRenderGrid();
+        };
+
+        window.observerBuildSectionTabs = () => {
+            const cadets = (window.cadets || []).filter(c => !c.isObserver
+                && (window._obsPicker.classFilter === null || Number(c.classNum) === window._obsPicker.classFilter));
+            const sections = ['ALL', ...[...new Set(cadets.map(c => (c.section||'').toUpperCase()).filter(Boolean))].sort()];
+            const secEl = document.getElementById('obs-section-tabs');
+            if (!secEl) return;
+            secEl.innerHTML = sections.map(s =>
+                `<button onclick="obsSetSection('${s}')" data-sec="${s}"
+                    class="obs-sec-btn px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wide border transition active:scale-95
+                    ${window._obsPicker.sectionFilter === s
+                        ? 'bg-blue-500 border-blue-400 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white'}"
+                >${s}</button>`
+            ).join('');
+        };
+
+        window.observerRenderGrid = () => {
+            const q = (document.getElementById('obs-search')?.value || '').toLowerCase().trim();
+            const cadets = (window.cadets || [])
+                .filter(c => !c.isObserver
+                    && (window._obsPicker.classFilter === null || Number(c.classNum) === window._obsPicker.classFilter)
+                    && (window._obsPicker.sectionFilter === 'ALL' || (c.section||'').toUpperCase() === window._obsPicker.sectionFilter)
+                    && (!q || c.name.toLowerCase().includes(q) || (c.studentId||'').toLowerCase().includes(q)))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            const countEl = document.getElementById('obs-count');
+            if (countEl) countEl.textContent = `${cadets.length} cadet${cadets.length !== 1 ? 's' : ''}`;
+
+            const grid = document.getElementById('obs-picker-grid');
+            if (!grid) return;
+
+            if (!cadets.length) {
+                grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-600">
+                    <i data-lucide="users" class="w-10 h-10 mb-3 opacity-30"></i>
+                    <div class="text-sm font-bold">No cadets found</div>
+                    <div class="text-xs mt-1">Try adjusting your filters</div>
+                </div>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
+            // Section colour map
+            const secColor = { ALPHA:'#3b82f6', BRAVO:'#ef4444', CHARLIE:'#f59e0b', DELTA:'#8b5cf6', ECHO:'#06b6d4' };
+            const suffix = n => ({ 1:'st',2:'nd',3:'rd' }[n] || 'th');
+
+            grid.innerHTML = cadets.map(c => {
+                const pct  = parseFloat(c.specificGradePercent || 0);
+                const mer  = parseInt(c.cumulativeMerits || 0);
+                const sec  = (c.section || '').toUpperCase();
+                const col  = secColor[sec] || '#64748b';
+                const isSelected = c.id === window.selectedCadetId && window.observerViewMode === 'cadet';
+                const initials = (c.name || '??').split(',')[0].trim().slice(0,2).toUpperCase();
+
+                return `<button onclick="observerSelectCadet('${c.id}')" title="${c.name}"
+                    class="group relative flex flex-col items-center rounded-xl overflow-hidden border transition-all duration-150 text-left cursor-pointer active:scale-95
+                    ${isSelected
+                        ? 'border-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.5)] scale-[1.03]'
+                        : 'border-slate-700 hover:border-slate-500 hover:shadow-[0_0_12px_rgba(255,255,255,0.07)]'}"
+                    style="background:linear-gradient(160deg,#1e293b,#0f172a);">
+
+                    <!-- Photo / Avatar -->
+                    <div class="w-full aspect-square relative overflow-hidden flex items-center justify-center" style="background:#1e293b;">
+                        ${c.photo
+                            ? `<img src="${c.photo}" class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                            : ''}
+                        <div class="${c.photo ? 'hidden' : 'flex'} absolute inset-0 items-center justify-center text-2xl font-black select-none"
+                            style="color:${col};background:${col}18;">${initials}</div>
+                        <!-- Section ribbon -->
+                        <div class="absolute top-1.5 left-1.5 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide" style="background:${col}dd;">${sec}</div>
+                        <!-- Class badge -->
+                        <div class="absolute top-1.5 right-1.5 bg-black/60 text-slate-300 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">${c.classNum ? c.classNum+suffix(Number(c.classNum)) : '?'}</div>
+                        <!-- Selected checkmark -->
+                        ${isSelected ? `<div class="absolute inset-0 flex items-center justify-center bg-emerald-500/20"><i data-lucide="check-circle" class="w-8 h-8 text-emerald-400"></i></div>` : ''}
+                    </div>
+
+                    <!-- Info -->
+                    <div class="w-full px-2 pt-1.5 pb-2 text-center">
+                        <div class="text-white text-[10px] font-bold leading-tight truncate" title="${c.name}">${c.name.split(',')[0].trim()}</div>
+                        <div class="text-slate-500 text-[9px] truncate">${c.studentId || ''}</div>
+                        <div class="mt-1 flex items-center justify-center gap-1">
+                            <span class="text-[9px] font-black" style="color:${pct>=90?'#4ade80':pct>=75?'#facc15':'#f87171'}">${pct ? pct.toFixed(1)+'%' : '—'}</span>
+                            ${mer ? `<span class="text-[8px] text-slate-600">· ${mer}pts</span>` : ''}
+                        </div>
+                    </div>
+                </button>`;
+            }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Called when a cadet card is clicked in the picker
+        window.observerSelectCadet = (cadetId) => {
+            const c = (window.cadets || []).find(x => x.id === cadetId);
+            if (!c) return;
+
+            // If not already in cadet view, switch panels now
+            if (window.observerViewMode !== 'cadet') {
                 window.observerViewMode = 'cadet';
-                window.currentUserRole = 'cadet';
-
-                // Swap UI panels
+                window.currentUserRole  = 'cadet';
                 document.querySelectorAll('.admin-controls').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('.cadet-controls').forEach(el => el.classList.remove('hidden'));
                 document.getElementById('left-panel-admin').classList.add('hidden');
                 document.getElementById('eval-right-panel').className =
                     'col-span-1 lg:col-span-12 flex flex-col gap-6 max-w-4xl mx-auto w-full';
-
-                // Show observer banner
                 const bar = document.getElementById('observer-cadet-bar');
                 if (bar) bar.classList.remove('hidden');
-
-                // Load selected cadet (or first in list)
-                const targetId = (window.selectedCadetId && available.find(c => c.id === window.selectedCadetId))
-                    ? window.selectedCadetId : available[0].id;
-                window.selectCadet(targetId);
-
-                // Disable editing controls (read-only for observer)
-                setTimeout(() => {
-                    document.querySelectorAll('.cadet-disable').forEach(el => {
-                        el.disabled = true;
-                        el.classList.add('opacity-70', 'cursor-not-allowed');
-                    });
-                }, 200);
-
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            } else {
-                // ── Switch back to Admin View ──
-                window.observerViewMode = 'admin';
-                window.currentUserRole = 'admin';
-
-                // Swap UI panels back
-                document.querySelectorAll('.cadet-controls').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
-                document.getElementById('left-panel-admin').classList.remove('hidden');
-                document.getElementById('eval-right-panel').className =
-                    'lg:col-span-4 flex flex-col gap-6';
-
-                // Hide observer banner
-                const bar = document.getElementById('observer-cadet-bar');
-                if (bar) bar.classList.add('hidden');
-
-                // Re-enable all controls
-                document.querySelectorAll('.cadet-disable').forEach(el => {
-                    el.disabled = false;
-                    el.classList.remove('opacity-70', 'cursor-not-allowed');
-                });
-
-                // Keep toggle button visible for next switch
-                const obsToggle = document.getElementById('observer-view-toggle');
-                if (obsToggle) obsToggle.classList.remove('hidden');
-
-                window.recalculateMetrics();
-                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
-        };
 
-        // Called by the cadet dropdown inside the observer banner
-        window.observerSwitchCadet = (cadetId) => {
-            if (!cadetId || !window.isObserverAccount) return;
+            // Load the cadet profile
             window.selectCadet(cadetId);
+
+            // Update the banner name
+            const nameEl = document.getElementById('observer-viewing-name');
+            if (nameEl) nameEl.textContent = c.name;
+
+            // Read-only: disable editing
             setTimeout(() => {
                 document.querySelectorAll('.cadet-disable').forEach(el => {
                     el.disabled = true;
                     el.classList.add('opacity-70', 'cursor-not-allowed');
                 });
             }, 200);
+
+            // Close picker
+            observerClosePicker();
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Return to full admin dashboard
+        window.observerBackToAdmin = () => {
+            if (!window.isObserverAccount) return;
+            window.observerViewMode = 'admin';
+            window.currentUserRole  = 'admin';
+
+            document.querySelectorAll('.cadet-controls').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
+            document.getElementById('left-panel-admin').classList.remove('hidden');
+            document.getElementById('eval-right-panel').className = 'lg:col-span-4 flex flex-col gap-6';
+
+            const bar = document.getElementById('observer-cadet-bar');
+            if (bar) bar.classList.add('hidden');
+
+            // Re-enable all controls
+            document.querySelectorAll('.cadet-disable').forEach(el => {
+                el.disabled = false;
+                el.classList.remove('opacity-70', 'cursor-not-allowed');
+            });
+
+            // Ensure toggle stays visible
+            const tog = document.getElementById('observer-view-toggle');
+            if (tog) tog.classList.remove('hidden');
+
+            window.recalculateMetrics();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
         window.changeAdminPin = async () => {
@@ -7819,9 +8002,6 @@ window.logAdminSettingsActivity = async (action, details) => {
                 }
 
                 if (c.isObserver) {
-                    // Observer accounts are created via the same Add Cadet flow (per Dean's request)
-                    // so Office/Dean staff can get a login without a dedicated Instructor account,
-                    // but they should see and use the full Instructor/Admin dashboard once inside.
                     window.currentUserRole = 'admin';
                     window.isObserverAccount = true;
                     window.currentObserverName = c.name;
@@ -7834,9 +8014,9 @@ window.logAdminSettingsActivity = async (action, details) => {
                     document.querySelectorAll('.cadet-controls').forEach(el => el.classList.add('hidden'));
                     document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
 
-                    // Show the observer view-switch toggle in the header
-                    const obsToggle = document.getElementById('observer-view-toggle');
-                    if (obsToggle) obsToggle.classList.remove('hidden');
+                    // Reveal the Cadet View toggle in the header
+                    const tog = document.getElementById('observer-view-toggle');
+                    if (tog) tog.classList.remove('hidden');
 
                     if(typeof lucide !== 'undefined') lucide.createIcons();
 
