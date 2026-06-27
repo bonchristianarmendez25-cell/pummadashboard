@@ -4602,82 +4602,183 @@ window.logAdminSettingsActivity = async (action, details) => {
         // ═══════════════════════════════════════════════════════════════════
         // ROR VISUAL CARDS — Lights & Shapes
         // ═══════════════════════════════════════════════════════════════════
-        function lightSvg(lights) {
-            const h = Math.max(120, lights.length*38+20);
-            const defs = lights.map((_,i)=>`<filter id="g${i}"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`).join('');
-            const els = lights.map((l,i)=>{
-                const cy=18+i*38;
-                const fill=l.color==='white'?'#fff':l.color==='red'?'#ef4444':l.color==='green'?'#22c55e':l.color==='yellow'?'#facc15':'#94a3b8';
-                return l.shape==='diamond'
-                    ?`<polygon points="40,${cy-10} 50,${cy} 40,${cy+10} 30,${cy}" fill="${fill}" filter="url(#g${i})"/>`
-                    :`<circle cx="40" cy="${cy}" r="9" fill="${fill}" filter="url(#g${i})"/>`;
+        // Front-bow perspective SVG: PORT (red) left · CENTER mast · STBD (green) right
+        // Each light: { c:'C'|'P'|'S', color:'white'|'red'|'green'|'yellow', row:number }
+        function vesselNightSvg(lights) {
+            const W=148, CX=74, PX=16, SX=132;
+            const RH=38, TP=14, BP=24;
+            const maxRow = lights.reduce((m,l)=>Math.max(m,l.row),0);
+            const H = TP + (maxRow+1)*RH + BP;
+            const cy = r => TP + r*RH + RH/2;
+            const cx = c => c==='C'?CX : c==='P'?PX : SX;
+            const hex = {white:'#ffffff',red:'#ef4444',green:'#22c55e',yellow:'#facc15',blue:'#60a5fa'};
+            const rgb = {white:'255,255,255',red:'239,68,68',green:'34,197,94',yellow:'250,204,21',blue:'96,165,250'};
+            // Mast line — only between topmost and bottommost center lights
+            const cRows = lights.filter(l=>l.c==='C').map(l=>l.row);
+            const mast = cRows.length
+                ? `<line x1="${CX}" y1="${cy(Math.min(...cRows))-15}" x2="${CX}" y2="${cy(Math.max(...cRows))+15}" stroke="#4b5e78" stroke-width="2.5"/>`
+                : `<line x1="${CX}" y1="${TP}" x2="${CX}" y2="${H-BP}" stroke="#2d3f55" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+            // Horizontal dashed arms from sidelights to mast
+            const arms = lights.filter(l=>l.c!=='C').map(l=>{
+                const y=cy(l.row), lx=cx(l.c);
+                const x1=l.c==='P'?lx+11:lx-11, x2=l.c==='P'?CX-11:CX+11;
+                return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#2d3f55" stroke-width="1.5" stroke-dasharray="5 3"/>`;
             }).join('');
-            return `<svg width="80" height="${h}" viewBox="0 0 80 ${h}" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="${h}" rx="8" fill="#0f172a"/><line x1="40" y1="0" x2="40" y2="${h}" stroke="#334155" stroke-width="2"/><defs>${defs}</defs>${els}</svg>`;
+            // Light dots with glow halo
+            const dots = lights.map(l=>{
+                const y=cy(l.row), x=cx(l.c);
+                const f=hex[l.color]||'#fff', r=rgb[l.color]||'255,255,255';
+                return `<circle cx="${x}" cy="${y}" r="16" fill="rgba(${r},0.13)"/>
+                        <circle cx="${x}" cy="${y}" r="9.5" fill="${f}" stroke="rgba(${r},0.55)" stroke-width="2.5"/>`;
+            }).join('');
+            // PORT / STBD corner labels
+            const labels =
+                `<text x="3" y="${H-6}" fill="#ef4444" font-size="7.5" font-weight="bold" font-family="monospace" opacity="0.9">PORT</text>
+                 <text x="${W-33}" y="${H-6}" fill="#22c55e" font-size="7.5" font-weight="bold" font-family="monospace" opacity="0.9">STBD</text>`;
+            return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="${W}" height="${H}" rx="8" fill="#080e1a"/>
+                ${mast}${arms}${dots}${labels}
+            </svg>`;
         }
+        // Improved day-shape SVG (black shapes on dark background, dashed mast line)
         function shapeSvg(shapes) {
-            const h=Math.max(100,shapes.length*42+20);
-            const els=shapes.map((s,i)=>{const cy=20+i*42;
-                if(s.type==='ball') return `<circle cx="40" cy="${cy}" r="13" fill="#111" stroke="#e2e8f0" stroke-width="2"/>`;
-                if(s.type==='cone') return s.inv?`<polygon points="40,${cy+13} 26,${cy-13} 54,${cy-13}" fill="#111" stroke="#e2e8f0" stroke-width="2"/>`:
-                    `<polygon points="40,${cy-13} 26,${cy+13} 54,${cy+13}" fill="#111" stroke="#e2e8f0" stroke-width="2"/>`;
-                if(s.type==='diamond') return `<polygon points="40,${cy-15} 55,${cy} 40,${cy+15} 25,${cy}" fill="#111" stroke="#e2e8f0" stroke-width="2"/>`;
-                if(s.type==='cylinder') return `<ellipse cx="40" cy="${cy-9}" rx="13" ry="5" fill="#111" stroke="#e2e8f0" stroke-width="2"/><rect x="27" y="${cy-9}" width="26" height="18" fill="#111" stroke="#e2e8f0" stroke-width="2"/><ellipse cx="40" cy="${cy+9}" rx="13" ry="5" fill="#1e293b" stroke="#e2e8f0" stroke-width="2"/>`;
+            const h=Math.max(90,shapes.length*46+18);
+            const els=shapes.map((s,i)=>{const cy=24+i*46;
+                if(s.type==='ball')
+                    return `<circle cx="40" cy="${cy}" r="14" fill="#0f172a" stroke="#cbd5e1" stroke-width="2.5"/>`;
+                if(s.type==='cone') return s.inv
+                    ?`<polygon points="40,${cy+15} 25,${cy-15} 55,${cy-15}" fill="#0f172a" stroke="#cbd5e1" stroke-width="2.5"/>`
+                    :`<polygon points="40,${cy-15} 25,${cy+15} 55,${cy+15}" fill="#0f172a" stroke="#cbd5e1" stroke-width="2.5"/>`;
+                if(s.type==='diamond')
+                    return `<polygon points="40,${cy-17} 57,${cy} 40,${cy+17} 23,${cy}" fill="#0f172a" stroke="#cbd5e1" stroke-width="2.5"/>`;
+                if(s.type==='cylinder')
+                    return `<ellipse cx="40" cy="${cy-10}" rx="14" ry="5" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+                            <rect x="26" y="${cy-10}" width="28" height="20" fill="#0f172a"/>
+                            <line x1="26" y1="${cy-10}" x2="26" y2="${cy+10}" stroke="#cbd5e1" stroke-width="2"/>
+                            <line x1="54" y1="${cy-10}" x2="54" y2="${cy+10}" stroke="#cbd5e1" stroke-width="2"/>
+                            <ellipse cx="40" cy="${cy+10}" rx="14" ry="5" fill="#0a1020" stroke="#cbd5e1" stroke-width="2"/>`;
                 return '';
             }).join('');
-            return `<svg width="80" height="${h}" viewBox="0 0 80 ${h}" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="${h}" rx="8" fill="#1e293b"/><line x1="40" y1="0" x2="40" y2="${h}" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3"/>${els}</svg>`;
+            return `<svg width="80" height="${h}" viewBox="0 0 80 ${h}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="80" height="${h}" rx="8" fill="#1e293b"/>
+                <line x1="40" y1="0" x2="40" y2="${h}" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3"/>
+                ${els}</svg>`;
         }
+        // Shorthand builders
+        const LC=(color,row)=>({c:'C',color,row});
+        const LP=(row)=>({c:'P',color:'red',row});
+        const LS=(row)=>({c:'S',color:'green',row});
+
         const ROR_CARDS=[
-            {cat:'Power Vessels',title:'Power Vessel Underway ≥50m',rule:'Rule 23(a)',
-             night:lightSvg([{color:'white'},{color:'white'},{color:'red'},{color:'green'}]),day:null,
-             desc:'Forward masthead white, aft masthead white (higher), red port, green starboard sidelights + white stern light.'},
-            {cat:'Power Vessels',title:'Power Vessel Underway <50m',rule:'Rule 23(b)',
-             night:lightSvg([{color:'white'},{color:'red'},{color:'green'}]),day:null,
-             desc:'Single masthead white, red port sidelight, green starboard sidelight + stern white.'},
-            {cat:'Power Vessels',title:'Vessel at Anchor',rule:'Rule 30(a)',
-             night:lightSvg([{color:'white'},{color:'white'}]),day:shapeSvg([{type:'ball'}]),
-             desc:'Forward white all-round (higher) + aft white all-round (lower). Day: one black ball forward.',
-             sound:{type:'anchor',label:'🔔 Bell — Vessel at Anchor',rule:'Rule 35(g)'}},
-            {cat:'Power Vessels',title:'Vessel Aground',rule:'Rule 30(d)',
-             night:lightSvg([{color:'red'},{color:'red'},{color:'white'},{color:'white'}]),day:shapeSvg([{type:'ball'},{type:'ball'},{type:'ball'}]),
-             desc:'Two red all-round lights + anchor lights. Day: three black balls in vertical line.',
-             sound:{type:'aground',label:'🔔 Bell — Vessel Aground',rule:'Rule 35(h)'}},
-            {cat:'Sailing & Special',title:'Sailing Vessel Underway',rule:'Rule 25(a)',
-             night:lightSvg([{color:'red'},{color:'green'}]),day:null,
-             desc:'Red port, green starboard, white stern. No masthead white light. No engine = no masthead.'},
-            {cat:'Sailing & Special',title:'NUC — Not Under Command',rule:'Rule 27(a)',
-             night:lightSvg([{color:'red'},{color:'red'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'ball'},{type:'ball'}]),
-             desc:'Two red all-round lights (vertical). When making way: also sidelights + stern. Day: two black balls.'},
-            {cat:'Sailing & Special',title:'RAM — Restricted Ability to Manoeuvre',rule:'Rule 27(b)',
-             night:lightSvg([{color:'red'},{color:'white'},{color:'red'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'ball'},{type:'diamond'},{type:'ball'}]),
-             desc:'Red-white-red all-round (vertical) + underway lights. Day: ball-diamond-ball.'},
-            {cat:'Sailing & Special',title:'Constrained by Draught',rule:'Rule 28',
-             night:lightSvg([{color:'red'},{color:'red'},{color:'red'},{color:'white'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'cylinder'}]),
-             desc:'Three red all-round in vertical line + normal underway lights. Day: black cylinder.'},
-            {cat:'Fishing Vessels',title:'Trawling Vessel',rule:'Rule 26(b)',
-             night:lightSvg([{color:'green'},{color:'white'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'cone'},{type:'cone',inv:true}]),
-             desc:'Green over white all-round. When making way: + sidelights and stern. Day: two cones apex together (hourglass).'},
-            {cat:'Fishing Vessels',title:'Fishing Vessel (Not Trawling)',rule:'Rule 26(c)',
-             night:lightSvg([{color:'red'},{color:'white'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'cone'},{type:'cone'}]),
-             desc:'Red over white all-round. When making way: + sidelights and stern. Day: two cones apex upward.'},
+            // ── POWER-DRIVEN VESSELS ────────────────────────────────────────
+            {cat:'Power-Driven Vessels',title:'Power Vessel Underway ≥50m',rule:'Rule 23(a)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1)]),day:null,
+             desc:'Two masthead whites (aft higher) on centreline. Red port + green starboard sidelights at forward masthead height. White sternlight aft.'},
+            {cat:'Power-Driven Vessels',title:'Power Vessel Underway <50m',rule:'Rule 23(a)',
+             night:vesselNightSvg([LC('white',0),LP(0),LS(0)]),day:null,
+             desc:'Single masthead white forward. Red port + green starboard sidelights. White sternlight aft. Second masthead optional.'},
+            {cat:'Power-Driven Vessels',title:'Power Vessel <12m',rule:'Rule 23(d)',
+             night:vesselNightSvg([LC('white',0),LP(1),LS(1)]),day:null,
+             desc:'May show all-round white in lieu of masthead + stern. Sidelights if practicable. <7m/<7kts: all-round white alone is sufficient.'},
+            {cat:'Power-Driven Vessels',title:'Air-Cushion Vessel (Hovercraft)',rule:'Rule 23(b)',
+             night:vesselNightSvg([LC('white',0),LP(0),LS(0),LC('yellow',1)]),day:null,
+             desc:'Normal power-driven lights PLUS an all-round flashing yellow light when operating in non-displacement mode.'},
+            {cat:'Power-Driven Vessels',title:'Vessel at Anchor',rule:'Rule 30(a)',
+             night:vesselNightSvg([LC('white',0),LC('white',1)]),day:shapeSvg([{type:'ball'}]),
+             desc:'All-round white forward (higher) + all-round white aft (lower). Day: one black ball in fore part of vessel.',
+             sound:{type:'anchor',label:'🔔 Rapid bell ~5 sec every minute',rule:'Rule 35(g)'}},
+            {cat:'Power-Driven Vessels',title:'Vessel Aground',rule:'Rule 30(d)',
+             night:vesselNightSvg([LC('red',0),LC('red',1),LC('white',2),LC('white',3)]),day:shapeSvg([{type:'ball'},{type:'ball'},{type:'ball'}]),
+             desc:'Two red all-round lights (vertical) PLUS both anchor lights. Day: three black balls in vertical line.',
+             sound:{type:'aground',label:'🔔 3 strokes + rapid bell + 3 strokes',rule:'Rule 35(h)'}},
+            // ── SAILING & NON-POWERED ───────────────────────────────────────
+            {cat:'Sailing & Non-Powered',title:'Sailing Vessel Underway',rule:'Rule 25(a)',
+             night:vesselNightSvg([LP(0),LS(0)]),day:null,
+             desc:'Red port + green starboard sidelights + white sternlight only. NO masthead white — engine off means no masthead.'},
+            {cat:'Sailing & Non-Powered',title:'Sailing Vessel — Optional Top Lights',rule:'Rule 25(c)',
+             night:vesselNightSvg([LC('red',0),LC('green',1),LP(2),LS(2)]),day:null,
+             desc:'May additionally show red over green all-round at/near masthead top. NOT used together with a tricolour lantern.'},
+            {cat:'Sailing & Non-Powered',title:'Sailing + Engine (Motoring)',rule:'Rule 25(e)',
+             night:vesselNightSvg([LC('white',0),LP(0),LS(0)]),day:shapeSvg([{type:'cone'}]),
+             desc:'When engine is used (even with sails set): show full power-driven lights. Day: black cone apex downward at bow — the "motoring" signal.'},
+            {cat:'Sailing & Non-Powered',title:'Vessel Under Oars',rule:'Rule 25(d)',
+             night:vesselNightSvg([LC('white',0)]),day:null,
+             desc:'May exhibit sailing vessel lights. If not, must have a white torch/lantern ready to show in time to prevent collision.'},
+            // ── NUC · RAM · CBD ─────────────────────────────────────────────
+            {cat:'NUC · RAM · CBD',title:'NUC — Not Under Command',rule:'Rule 27(a)',
+             night:vesselNightSvg([LC('red',0),LC('red',1),LP(2),LS(2)]),day:shapeSvg([{type:'ball'},{type:'ball'}]),
+             desc:'Two red all-round lights (vertical) — the NUC signal. When making way: ALSO sidelights + sternlight. Day: two black balls vertical.'},
+            {cat:'NUC · RAM · CBD',title:'RAM — Restricted in Ability to Manoeuvre',rule:'Rule 27(b)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1),LC('red',2),LC('white',3),LC('red',4)]),day:shapeSvg([{type:'ball'},{type:'diamond'},{type:'ball'}]),
+             desc:'Red-White-Red all-round (vertical) — the RAM signal — plus masthead(s), sidelights and sternlight when making way. Day: ball-diamond-ball.'},
+            {cat:'NUC · RAM · CBD',title:'RAM — Dredging / Underwater Ops',rule:'Rule 27(d)',
+             night:vesselNightSvg([LC('red',0),LC('white',1),LC('red',2),LP(2),LS(2),{c:'P',color:'red',row:3},{c:'P',color:'red',row:4},{c:'S',color:'green',row:3},{c:'S',color:'green',row:4}]),
+             day:shapeSvg([{type:'ball'},{type:'diamond'},{type:'ball'},{type:'ball'},{type:'ball'},{type:'diamond'},{type:'diamond'}]),
+             desc:'RAM signal (R-W-R) + TWO REDS port side (obstruction) + TWO GREENS stbd side (safe to pass). Day: ball-diamond-ball + 2 balls (obstruct) + 2 diamonds (clear).'},
+            {cat:'NUC · RAM · CBD',title:'CBD — Constrained by Draught',rule:'Rule 28',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1),LC('red',2),LC('red',3),LC('red',4)]),day:shapeSvg([{type:'cylinder'}]),
+             desc:'Three red all-round lights (vertical) — the CBD signal — PLUS normal power-driven underway lights. Day: black cylinder.'},
+            {cat:'NUC · RAM · CBD',title:'Mineclearance Vessel',rule:'Rule 27(f)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1),LC('green',2),{c:'P',color:'green',row:2},{c:'S',color:'green',row:2}]),
+             day:shapeSvg([{type:'ball'},{type:'ball'},{type:'ball'}]),
+             desc:'Power-driven lights PLUS three green all-round: one at foremast head, one at each end of fore yard. Dangerous within 1,000 m.'},
+            // ── FISHING VESSELS ─────────────────────────────────────────────
+            {cat:'Fishing Vessels',title:'Trawling (making way)',rule:'Rule 26(b)',
+             night:vesselNightSvg([LC('green',0),LC('white',1),LP(2),LS(2)]),day:shapeSvg([{type:'cone'},{type:'cone',inv:true}]),
+             desc:'Green over white all-round — the trawl signal. When making way: + sidelights + sternlight. Day: two cones apexes together (hourglass).'},
+            {cat:'Fishing Vessels',title:'Trawling ≥50m (with aft masthead)',rule:'Rule 26(b)',
+             night:vesselNightSvg([LC('white',0),LC('green',1),LC('white',2),LP(2),LS(2)]),day:shapeSvg([{type:'cone'},{type:'cone',inv:true}]),
+             desc:'≥50m trawler: masthead white abaft & HIGHER than the green all-round, above the green-over-white pair. Sidelights + sternlight when making way.'},
+            {cat:'Fishing Vessels',title:'Fishing — Not Trawling',rule:'Rule 26(c)',
+             night:vesselNightSvg([LC('red',0),LC('white',1),LP(2),LS(2)]),day:shapeSvg([{type:'cone'},{type:'cone'}]),
+             desc:'Red over white all-round — distinct from trawl (green over white). Making way: + sidelights + sternlight. Day: two cones apex upward.'},
+            {cat:'Fishing Vessels',title:'Fishing — Outlying Gear >150m',rule:'Rule 26(c-ii)',
+             night:vesselNightSvg([LC('red',0),LC('white',1),LC('white',2),LP(2),LS(2)]),day:shapeSvg([{type:'cone'},{type:'cone'},{type:'cone',inv:true}]),
+             desc:'Red over white + an EXTRA white all-round in direction of gear (>150m horizontal). Sidelights + sternlight making way. Day: extra cone apex up toward gear.'},
+            // ── SPECIAL VESSELS ─────────────────────────────────────────────
             {cat:'Special Vessels',title:'Pilot Vessel on Duty',rule:'Rule 29',
-             night:lightSvg([{color:'white'},{color:'red'},{color:'white'},{color:'red'},{color:'green'}]),day:null,
-             desc:'White over red all-round. Underway: + sidelights and stern. At anchor: + anchor light.'},
-            {cat:'Special Vessels',title:'Vessel Towing (tow >200m)',rule:'Rule 24(a)',
-             night:lightSvg([{color:'white'},{color:'white'},{color:'white'},{color:'red'},{color:'green'}]),day:shapeSvg([{type:'diamond'}]),
-             desc:'Three white mastheads (vertical) + sidelights + yellow towing light. Day: diamond where tow >200m.'},
+             night:vesselNightSvg([LC('white',0),LC('red',1),LP(2),LS(2)]),day:null,
+             desc:'White over red all-round — the pilot signal. Underway: + sidelights + sternlight. At anchor: + anchor lights (replace underway lights).'},
+            {cat:'Special Vessels',title:'Vessel Towing — Tow ≤200m',rule:'Rule 24(a)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1),LC('yellow',2)]),day:null,
+             desc:'Two masthead whites (vertical) + sidelights + yellow towing light above sternlight. <50m: second masthead not required but may be shown.'},
+            {cat:'Special Vessels',title:'Vessel Towing — Tow >200m',rule:'Rule 24(a)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LC('white',2),LP(2),LS(2),LC('yellow',3)]),day:shapeSvg([{type:'diamond'}]),
+             desc:'THREE masthead whites (vertical) + sidelights + yellow towing light. Day: diamond shape where best seen. The tow itself also shows a diamond.'},
+            {cat:'Special Vessels',title:'Vessel Being Towed',rule:'Rule 24(e)',
+             night:vesselNightSvg([LP(0),LS(0)]),day:shapeSvg([{type:'diamond'}]),
+             desc:'Sidelights + white sternlight only. If tow >200m: also shows a diamond shape. Inconspicuous tow: all-round white light(s) instead.'},
+            {cat:'Special Vessels',title:'Vessel Pushing / Towing Alongside',rule:'Rule 24(c)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1)]),day:null,
+             desc:'Two masthead whites (vertical) + sidelights + sternlight. No yellow towing light (that applies only to towing astern). Composite unit: treated as one power-driven vessel.'},
+            {cat:'Special Vessels',title:'Vessel Being Pushed Ahead',rule:'Rule 24(f)',
+             night:vesselNightSvg([LP(0),LS(0)]),day:null,
+             desc:'Sidelights at the forward end only (no sternlight, no masthead). If towed alongside: sidelights + sternlight. Composite unit (rigidly connected): light as one power-driven vessel.'},
+            {cat:'Special Vessels',title:'WIG Craft (taking off / landing)',rule:'Rule 23(c)',
+             night:vesselNightSvg([LC('white',0),LC('white',1),LP(1),LS(1),LC('red',2)]),day:null,
+             desc:'Normal power-driven lights PLUS a high-intensity all-round flashing RED light when taking off, landing, or in flight near the surface.'},
         ];
         function buildRorCards(){
             const cats=[...new Set(ROR_CARDS.map(c=>c.cat))];
             let h=`<div class="space-y-8 pb-6">
-            <div><h2 class="text-2xl font-black text-teal-400 mb-1">ROR Visual Cards</h2>
-            <p class="text-slate-400 text-sm mb-3">Lights &amp; Shapes — Night &amp; Day · COLREGs 1972</p>
-            <div class="flex gap-3 flex-wrap text-[11px] bg-slate-900 rounded-lg p-3 border border-slate-700 text-slate-200">
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-500"></span>White</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>Red</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>Green</span>
-                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>Yellow</span>
-                <span class="text-slate-500 ml-2">● Black = Day shape</span>
-            </div></div>`;
+            <div>
+              <h2 class="text-2xl font-black text-teal-400 mb-1">ROR Visual Cards</h2>
+              <p class="text-slate-400 text-sm mb-2">Lights &amp; Shapes — Night &amp; Day · COLREGs 1972 · 26 vessel types</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <div class="flex gap-3 flex-wrap text-[11px] bg-slate-900 rounded-lg p-3 border border-slate-700 text-slate-200">
+                  <span class="font-bold text-slate-400 w-full mb-1">Light colours:</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-500"></span>White — masthead / all-round</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>Red — port side / all-round</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>Green — stbd side / all-round</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span>Yellow — towing light</span>
+                </div>
+                <div class="text-[11px] bg-slate-900 rounded-lg p-3 border border-slate-700 text-slate-300">
+                  <span class="font-bold text-slate-400 block mb-1">Card orientation — bow-on (head-on view):</span>
+                  <span class="text-red-400 font-bold">PORT ←</span> <span class="text-slate-500">centre mast</span> <span class="text-green-400 font-bold">→ STBD</span><br>
+                  <span class="text-slate-500 text-[10px]">Sidelights shown on their correct side. Masthead &amp; all-round lights on centre mast. Black shapes = daytime signals.</span>
+                </div>
+              </div>
+            </div>`;
             cats.forEach(cat=>{
                 const cards=ROR_CARDS.filter(c=>c.cat===cat);
                 h+=`<div><div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">${cat}</div>
@@ -4688,9 +4789,9 @@ window.logAdminSettingsActivity = async (action, details) => {
                             <span class="text-[9px] bg-teal-900/60 text-teal-400 font-black px-2 py-0.5 rounded border border-teal-800">${card.rule}</span>
                             <span class="text-white text-xs font-bold">${card.title}</span>
                         </div>
-                        <div class="flex gap-4 px-4 py-3 items-end">
-                            <div class="flex flex-col items-center gap-1"><div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">🌙 Night</div>${card.night||'<div class="w-20 h-20 rounded bg-slate-800 flex items-center justify-center text-slate-600 text-[10px]">—</div>'}</div>
-                            ${card.day?`<div class="flex flex-col items-center gap-1"><div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">☀️ Day</div>${card.day}</div>`:''}
+                        <div class="flex gap-4 px-4 py-3 items-start">
+                            <div class="flex flex-col items-center gap-1 shrink-0"><div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">🌙 Night</div>${card.night||'<div class="w-20 h-20 rounded bg-slate-800 flex items-center justify-center text-slate-600 text-[10px]">—</div>'}</div>
+                            ${card.day?`<div class="flex flex-col items-center gap-1 shrink-0"><div class="text-[9px] text-slate-500 uppercase tracking-wider mb-1">☀️ Day</div>${card.day}</div>`:''}
                         </div>
                         <div class="px-4 pb-3 text-[10px] text-slate-400 leading-relaxed">${card.desc}</div>
                         ${card.sound?`<div class="px-4 pb-3 flex items-center gap-2 border-t border-slate-800 pt-2">
