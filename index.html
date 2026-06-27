@@ -4551,6 +4551,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             { id: "flags-int",    title: "International Maritime Flags",       part: "ROR Visual Cards", text: "__FLAGS__" },
             { id: "sound-sigs",   title: "Sound Signals & Vessel Whistle",     part: "ROR Visual Cards", text: "__SOUND__" },
             { id: "morse-code",   title: "Morse Code — Maritime Reference",    part: "ROR Visual Cards", text: "__MORSE__" },
+            { id: "gmdss-sim",   title: "GMDSS Interactive Simulator",         part: "ROR Visual Cards", text: "__GMDSS__" },
             { id: "a4", title: "Annex IV: Distress Signals", part: "Annexes", text: rHtml("Annex IV: Distress Signals", `<b>1. The following signals, used or exhibited either together or separately, indicate distress and need of assistance:</b><br>(a) a gun or other explosive signals fired at intervals of about a minute;<br>(b) a continuous sounding with any fog-signalling apparatus;<br>(c) rockets or shells, throwing red stars fired one at a time at short intervals;<br>(d) a signal made by any signalling method consisting of the group ...---... (SOS) in the Morse Code;<br>(e) a signal sent by radiotelephony consisting of the spoken word "MAYDAY";<br>(f) the International Code Signal of distress indicated by N.C.;<br>(g) a signal consisting of a square flag having above or below it a ball or anything resembling a ball;<br>(h) flames on the vessel (as from a burning tar barrel, oil barrel, etc.);<br>(i) a rocket parachute flare or a hand-flare showing a red light;<br>(j) a smoke signal giving off orange-coloured smoke;<br>(k) slowly and repeatedly raising and lowering arms outstretched to each side;<br>(l) a distress alert by means of digital selective calling (DSC);<br>(m) a ship-to-shore distress alert transmitted by the ship's Inmarsat or other mobile satellite service provider ship earth station;<br>(n) signals transmitted by emergency position-indicating radio beacons;<br>(o) approved signals transmitted by radiocommunications systems, including survival craft radar transponders.<br><br><b>2.</b> The use or exhibition of any of the foregoing signals, except for the purpose of indicating distress and need of assistance and the use of other signals which may be confused with any of the above signals, is prohibited.`) }
         ];
 
@@ -4593,6 +4594,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (id==='flags-int')   { el.innerHTML=buildIntFlags();   el.scrollTo(0,0); lucide&&lucide.createIcons(); return; }
             if (id==='sound-sigs')  { el.innerHTML=buildSoundSigs();  el.scrollTo(0,0); lucide&&lucide.createIcons(); return; }
             if (id==='morse-code')  { el.innerHTML=buildMorseCode();  el.scrollTo(0,0); lucide&&lucide.createIcons(); initMorseEncoder(); return; }
+            if (id==='gmdss-sim')   { el.innerHTML=buildGmdss();     el.scrollTo(0,0); lucide&&lucide.createIcons(); initGmdss(); return; }
             const rule = window.colregsDatabase.find(r=>r.id===id);
             if (rule) { el.innerHTML=rule.text; el.scrollTo(0,0); }
         };
@@ -4917,6 +4919,506 @@ window.logAdminSettingsActivity = async (action, details) => {
                 setTimeout(()=>{ btnEl.disabled=false; btnEl.textContent='▶ Play'; }, totalMs);
             }
         }
+        // ═══════════════════════════════════════════════════════════════════
+        // GMDSS INTERACTIVE SIMULATOR
+        // ═══════════════════════════════════════════════════════════════════
+        const VHF_CHANNELS = [
+            {ch:6,  freq:'156.300',purpose:'Intership Safety — SAR On-Scene',    color:'text-blue-300'},
+            {ch:8,  freq:'156.400',purpose:'Commercial Working (intership)',       color:'text-slate-300'},
+            {ch:9,  freq:'156.450',purpose:'Boater Calling / Commercial',          color:'text-slate-300'},
+            {ch:10, freq:'156.500',purpose:'Commercial Working / Oil Spill Ops',   color:'text-slate-300'},
+            {ch:12, freq:'156.600',purpose:'Port Operations / VTS',                color:'text-amber-300'},
+            {ch:13, freq:'156.650',purpose:'Bridge-to-Bridge Safety Navigation',   color:'text-yellow-300'},
+            {ch:16, freq:'156.800',purpose:'DISTRESS · Safety · Calling — watch',  color:'text-red-400'},
+            {ch:22, freq:'157.100',purpose:'US/CAN Coast Guard Liaison',           color:'text-teal-300'},
+            {ch:67, freq:'156.375',purpose:'Working / UK Coastguard',              color:'text-slate-300'},
+            {ch:70, freq:'156.525',purpose:'DSC Only — Digital Selective Calling', color:'text-purple-300'},
+            {ch:72, freq:'156.625',purpose:'Intership (no shore stations)',         color:'text-slate-300'},
+            {ch:73, freq:'156.675',purpose:'Port Operations',                       color:'text-amber-300'},
+            {ch:77, freq:'156.875',purpose:'Port Operations (intership)',           color:'text-amber-300'},
+        ];
+        const CH_INFO = {};
+        VHF_CHANNELS.forEach(c=>{ CH_INFO[c.ch]={freq:c.freq+'0 MHz',purpose:c.purpose}; });
+
+        const NAVTEX_MESSAGES = [
+            {type:'B',cat:'Met Warning',station:'MANILA RADIO',time:'0645 UTC',body:'GALE WARNING NR 047\nEASTERN PHILIPPINE SEA\nTROPICAL STORM SIGNAL FORCE 8 TO 9\nWINDS 34-47 KTS GUSTING 55 KTS\nSEAS 4-6 METRES\nVESSELS ADVISED TO PROCEED WITH CAUTION'},
+            {type:'A',cat:'Nav Warning',station:'MANILA RADIO',time:'0600 UTC',body:'NAVAREA XI NR 0234/26\nSIBUYAN SEA\n12-30N 122-15E\nUNLIT VESSEL AGROUND\nLAST KNOWN POSITION: 12-28.4N 122-14.7E\nMARINERS ADVISED TO EXERCISE CAUTION'},
+            {type:'D',cat:'SAR Info',  station:'MRCC MANILA', time:'0730 UTC',body:'SAR OPERATION IN PROGRESS\nAREA: SULU SEA 06-15N 121-30E\nVESSEL OVERDUE: MV SAN PEDRO\n15M FISHING VESSEL, 8 POB\nALL VESSELS REQUESTED TO MAINTAIN SHARP LOOKOUT AND REPORT SIGHTINGS TO MRCC MANILA ON CH 16'},
+            {type:'C',cat:'Ice Report', station:'JMH TOKYO',   time:'0500 UTC',body:'ICE REPORT NR 012\nNO ICE HAZARDS REPORTED\nPHILIPPINE SEA REGION\nNEXT REPORT: 1200 UTC'},
+        ];
+
+        const DSC_STEPS = [
+            {id:0, title:'Standby',           desc:'Radio on Ch 16. DSC watch active on Ch 70. Continuous watch maintained.',                                                                        action:null},
+            {id:1, title:'Lift Distress Cover',desc:'Lift the red safety cover over the DISTRESS button to prevent accidental activation.',                                                         action:'lift-cover'},
+            {id:2, title:'Hold DISTRESS 5 sec',desc:'Press and hold the DISTRESS button for 5 seconds. The radio auto-composes a DSC alert with MMSI, nature of distress, and GPS position.',      action:'hold-distress'},
+            {id:3, title:'DSC Alert Sent',     desc:'Alert transmitted on Ch 70 (DSC) to all ships and coast stations. Radio automatically switches to Ch 16 for voice.',                          action:'auto'},
+            {id:4, title:'Voice MAYDAY Call',  desc:'On Ch 16 voice: "MAYDAY MAYDAY MAYDAY — This is [vessel name] [MMSI] — MAYDAY [vessel] — Position [LAT/LON] — [nature] — [persons] — OVER"', action:'voice'},
+            {id:5, title:'Await Acknowledge',  desc:'Maintain watch on Ch 16. Coast Guard or ship will respond with DSC acknowledgment then voice. Switch to working channel as directed.',          action:'wait'},
+            {id:6, title:'CG Acknowledged',    desc:'MRCC responded: "MAYDAY [vessel] — This is MRCC Manila — Received Mayday — [instructions]". DSC acknowledgment received on Ch 70.',            action:'done'},
+        ];
+
+        function buildGmdss(){
+            return `<div class="p-4 space-y-5">
+            <div>
+                <h2 class="text-2xl font-black text-teal-400 mb-1">GMDSS Simulator</h2>
+                <p class="text-slate-400 text-sm mb-2">Global Maritime Distress & Safety System — Interactive Training Equipment</p>
+                <div class="bg-red-950/40 border border-red-700/40 rounded-xl px-3 py-2 text-[10px] text-red-300 flex items-center gap-2">
+                    <span class="text-red-400 font-black text-sm shrink-0">⚠</span>
+                    FOR TRAINING USE ONLY — Simulator only. Do not use for actual maritime navigation or emergency signalling.
+                </div>
+            </div>
+
+            <!-- VHF DSC + NAVTEX -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <!-- VHF DSC RADIO -->
+                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                    <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">VHF DSC RADIO</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80] animate-pulse"></span><span class="text-[9px] text-green-400 font-bold">POWER ON</span></span>
+                    </div>
+                    <!-- LCD -->
+                    <div class="mx-3 mt-3 bg-[#162416] border border-green-900/50 rounded-xl p-3 font-mono shadow-inner">
+                        <div class="flex justify-between text-[9px] text-green-700 mb-1">
+                            <span>CH</span><span id="g-dsc-watch">▶ DSC WATCH CH70</span>
+                        </div>
+                        <div id="g-ch" class="text-green-300 text-5xl font-black tracking-widest text-center leading-none">16</div>
+                        <div id="g-freq" class="text-green-600 text-[10px] text-center mt-1">156.800 MHz</div>
+                        <div id="g-purpose" class="text-green-400 text-[9px] text-center mt-1 bg-green-950/60 rounded px-1 py-0.5">DISTRESS · SAFETY · CALLING</div>
+                        <div id="g-tx" class="hidden text-red-300 text-[9px] text-center bg-red-950/70 rounded px-1 py-0.5 mt-1 font-black animate-pulse">◉ TRANSMITTING</div>
+                        <div id="g-rx" class="hidden text-cyan-300 text-[9px] text-center bg-cyan-950/50 rounded px-1 py-0.5 mt-1">◎ RECEIVING</div>
+                    </div>
+                    <!-- CH Controls -->
+                    <div class="px-3 pt-3 grid grid-cols-3 gap-2">
+                        <button onclick="gCh(-1)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2.5 rounded-xl transition">▼ CH</button>
+                        <button onclick="gCh(1)"  class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2.5 rounded-xl transition">▲ CH</button>
+                        <button onclick="gChSet(16)" class="bg-teal-900 hover:bg-teal-800 active:scale-95 text-teal-200 text-xs font-bold py-2.5 rounded-xl transition">CH 16</button>
+                        <button onclick="gDscMenu('routine')" class="bg-blue-950 hover:bg-blue-900 active:scale-95 text-blue-300 text-xs font-bold py-2.5 rounded-xl transition">📋 Routine</button>
+                        <button onclick="gDscMenu('urgency')" class="bg-orange-950 hover:bg-orange-900 active:scale-95 text-orange-300 text-xs font-bold py-2.5 rounded-xl transition">🔔 Urgency</button>
+                        <button onclick="gChSet(70)" class="bg-purple-950 hover:bg-purple-900 active:scale-95 text-purple-300 text-xs font-bold py-2.5 rounded-xl transition">CH 70</button>
+                    </div>
+                    <!-- PTT -->
+                    <div class="px-3 pt-2">
+                        <button id="g-ptt" onmousedown="gPTT(true)" onmouseup="gPTT(false)" ontouchstart="gPTT(true)" ontouchend="gPTT(false)"
+                            class="w-full bg-slate-600 hover:bg-slate-500 active:bg-green-800 text-white text-sm font-black py-3.5 rounded-2xl transition select-none border border-slate-500">
+                            🎙 PTT — HOLD TO TALK
+                        </button>
+                    </div>
+                    <!-- DISTRESS -->
+                    <div class="p-3">
+                        <div class="bg-red-950/40 border border-red-800/50 rounded-2xl p-3">
+                            <div class="text-[9px] text-red-400 text-center mb-2 font-black uppercase tracking-widest">⚠ DISTRESS BUTTON</div>
+                            <div class="flex gap-2">
+                                <button id="g-cover" onclick="gCover()" class="flex-1 bg-slate-700 hover:bg-red-900/60 active:scale-95 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition">🔐 Lift Cover</button>
+                                <button id="g-distress" onclick="gDistress()" disabled class="flex-1 bg-slate-800 text-slate-600 text-xs font-black py-2.5 rounded-xl cursor-not-allowed border border-slate-700">🆘 DISTRESS</button>
+                            </div>
+                            <div id="g-distress-hint" class="text-[9px] text-slate-600 text-center mt-2">Lift cover first to enable button</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NAVTEX -->
+                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                    <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">NAVTEX RECEIVER</span>
+                        <span class="text-[9px] text-amber-400 font-bold">518 kHz</span>
+                    </div>
+                    <!-- Thermal paper display -->
+                    <div id="navtex-out" class="mx-3 mt-3 bg-[#f4efdf] rounded-xl p-3 h-52 overflow-y-auto font-mono text-[9px] text-[#2a1f00] leading-[1.55] shadow-inner border border-amber-200/30">
+                        <div class="text-[#888]">FURUNO NX-700 NAVTEX RECEIVER<br>━━━━━━━━━━━━━━━━━━━━━<br>FREQ : 518 kHz INTL<br>STATION: ALL<br>━━━━━━━━━━━━━━━━━━━━━<br><span class="text-[#aaa]">Awaiting messages…<br>Press SELF TEST or RECEIVE</span></div>
+                    </div>
+                    <div class="p-3 grid grid-cols-2 gap-2">
+                        <button onclick="nxTest()" class="bg-slate-700 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-xs font-bold py-2.5 rounded-xl transition">🧪 Self Test</button>
+                        <button onclick="nxReceive()" class="bg-amber-950 hover:bg-amber-900 active:scale-95 text-amber-200 text-xs font-bold py-2.5 rounded-xl transition">📥 Receive</button>
+                        <button onclick="nxClear()" class="col-span-2 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🗑 Clear</button>
+                    </div>
+                    <div class="px-3 pb-3 space-y-1">
+                        <div class="text-[9px] text-slate-600 font-black uppercase tracking-wider mb-1">Message Types</div>
+                        ${['A=Nav Warning','B=Met Warning','D=SAR','G=GPS/GNSS','L=Subfacts'].map(t=>`<div class="text-[9px] text-slate-500">${t}</div>`).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <!-- EPIRB + SART + MF/HF -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- EPIRB -->
+                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                    <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">EPIRB</span>
+                        <span class="text-[9px] text-slate-500">406 / 121.5 MHz</span>
+                    </div>
+                    <div class="p-3 space-y-3">
+                        <div id="epirb-panel" class="rounded-xl border border-slate-700 p-4 text-center bg-slate-800/50">
+                            <div class="text-3xl mb-2">🛰️</div>
+                            <div id="epirb-state" class="text-[11px] font-black text-green-400 uppercase">ARMED · STANDBY</div>
+                            <div class="text-[9px] text-slate-500 mt-1">Auto hydrostatic release</div>
+                            <div id="epirb-blink" class="mx-auto mt-2 w-3 h-3 rounded-full bg-green-600"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="eTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🧪 Test</button>
+                            <button id="epirb-act-btn" onclick="eAct()" class="bg-red-900 hover:bg-red-800 active:scale-95 text-red-300 text-xs font-bold py-2 rounded-xl transition">🆘 Activate</button>
+                        </div>
+                        <div class="text-[9px] text-slate-600 text-center">MMSI: 525 001 2345 · 48h bat</div>
+                    </div>
+                </div>
+
+                <!-- SART -->
+                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                    <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">SART</span>
+                        <span class="text-[9px] text-slate-500">9 GHz Radar</span>
+                    </div>
+                    <div class="p-3 space-y-3">
+                        <div id="sart-panel" class="rounded-xl border border-slate-700 p-4 text-center bg-slate-800/50">
+                            <div class="text-3xl mb-2">📡</div>
+                            <div id="sart-state" class="text-[11px] font-black text-yellow-400 uppercase">STANDBY</div>
+                            <div class="text-[9px] text-slate-500 mt-1">Awaiting radar interrogation</div>
+                            <div id="sart-blink" class="mx-auto mt-2 w-3 h-3 rounded-full bg-yellow-600/50"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="sTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🧪 Test</button>
+                            <button id="sart-act-btn" onclick="sAct()" class="bg-orange-900 hover:bg-orange-800 active:scale-95 text-orange-300 text-xs font-bold py-2 rounded-xl transition">🔴 Activate</button>
+                        </div>
+                        <div class="text-[9px] text-slate-600 text-center">Battery: 96 hrs standby</div>
+                    </div>
+                </div>
+
+                <!-- MF/HF DSC -->
+                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                    <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">MF/HF DSC RADIO</span>
+                        <span class="text-[9px] text-slate-500">SSB 2–27 MHz</span>
+                    </div>
+                    <div class="p-3 space-y-3">
+                        <div class="bg-[#162416] border border-green-900/40 rounded-xl p-3 font-mono">
+                            <div class="text-green-700 text-[9px]">FREQUENCY</div>
+                            <div id="mfhf-f" class="text-green-300 text-2xl font-black">2182.0 kHz</div>
+                            <div id="mfhf-m" class="text-green-600 text-[9px] mt-0.5">J3E · MF DISTRESS WATCH</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${[['2182.0','MF DISTRESS'],['4125.0','HF DISTRESS 1'],['6215.0','HF DISTRESS 2'],['8291.0','HF DISTRESS 3']].map(([f,m])=>
+                            `<button onclick="mfSet('${f} kHz','${m}')" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-[10px] font-bold py-2 rounded-xl transition">${f}</button>`).join('')}
+                        </div>
+                        <div class="text-[9px] text-slate-600 text-center">DSC watch on 2187.5 kHz</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DSC Distress Step-by-Step Workflow -->
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+                <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                    <div class="text-sm font-black text-teal-400 uppercase tracking-widest">📟 DSC Distress Alert — Step-by-Step Drill</div>
+                    <button onclick="gResetWorkflow()" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white px-3 py-1 rounded-lg transition">↺ Reset</button>
+                </div>
+                <div id="dsc-workflow" class="p-4 space-y-2"></div>
+            </div>
+
+            <!-- Sea Areas -->
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+                <div class="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                    <div class="text-sm font-black text-teal-400 uppercase tracking-widest">GMDSS Sea Areas & Minimum Equipment</div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px]">
+                        <thead><tr class="bg-slate-800/60 border-b border-slate-700">
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">Area</th>
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">Range</th>
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">Minimum Equipment</th>
+                        </tr></thead>
+                        <tbody>
+                            ${[
+                              ['A1','text-blue-300','VHF coast range 20–30 nm','VHF DSC (Ch 16/70) · EPIRB 406 MHz · 2× SART · NAVTEX · Portable VHF'],
+                              ['A2','text-green-300','MF coast range ~150 nm', 'A1 + MF DSC (2187.5 kHz watch) · MF NBDP · Enhanced EPIRB'],
+                              ['A3','text-amber-300','Inmarsat 70°S–70°N',     'A2 + Inmarsat SES or HF DSC · EGC receiver · HF NBDP'],
+                              ['A4','text-red-300',  'Polar — outside Inmarsat','A3 + HF DSC all distress freqs · 2× SART · additional HF NBDP'],
+                            ].map(([a,c,r,e])=>`<tr class="border-b border-slate-800 hover:bg-slate-800/40">
+                                <td class="px-3 py-2.5 font-black ${c}">${a}</td>
+                                <td class="px-3 py-2.5 text-slate-500">${r}</td>
+                                <td class="px-3 py-2.5 text-slate-300">${e}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VHF Channel Reference -->
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+                <div class="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                    <div class="text-sm font-black text-teal-400 uppercase tracking-widest">VHF Maritime Channel Reference</div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px]">
+                        <thead><tr class="bg-slate-800/60 border-b border-slate-700">
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">CH</th>
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">Frequency</th>
+                            <th class="text-left px-3 py-2 text-teal-400 font-black">Purpose</th>
+                            <th class="px-3 py-2"></th>
+                        </tr></thead>
+                        <tbody>${VHF_CHANNELS.map(c=>`<tr class="border-b border-slate-800 hover:bg-slate-800/40">
+                            <td class="px-3 py-2.5 font-black ${c.color}">${String(c.ch).padStart(2,'0')}</td>
+                            <td class="px-3 py-2.5 text-slate-400 font-mono">${c.freq}0 MHz</td>
+                            <td class="px-3 py-2.5 text-slate-300">${c.purpose}</td>
+                            <td class="px-3 py-2.5"><button onclick="gChSet(${c.ch})" class="text-[9px] bg-slate-700 hover:bg-teal-800 text-slate-300 hover:text-white px-2 py-1 rounded-lg transition font-bold">Tune ▶</button></td>
+                        </tr>`).join('')}</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>`;
+        }
+
+        function initGmdss(){
+            window._g = { ch:16, coverLifted:false, dscStep:0, epirb:'standby', sart:'standby', pttTimer:null };
+            renderWorkflow();
+            renderDscDisplay();
+        }
+
+        // ── Audio helpers ──────────────────────────────────────────────────
+        function gBeep(type){
+            const ctx = getRorAudioCtx(); if(!ctx) return; ctx.resume();
+            const t = ctx.currentTime;
+            function tone(freq, start, dur, vol){
+                const o=ctx.createOscillator(), g=ctx.createGain();
+                o.connect(g); g.connect(ctx.destination);
+                o.frequency.value=freq; o.type='sine';
+                g.gain.setValueAtTime(0, t+start);
+                g.gain.linearRampToValueAtTime(vol, t+start+0.008);
+                g.gain.linearRampToValueAtTime(0, t+start+dur);
+                o.start(t+start); o.stop(t+start+dur+0.01);
+            }
+            if(type==='ch')     { tone(900,0,0.06,0.3); tone(1200,0.08,0.06,0.3); }
+            if(type==='ptt-on') { tone(1050,0,0.04,0.35); }
+            if(type==='ptt-off'){ tone(800,0,0.04,0.3); }
+            if(type==='dsc-tx') { // DSC alert sweep
+                for(let i=0;i<6;i++){ tone(1200+i*80, i*0.18, 0.15, 0.4); }
+            }
+            if(type==='ack'){   tone(880,0,0.1,0.4); tone(1100,0.12,0.1,0.4); tone(1320,0.24,0.15,0.45); }
+            if(type==='epirb'){ // pulsing alarm
+                for(let i=0;i<4;i++){ tone(2200,i*0.5,0.3,0.5); tone(1700,i*0.5+0.3,0.15,0.3); }
+            }
+            if(type==='sart'){  // radar-like sweeping
+                for(let i=0;i<5;i++){ tone(9400-(i*300),i*0.12,0.1,0.4); }
+            }
+            if(type==='navtex'){ tone(518/100,0,0.05,0.2); tone(900,0.06,0.08,0.3); }
+        }
+
+        // ── VHF DSC Radio ──────────────────────────────────────────────────
+        const G_CH_LIST=[6,8,9,10,12,13,16,22,67,70,72,73,77];
+        function gCh(dir){
+            if(!window._g) return;
+            const idx = G_CH_LIST.indexOf(window._g.ch);
+            const ni = (idx+dir+G_CH_LIST.length) % G_CH_LIST.length;
+            gChSet(G_CH_LIST[ni]);
+        }
+        function gChSet(ch){
+            if(!window._g) return;
+            window._g.ch = ch;
+            gBeep('ch');
+            renderDscDisplay();
+        }
+        function renderDscDisplay(){
+            if(!window._g) return;
+            const ch = window._g.ch;
+            const info = CH_INFO[ch] || {freq: '---', purpose:'Working Channel'};
+            const chEl=document.getElementById('g-ch');
+            const frEl=document.getElementById('g-freq');
+            const puEl=document.getElementById('g-purpose');
+            if(chEl) chEl.textContent = String(ch).padStart(2,'0');
+            if(frEl) frEl.textContent = info.freq;
+            if(puEl) puEl.textContent = info.purpose;
+            // Color display red on ch16
+            if(chEl){ chEl.style.color = ch===16?'#f87171': ch===70?'#c084fc':'#86efac'; }
+        }
+        function gPTT(down){
+            const btn=document.getElementById('g-ptt');
+            const tx=document.getElementById('g-tx');
+            if(down){
+                gBeep('ptt-on');
+                if(btn){ btn.style.background='#166534'; btn.textContent='🎙 TRANSMITTING…'; }
+                if(tx) tx.classList.remove('hidden');
+            } else {
+                gBeep('ptt-off');
+                if(btn){ btn.style.background=''; btn.textContent='🎙 PTT — HOLD TO TALK'; }
+                if(tx) tx.classList.add('hidden');
+            }
+        }
+        function gCover(){
+            if(!window._g) return;
+            if(window._g.coverLifted){
+                // re-lock
+                window._g.coverLifted=false;
+                const cb=document.getElementById('g-cover'), db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
+                if(cb){ cb.textContent='🔐 Lift Cover'; cb.classList.remove('bg-red-800','text-red-200'); cb.classList.add('bg-slate-700','text-slate-300'); }
+                if(db){ db.disabled=true; db.classList.remove('bg-red-600','text-white','cursor-pointer'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); }
+                if(dh) dh.textContent='Lift cover first to enable button';
+                return;
+            }
+            window._g.coverLifted=true;
+            const cb=document.getElementById('g-cover'), db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
+            if(cb){ cb.textContent='🔓 Cover Open'; cb.classList.add('bg-red-800','text-red-200'); cb.classList.remove('bg-slate-700','text-slate-300'); }
+            if(db){ db.disabled=false; db.classList.add('bg-red-600','text-white','cursor-pointer'); db.classList.remove('bg-slate-800','text-slate-600','cursor-not-allowed'); }
+            if(dh) dh.textContent='Cover lifted — press and hold DISTRESS to transmit alert';
+            gAdvanceWorkflow(1);
+        }
+        function gDistress(){
+            if(!window._g||!window._g.coverLifted) return;
+            gAdvanceWorkflow(2);
+            const db=document.getElementById('g-distress');
+            if(db){ db.textContent='⏳ Sending…'; db.disabled=true; }
+            gBeep('dsc-tx');
+            setTimeout(()=>{
+                gAdvanceWorkflow(3);
+                gChSet(16); // auto-switch to Ch16
+                const tx=document.getElementById('g-tx'); if(tx) tx.classList.remove('hidden');
+                setTimeout(()=>{ const tx2=document.getElementById('g-tx'); if(tx2) tx2.classList.add('hidden'); },1500);
+                gAdvanceWorkflow(4);
+                // Simulate CG response after 5s
+                setTimeout(()=>{
+                    gBeep('ack');
+                    gAdvanceWorkflow(5);
+                    const rx=document.getElementById('g-rx'); if(rx){ rx.classList.remove('hidden'); setTimeout(()=>rx.classList.add('hidden'),3000); }
+                    setTimeout(()=>gAdvanceWorkflow(6), 2000);
+                },5000);
+            },2500);
+        }
+        function gDscMenu(type){
+            const hints={routine:'Routine call: select vessel MMSI/group, then press SEND.',urgency:'Urgency (PAN PAN): select urgency, add position, press SEND.'};
+            const el=document.getElementById('g-purpose');
+            if(el){ el.textContent=hints[type]||'DSC Menu open'; }
+            gBeep('ch');
+        }
+        function gResetWorkflow(){
+            if(window._g){ window._g.dscStep=0; window._g.coverLifted=false; }
+            const cb=document.getElementById('g-cover'),db=document.getElementById('g-distress'),dh=document.getElementById('g-distress-hint');
+            if(cb){ cb.textContent='🔐 Lift Cover'; cb.classList.remove('bg-red-800','text-red-200'); cb.classList.add('bg-slate-700','text-slate-300'); }
+            if(db){ db.textContent='🆘 DISTRESS'; db.disabled=true; db.classList.remove('bg-red-600','text-white','cursor-pointer'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); }
+            if(dh) dh.textContent='Lift cover first to enable button';
+            gChSet(16);
+            renderWorkflow();
+        }
+
+        // ── DSC Workflow Steps ──────────────────────────────────────────────
+        function renderWorkflow(){
+            const el=document.getElementById('dsc-workflow'); if(!el) return;
+            const step = window._g ? window._g.dscStep : 0;
+            el.innerHTML = DSC_STEPS.map((s,i)=>{
+                const done=i<step, active=i===step, future=i>step;
+                const bg = done?'bg-green-950/40 border-green-800/50':active?'bg-teal-950/60 border-teal-600/60':'bg-slate-800/40 border-slate-700/40';
+                const numC = done?'bg-green-600 text-white':active?'bg-teal-500 text-white animate-pulse':'bg-slate-700 text-slate-500';
+                const titleC= done?'text-green-300':active?'text-teal-300':'text-slate-500';
+                const descC = done?'text-green-700':active?'text-slate-300':'text-slate-600';
+                const icon = done?'✓':active?'▶':String(i+1);
+                return `<div class="flex gap-3 items-start rounded-xl border px-3 py-2.5 transition ${bg}">
+                    <div class="w-6 h-6 rounded-full ${numC} flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">${icon}</div>
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-wide ${titleC}">${s.title}</div>
+                        <div class="text-[9px] leading-relaxed mt-0.5 ${descC}">${s.desc}</div>
+                        ${active&&s.action&&s.action!=='auto'?`<div class="mt-1.5 text-[9px] text-teal-400 font-bold animate-pulse">
+                            ${s.action==='lift-cover'?'→ Click "Lift Cover" on the radio panel above':s.action==='hold-distress'?'→ Click the 🆘 DISTRESS button on the radio panel':s.action==='voice'?'→ Hold PTT and broadcast your MAYDAY voice call':s.action==='wait'?'→ Maintain Ch 16 watch — simulated CG response incoming…':''}
+                        </div>`:''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        function gAdvanceWorkflow(to){
+            if(!window._g) return;
+            window._g.dscStep = to;
+            renderWorkflow();
+        }
+
+        // ── NAVTEX ─────────────────────────────────────────────────────────
+        function nxAppend(text){
+            const el=document.getElementById('navtex-out'); if(!el) return;
+            const p=document.createElement('div'); p.innerHTML=text;
+            el.appendChild(p); el.scrollTop=el.scrollHeight;
+        }
+        function nxTest(){
+            gBeep('navtex');
+            const el=document.getElementById('navtex-out'); if(!el) return;
+            el.innerHTML='';
+            nxAppend('<span style="color:#555">SELF TEST IN PROGRESS…</span>');
+            setTimeout(()=>nxAppend('<span style="color:#555">RECEIVER OK · MEMORY OK · ANTENNA OK</span>'),600);
+            setTimeout(()=>nxAppend('<span style="color:#555">SELF TEST PASSED ✓</span>'),1200);
+        }
+        function nxReceive(){
+            gBeep('navtex');
+            let delay=0;
+            NAVTEX_MESSAGES.forEach((m,i)=>{
+                setTimeout(()=>{
+                    nxAppend(`<br><b>ZCZC ${m.station[0]}${m.type}${String(i+1).padStart(2,'0')}</b>`);
+                    nxAppend(`<span style="color:#666">${m.time} — ${m.cat}</span>`);
+                    nxAppend(m.body.replace(/\n/g,'<br>'));
+                    nxAppend('NNNN');
+                },delay);
+                delay+=800;
+            });
+        }
+        function nxClear(){
+            const el=document.getElementById('navtex-out');
+            if(el) el.innerHTML='<div style="color:#aaa">Display cleared.</div>';
+        }
+
+        // ── EPIRB ──────────────────────────────────────────────────────────
+        function eTest(){
+            gBeep('ch');
+            const s=document.getElementById('epirb-state');
+            if(s){ s.textContent='SELF TEST…'; s.style.color='#fbbf24'; }
+            setTimeout(()=>{
+                const s2=document.getElementById('epirb-state');
+                if(s2){ s2.textContent='TEST OK — ARMED · STANDBY'; s2.style.color='#4ade80'; }
+            },1500);
+        }
+        function eAct(){
+            if(!window._g) return;
+            const btn=document.getElementById('epirb-act-btn'), s=document.getElementById('epirb-state'), b=document.getElementById('epirb-blink');
+            if(window._g.epirb==='active'){
+                window._g.epirb='standby';
+                if(btn){ btn.textContent='🆘 Activate'; btn.classList.remove('bg-green-800'); btn.classList.add('bg-red-900'); }
+                if(s){ s.textContent='ARMED · STANDBY'; s.style.color='#4ade80'; }
+                if(b){ b.style.background='#16a34a'; b.classList.remove('animate-ping'); }
+                return;
+            }
+            window._g.epirb='active';
+            gBeep('epirb');
+            if(btn){ btn.textContent='⏹ Deactivate'; btn.classList.add('bg-green-800'); btn.classList.remove('bg-red-900'); }
+            if(s){ s.textContent='⚠ TRANSMITTING 406 MHz'; s.style.color='#f87171'; }
+            if(b){ b.style.background='#ef4444'; b.classList.add('animate-ping'); }
+        }
+
+        // ── SART ───────────────────────────────────────────────────────────
+        function sTest(){
+            gBeep('sart');
+            const s=document.getElementById('sart-state'), b=document.getElementById('sart-blink');
+            if(s){ s.textContent='TEST SWEEP…'; s.style.color='#fbbf24'; }
+            setTimeout(()=>{
+                const s2=document.getElementById('sart-state');
+                if(s2){ s2.textContent='TEST OK — STANDBY'; s2.style.color='#fbbf24'; }
+            },1200);
+        }
+        function sAct(){
+            if(!window._g) return;
+            const btn=document.getElementById('sart-act-btn'), s=document.getElementById('sart-state'), b=document.getElementById('sart-blink');
+            if(window._g.sart==='active'){
+                window._g.sart='standby';
+                if(btn){ btn.textContent='🔴 Activate'; btn.classList.remove('bg-green-800'); btn.classList.add('bg-orange-900'); }
+                if(s){ s.textContent='STANDBY'; s.style.color='#fbbf24'; }
+                if(b){ b.style.background='rgba(202,138,4,0.5)'; b.classList.remove('animate-ping'); }
+                return;
+            }
+            window._g.sart='active';
+            gBeep('sart');
+            if(btn){ btn.textContent='⏹ Deactivate'; btn.classList.add('bg-green-800'); btn.classList.remove('bg-orange-900'); }
+            if(s){ s.textContent='⚠ RADAR ACTIVE — 12 rings visible'; s.style.color='#f97316'; }
+            if(b){ b.style.background='#f97316'; b.classList.add('animate-ping'); }
+        }
+
+        // ── MF/HF ──────────────────────────────────────────────────────────
+        function mfSet(freq, mode){
+            gBeep('ch');
+            const f=document.getElementById('mfhf-f'), m=document.getElementById('mfhf-m');
+            if(f) f.textContent=freq;
+            if(m) m.textContent='J3E · '+mode;
+        }
+
         function buildSoundSigs(){
             function table(rows,title,icon){
                 return `<div class="mb-6">
