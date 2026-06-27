@@ -357,6 +357,34 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- OBSERVER ACCOUNTS PANEL — separated dimension, not cadets -->
+                <div id="observers-panel" class="bg-white dark:bg-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-900 shadow-sm admin-controls hidden overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950 border-b border-emerald-200 dark:border-emerald-900">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="eye" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Observer Accounts</span>
+                            <span id="observer-badge-count" class="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                        </div>
+                        <p class="text-[9px] text-emerald-600 dark:text-emerald-500 font-medium hidden sm:block">Deans &amp; Office staff — admin access via cadet login. Not included in grades, sections, or exports.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="text-[10px] text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                                    <th class="p-2.5 text-left font-semibold">Name</th>
+                                    <th class="p-2.5 text-left font-semibold">Login ID</th>
+                                    <th class="p-2.5 text-left font-semibold">Email</th>
+                                    <th class="p-2.5 text-center font-semibold">Last Login</th>
+                                    <th class="p-2.5 text-center font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="observers-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                        </table>
+                        <p id="observers-empty" class="hidden text-center text-slate-400 text-[11px] py-4 px-4">No observer accounts registered yet. Add one using the "Add Cadet" button and check the Observer Account box.</p>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Right Side: Side Panel -->
@@ -691,6 +719,7 @@
                     <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cadet ID</label><input type="text" id="modal-cadet-id" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"></div>
                     <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Gender</label><select id="modal-cadet-gender" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="M">Male</option><option value="F">Female</option></select></div>
                 </div>
+                <div id="observer-cadet-fields" style="transition: opacity 0.2s;">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Class</label><select id="modal-cadet-class" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue"><option value="4">4th Class</option><option value="3">3rd Class</option></select></div>
                     <div><label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Section</label><select id="modal-cadet-section" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-brand-black dark:text-white font-semibold text-xs uppercase focus:outline-none focus:border-brand-blue"></select></div>
@@ -701,10 +730,19 @@
                     <div><label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">3rd Sem GWA</label><input type="number" id="modal-cadet-gwa3" step="0.1" value="" placeholder="0.0" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue text-center"></div>
                     <div><label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Bonus %</label><input type="number" id="modal-cadet-bonus" value="0" step="0.1" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-brand-black dark:text-white font-semibold text-xs focus:outline-none focus:border-brand-blue text-center"></div>
                 </div>
-                <label class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2.5 cursor-pointer mt-1">
-                    <input type="checkbox" id="modal-cadet-is-observer" class="w-4 h-4 accent-emerald-600">
-                    <span class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Observer Account (full Instructor/Admin dashboard access, logs in with Student ID like a cadet — for Dean/Office staff who don't need a dedicated instructor login)</span>
+                </div>
+                <label class="flex items-start gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-2.5 cursor-pointer mt-1">
+                    <input type="checkbox" id="modal-cadet-is-observer" class="w-4 h-4 accent-emerald-600 mt-0.5 shrink-0" onchange="window.toggleObserverMode(this.checked)">
+                    <div>
+                        <span class="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1"><i data-lucide="eye" class="w-3.5 h-3.5"></i> Observer Account</span>
+                        <p class="text-[10px] text-emerald-700 dark:text-emerald-400 mt-0.5 leading-snug">Full Instructor/Admin dashboard access. Logs in with Student ID like a cadet — for Deans or Office staff. <strong>Not counted as a cadet</strong> in any section, grade computation, masterlist, or Excel export.</p>
+                    </div>
                 </label>
+                <!-- Observer-only notice (hidden unless observer is checked) -->
+                <div id="observer-notice" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-2.5 text-[10px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                    <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                    <span>Class, Section, GWA, and Bonus fields are <strong>not required</strong> for Observer accounts — they are excluded from all cadet computations.</span>
+                </div>
             </div>
             <div class="p-4 bg-brand-creamAccent dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 flex justify-end gap-2"><button onclick="closeAddCadetModal()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-brand-creamBg dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-brand-creamBorder dark:border-slate-600 transition-all">Cancel</button><button onclick="saveNewCadet()" class="px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green-hover text-white text-xs font-semibold transition-all border border-brand-creamBorder dark:border-slate-700">Save Cadet</button></div>
         </div>
@@ -3641,10 +3679,7 @@
             document.getElementById('print-masterlist-generated').innerText = `Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
             setTxt('print-masterlist-prepared', window.currentAdminName || '\u00A0');
 
-            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec)).sort((a, b) => a.name.localeCompare(b.name));
-
-            // --- Summary strip ---
-            const totalCadets = filtered.length;
+            const filtered = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec)).sort((a, b) => a.name.localeCompare(b.name));
             const officerCount = filtered.filter(c => c.officer).length;
             const grades = filtered.map(c => parseFloat(c.specificGradePercent) || 0);
             const avgGrade = totalCadets ? (grades.reduce((a, b) => a + b, 0) / totalCadets) : 0;
@@ -8469,6 +8504,75 @@ window.logAdminSettingsActivity = async (action, details) => {
             return result;
         }
 
+        // ============================================================
+        // OBSERVER ACCOUNT SYSTEM — Separated dimension from cadets
+        // Observers log in via cadet login but are NEVER included in
+        // any section, grade computation, masterlist, or export.
+        // ============================================================
+
+        window.toggleObserverMode = (isObserver) => {
+            const cadetFields = document.getElementById('observer-cadet-fields');
+            const notice = document.getElementById('observer-notice');
+            if (cadetFields) cadetFields.style.opacity = isObserver ? '0.35' : '1';
+            if (cadetFields) cadetFields.style.pointerEvents = isObserver ? 'none' : '';
+            if (notice) notice.classList.toggle('hidden', !isObserver);
+            // Update modal title
+            const modalTitle = document.querySelector('#add-cadet-modal h3 span:last-child, #add-cadet-modal h3');
+            // Re-init icons in case anchor just appeared
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.renderObservers = () => {
+            if (!window.cadets) return;
+            const observers = window.cadets.filter(c => c.isObserver);
+            const tbody = document.getElementById('observers-tbody');
+            const empty = document.getElementById('observers-empty');
+            const badge = document.getElementById('observer-badge-count');
+            const panel = document.getElementById('observers-panel');
+
+            if (badge) badge.textContent = observers.length;
+            if (panel) panel.classList.toggle('hidden', false); // always visible to admin now
+
+            if (!tbody) return;
+
+            if (observers.length === 0) {
+                tbody.innerHTML = '';
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+            if (empty) empty.classList.add('hidden');
+
+            tbody.innerHTML = observers.map(o => {
+                const loginId = o.studentId || `PUMMA-OBS-${o.id.substring(o.id.length - 4)}`;
+                const lastLogin = o.accessLogs && o.accessLogs.length ? o.accessLogs[0].date : '—';
+                return `
+                <tr class="hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors">
+                    <td class="p-2.5 font-bold text-brand-black dark:text-white flex items-center gap-2">
+                        <span class="w-5 h-5 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center shrink-0"><i data-lucide="eye" class="w-3 h-3 text-emerald-600 dark:text-emerald-400"></i></span>
+                        ${o.name}
+                    </td>
+                    <td class="p-2.5 font-mono text-slate-500 dark:text-slate-400">${loginId}</td>
+                    <td class="p-2.5 text-slate-500 dark:text-slate-400">${o.email || '<span class="italic text-slate-400">none</span>'}</td>
+                    <td class="p-2.5 text-center text-[10px] text-slate-400">${lastLogin}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="window.deleteObserver('${o.id}', '${o.name}')" class="text-red-400 hover:text-red-600 transition text-[10px] font-semibold flex items-center gap-0.5 mx-auto"><i data-lucide="trash-2" class="w-3 h-3"></i> Remove</button>
+                    </td>
+                </tr>`;
+            }).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.deleteObserver = async (obsId, obsName) => {
+            const confirmed = await customConfirm(`Remove observer account for ${obsName}?\n\nThis will permanently delete their login. This cannot be undone.`);
+            if (!confirmed) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', obsId));
+                window.cadets = window.cadets.filter(c => c.id !== obsId);
+                window.renderObservers();
+                window.logAuditActivity('Observer Removed', `Deleted observer account: ${obsName}`, 'Admin');
+            } catch(e) { alert('Error removing observer: ' + e.message); }
+        };
+
 
         window.recalculateMetrics = () => {
             try {
@@ -8518,7 +8622,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     }
                 });
 
-                const yearFilteredCadets = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear));
+                const yearFilteredCadets = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear));
                 const cohort = yearFilteredCadets.filter(c => parseInt(c.classNum) === targetClass);
                 
                 yearFilteredCadets.forEach(c => {
@@ -8844,7 +8948,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             const targetSec = getVal('filter-section', 'ALL').toUpperCase();
             const search = getVal('table-search').toLowerCase();
 
-            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec) && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
+            const filtered = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec) && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
 
             filtered.forEach(c => {
                 const tr = document.createElement('tr');
@@ -8871,6 +8975,8 @@ window.logAdminSettingsActivity = async (action, details) => {
                 tbody.appendChild(tr);
             });
             if(window.currentUserRole === 'admin') lucide.createIcons();
+            // Keep the Observers panel in sync with the cadet list
+            if(window.currentUserRole === 'admin') window.renderObservers();
         };
 
         window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); };
@@ -8974,7 +9080,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             const search = getVal('table-search').toLowerCase();
 
             // Matches exactly what you see on the dashboard table
-            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec) && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
+            const filtered = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec) && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
 
             if (filtered.length === 0) return;
 
@@ -10123,6 +10229,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const targetSec = getVal('filter-section', 'ALL').toUpperCase();
 
             const atRiskList = window.cadets.filter(c => {
+                if (c.isObserver) return false;
                 const matchesScope = (c.academicYear === targetAcadYear || !c.academicYear)
                     && parseInt(c.classNum) === targetClass
                     && (targetSec === "ALL" || c.section.toUpperCase() === targetSec);
@@ -10180,7 +10287,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const targetClass = parseInt(getVal('filter-class', 3));
             const targetSec = getVal('filter-section', 'ALL').toUpperCase();
             
-            const filtered = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec)).sort((a, b) => a.name.localeCompare(b.name));
+            const filtered = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec)).sort((a, b) => a.name.localeCompare(b.name));
             
             let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
             <head>
@@ -10261,6 +10368,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
             
             const filtered = window.cadets.filter(c => {
+               if (c.isObserver) return false;
                const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
                const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
                const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
@@ -10300,6 +10408,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const bSec = getVal('bulk-target-section', 'ALL').toUpperCase();
             
             const filtered = window.cadets.filter(c => {
+               if (c.isObserver) return false;
                const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
                const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
                const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
@@ -10406,8 +10515,8 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const isDark = document.documentElement.classList.contains('dark');
             Chart.defaults.color = isDark ? '#cbd5e1' : '#64748b';
             
-            const filtered3rd = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === 3);
-            const filtered4th = window.cadets.filter(c => (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === 4);
+            const filtered3rd = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === 3);
+            const filtered4th = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === 4);
             
             let p3=0, f3=0, p4=0, f4=0;
             filtered3rd.forEach(c => { if(c.finalRating >= 3.51) p3++; else f3++; });
@@ -10450,7 +10559,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         };
         window.closeAnalyticsModal = () => { const m = document.getElementById('analytics-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
-        window.openAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } const obsCb = document.getElementById('modal-cadet-is-observer'); if (obsCb) obsCb.checked = false; };
+        window.openAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } const obsCb = document.getElementById('modal-cadet-is-observer'); if (obsCb) obsCb.checked = false; window.toggleObserverMode(false); };
         window.closeAddCadetModal = () => { const m = document.getElementById('add-cadet-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
         
         window.saveNewCadet = async () => {
@@ -10487,25 +10596,36 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 if(gwa3 > 0) { gSum += gwa3; gCount++; }
                 const avgGwa = gCount > 0 ? (gSum / gCount) : 0;
                 
+                const isObs = !!document.getElementById('modal-cadet-is-observer')?.checked;
+
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', nextId), JSON.parse(JSON.stringify({
-                    id: nextId, classNum: classVal, academicYear: getVal('input-acad-year', "2025-2026"), section: secVal,
+                    id: nextId,
+                    classNum: isObs ? 0 : classVal,
+                    section: isObs ? '__OBS__' : secVal,
+                    academicYear: getVal('input-acad-year', "2025-2026"),
                     studentId: window.normalizeCadetId(getVal('modal-cadet-id', '')), email: email, gender: getVal('modal-cadet-gender', 'M'), name: name.toUpperCase(), 
-                    gwaSem1: gwa1, gwaSem2: gwa2, gwaSem3: gwa3, gwa: avgGwa,
-                    meritsSem1: getNum('modal-cadet-merits', 0), meritsSem2: 0, meritsSem3: 0, individualBonus: getNum('modal-cadet-bonus', 0),
+                    gwaSem1: isObs ? 0 : gwa1, gwaSem2: isObs ? 0 : gwa2, gwaSem3: isObs ? 0 : gwa3, gwa: isObs ? 0 : avgGwa,
+                    meritsSem1: 0, meritsSem2: 0, meritsSem3: 0, individualBonus: isObs ? 0 : getNum('modal-cadet-bonus', 0),
                     officer: false, logbook2026: {}, logbook: {}, checklists: checklists, incidents: [], starCadet: false, accessLogs: [],
-                    isObserver: !!document.getElementById('modal-cadet-is-observer')?.checked
+                    isObserver: isObs
                 })));
                 
-                window.logAuditActivity('Cadet Registered', `Added new ${document.getElementById('modal-cadet-is-observer')?.checked ? 'Observer' : 'cadet'}: ${name.toUpperCase()}`, 'System');
+                window.logAuditActivity('Cadet Registered', `Added new ${isObs ? 'Observer' : 'cadet'}: ${name.toUpperCase()}`, 'System');
                 
-                // UX FIX: Automatically switch the dashboard filters so the admin instantly sees the cadet they just added!
-                setVal('filter-class', classVal.toString());
-                setVal('filter-section', secVal);
+                // Only auto-switch filters for real cadets, not observers
+                if (!isObs) {
+                    setVal('filter-class', classVal.toString());
+                    setVal('filter-section', secVal);
+                }
                 
                 // Give visual success confirmation
                 const toast = document.createElement('div');
-                toast.className = 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-[200]';
-                toast.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> ${name.toUpperCase()} Registered!`;
+                toast.className = isObs
+                    ? 'fixed bottom-4 right-4 bg-emerald-700 text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-[200]'
+                    : 'fixed bottom-4 right-4 bg-brand-green text-white font-bold text-xs py-3 px-5 rounded-lg shadow-2xl flex items-center gap-2 z-[200]';
+                toast.innerHTML = isObs
+                    ? `<i data-lucide="eye" class="w-4 h-4 text-white"></i> Observer: ${name.toUpperCase()} added!`
+                    : `<i data-lucide="check-circle-2" class="w-4 h-4 text-white"></i> ${name.toUpperCase()} Registered!`;
                 document.body.appendChild(toast); 
                 if(typeof lucide !== 'undefined') lucide.createIcons();
                 setTimeout(() => toast.remove(), 3000);
