@@ -5824,6 +5824,36 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.updateMorseOutput= updateMorseOutput;
         window.initMorseEncoder = initMorseEncoder;
 
+        // ── GMDSS Simulator — expose all functions to global scope ──────────
+        // onclick attributes in dynamically-built HTML look up on window, so
+        // every function called from buildGmdss() HTML must be assigned here.
+        window.gBeep            = gBeep;
+        window.gStartStatic     = gStartStatic;
+        window.gStopStatic      = gStopStatic;
+        window.gCh              = gCh;
+        window.gChSet           = gChSet;
+        window.renderDscDisplay = renderDscDisplay;
+        window.gPTT             = gPTT;
+        window.gCover           = gCover;
+        window.gDistressDown    = gDistressDown;
+        window.gDistressUp      = gDistressUp;
+        window.gDistressFire    = gDistressFire;
+        window.gDscMenu         = gDscMenu;
+        window.gResetWorkflow   = gResetWorkflow;
+        window.gAdvanceWorkflow = gAdvanceWorkflow;
+        window.renderWorkflow   = renderWorkflow;
+        window.nxAppend         = nxAppend;
+        window.nxTest           = nxTest;
+        window.nxReceive        = nxReceive;
+        window.nxClear          = nxClear;
+        window.eTest            = eTest;
+        window.eAct             = eAct;
+        window.sTest            = sTest;
+        window.sAct             = sAct;
+        window.mfSet            = mfSet;
+        window.initGmdss        = initGmdss;
+        window.buildGmdss       = buildGmdss;
+
 // --- MARITIME LAW NATIVE PDF LIBRARY ENGINE ---
         // Updated to perfectly match your exact GitHub file names
         window.lawDocuments = {
