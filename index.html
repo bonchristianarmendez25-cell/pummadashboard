@@ -5069,51 +5069,92 @@ window.logAdminSettingsActivity = async (action, details) => {
                 </div>
             </div>
 
+            <!-- Tab Nav -->
+            <div class="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+                ${[['tab-radios','📻 Radios'],['tab-beacons','🛰 Beacons'],['tab-extras','🛟 Extras'],['tab-mayday','🆘 MAYDAY'],['tab-log','📋 Event Log'],['tab-ref','📖 Reference']].map((t,i)=>
+                `<button onclick="gTab('${t[0]}')" id="btn-${t[0]}" class="shrink-0 text-[10px] font-black px-3 py-1.5 rounded-lg transition ${i===0?'bg-teal-700 text-white':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">${t[1]}</button>`).join('')}
+            </div>
+
+            <!-- TAB: RADIOS -->
+            <div id="tab-radios" class="space-y-4">
             <!-- VHF DSC + NAVTEX -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <!-- VHF DSC RADIO -->
-                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <!-- VHF DSC RADIO — ICOM IC-M605 style -->
+                <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">VHF DSC RADIO</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80] animate-pulse"></span><span class="text-[9px] text-green-400 font-bold">POWER ON</span></span>
-                    </div>
-                    <!-- LCD -->
-                    <div class="mx-3 mt-3 bg-[#162416] border border-green-900/50 rounded-xl p-3 font-mono shadow-inner">
-                        <div class="flex justify-between text-[9px] text-green-700 mb-1">
-                            <span>CH</span><span id="g-dsc-watch">▶ DSC WATCH CH70</span>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">VHF DSC RADIO</span>
+                            <div class="text-[8px] text-slate-600">ICOM IC-M605 · Class D DSC</div>
                         </div>
-                        <div id="g-ch" class="text-green-300 text-5xl font-black tracking-widest text-center leading-none">16</div>
-                        <div id="g-freq" class="text-green-600 text-[10px] text-center mt-1">156.800 MHz</div>
-                        <div id="g-purpose" class="text-green-400 text-[9px] text-center mt-1 bg-green-950/60 rounded px-1 py-0.5">DISTRESS · SAFETY · CALLING</div>
-                        <div id="g-tx" class="hidden text-red-300 text-[9px] text-center bg-red-950/70 rounded px-1 py-0.5 mt-1 font-black animate-pulse">◉ TRANSMITTING</div>
-                        <div id="g-rx" class="hidden text-cyan-300 text-[9px] text-center bg-cyan-950/50 rounded px-1 py-0.5 mt-1">◎ RECEIVING</div>
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80] animate-pulse"></span><span class="text-[9px] text-green-400 font-bold">PWR</span></span>
                     </div>
-                    <!-- CH Controls -->
-                    <div class="px-3 pt-3 grid grid-cols-3 gap-2">
-                        <button onclick="gCh(-1)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2.5 rounded-xl transition">▼ CH</button>
-                        <button onclick="gCh(1)"  class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2.5 rounded-xl transition">▲ CH</button>
-                        <button onclick="gChSet(16)" class="bg-teal-900 hover:bg-teal-800 active:scale-95 text-teal-200 text-xs font-bold py-2.5 rounded-xl transition">CH 16</button>
-                        <button onclick="gDscMenu('routine')" class="bg-blue-950 hover:bg-blue-900 active:scale-95 text-blue-300 text-xs font-bold py-2.5 rounded-xl transition">📋 Routine</button>
-                        <button onclick="gDscMenu('urgency')" class="bg-orange-950 hover:bg-orange-900 active:scale-95 text-orange-300 text-xs font-bold py-2.5 rounded-xl transition">🔔 Urgency</button>
-                        <button onclick="gChSet(70)" class="bg-purple-950 hover:bg-purple-900 active:scale-95 text-purple-300 text-xs font-bold py-2.5 rounded-xl transition">CH 70</button>
-                    </div>
-                    <!-- PTT -->
-                    <div class="px-3 pt-2">
-                        <button id="g-ptt" 
+                    <!-- Realistic VHF body -->
+                    <div class="p-3 space-y-2">
+                        <!-- LCD display -->
+                        <div class="mx-1 bg-[#0d1f0d] border-2 border-green-900/60 rounded-xl p-3 font-mono shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]" style="background:linear-gradient(135deg,#0a1a0a,#0d200d)">
+                            <div class="flex justify-between text-[8px] text-green-700 mb-1">
+                                <span id="g-dsc-watch" class="font-bold">▶ DSC WATCH CH70</span>
+                                <span id="g-squelch-ind" class="text-green-800">SQL:3</span>
+                            </div>
+                            <div class="flex items-end justify-center gap-2">
+                                <div class="text-green-700 text-[9px]">CH</div>
+                                <div id="g-ch" class="text-green-300 text-5xl font-black tracking-widest leading-none" style="text-shadow:0 0 12px #4ade8066">16</div>
+                            </div>
+                            <div id="g-freq" class="text-green-600 text-[10px] text-center mt-1 font-mono">156.800 MHz</div>
+                            <div id="g-purpose" class="text-green-400 text-[9px] text-center mt-1 bg-green-950/60 rounded px-1 py-0.5">DISTRESS · SAFETY · CALLING</div>
+                            <div id="g-tx" class="hidden text-red-300 text-[9px] text-center bg-red-950/70 rounded px-1 py-0.5 mt-1 font-black animate-pulse">◉ TRANSMITTING</div>
+                            <div id="g-rx" class="hidden text-cyan-300 text-[9px] text-center bg-cyan-950/50 rounded px-1 py-0.5 mt-1">◎ RECEIVING DSC</div>
+                            <div id="g-scan-ind" class="hidden text-yellow-300 text-[9px] text-center bg-yellow-950/50 rounded px-1 py-0.5 mt-1 animate-pulse">⟳ SCANNING…</div>
+                        </div>
+                        <!-- Knobs row -->
+                        <div class="flex items-center justify-between px-1">
+                            <div class="text-center">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 border-2 border-slate-500 flex items-center justify-center shadow-lg cursor-pointer hover:from-slate-400" onclick="gVolUp()">
+                                    <div class="w-1 h-3 bg-slate-300 rounded"></div>
+                                </div>
+                                <div class="text-[8px] text-slate-600 mt-0.5">VOL</div>
+                                <div id="g-vol-ind" class="text-[8px] text-green-500">▮▮▮▮▮</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 border-2 border-slate-500 flex items-center justify-center shadow-lg cursor-pointer hover:from-slate-400" onclick="gSqlUp()">
+                                    <div class="w-1 h-3 bg-slate-300 rounded"></div>
+                                </div>
+                                <div class="text-[8px] text-slate-600 mt-0.5">SQL</div>
+                                <div id="g-sql-ind" class="text-[8px] text-green-500">▮▮▮</div>
+                            </div>
+                            <button onclick="gScan()" id="g-scan-btn" class="bg-yellow-900/60 hover:bg-yellow-800 active:scale-95 text-yellow-300 text-[9px] font-black px-3 py-2 rounded-xl transition border border-yellow-800/50">⟳ SCAN</button>
+                            <button onclick="gDscMenu('urgency')" class="bg-orange-950 hover:bg-orange-900 active:scale-95 text-orange-300 text-[9px] font-black px-3 py-2 rounded-xl transition">PAN-PAN</button>
+                        </div>
+                        <!-- CH Controls -->
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="gCh(-1)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2 rounded-xl transition">▼ CH</button>
+                            <button onclick="gCh(1)"  class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs font-bold py-2 rounded-xl transition">▲ CH</button>
+                            <button onclick="gChSet(16)" class="bg-teal-900 hover:bg-teal-800 active:scale-95 text-teal-200 text-xs font-bold py-2 rounded-xl transition">CH 16</button>
+                            <button onclick="gDscMenu('routine')" class="bg-blue-950 hover:bg-blue-900 active:scale-95 text-blue-300 text-xs font-bold py-2 rounded-xl transition">📋 Routine</button>
+                            <button onclick="gChSet(70)" class="bg-purple-950 hover:bg-purple-900 active:scale-95 text-purple-300 text-xs font-bold py-2 rounded-xl transition">CH 70</button>
+                            <button onclick="gChSet(6)" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">CH 06</button>
+                        </div>
+                        <!-- DSC Call Log -->
+                        <div class="bg-slate-900 rounded-xl border border-slate-700 p-2">
+                            <div class="text-[8px] text-slate-500 font-black uppercase mb-1">DSC Call Log</div>
+                            <div id="g-dsc-log" class="space-y-0.5 max-h-16 overflow-y-auto font-mono text-[8px] text-slate-400">
+                                <div class="text-slate-600">No calls logged</div>
+                            </div>
+                        </div>
+                        <!-- PTT -->
+                        <button id="g-ptt"
                             onmousedown="gPTT(true,event)" onmouseup="gPTT(false,event)" onmouseleave="gPTT(false,event)"
                             ontouchstart="gPTT(true,event)" ontouchend="gPTT(false,event)" ontouchcancel="gPTT(false,event)"
                             class="w-full bg-slate-600 hover:bg-slate-500 active:bg-green-800 text-white text-sm font-black py-3.5 rounded-2xl transition select-none border border-slate-500">
                             🎙 PTT — HOLD TO TALK
                         </button>
-                    </div>
-                    <!-- DISTRESS -->
-                    <div class="p-3">
+                        <!-- DISTRESS -->
                         <div class="bg-red-950/40 border border-red-800/50 rounded-2xl p-3">
-                            <div class="text-[9px] text-red-400 text-center mb-2 font-black uppercase tracking-widest">⚠ DISTRESS BUTTON</div>
+                            <div class="text-[9px] text-red-400 text-center mb-2 font-black uppercase tracking-widest">⚠ DISTRESS BUTTON — COVER PROTECTED</div>
                             <div class="flex gap-2">
                                 <button id="g-cover" onclick="gCover()" class="flex-1 bg-slate-700 hover:bg-red-900/60 active:scale-95 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition">🔐 Lift Cover</button>
-                                <button id="g-distress" 
+                                <button id="g-distress"
                                     onmousedown="gDistressDown(event)" onmouseup="gDistressUp(event)" onmouseleave="gDistressUp(event)"
                                     ontouchstart="gDistressDown(event)" ontouchend="gDistressUp(event)" ontouchcancel="gDistressUp(event)"
                                     disabled class="flex-1 bg-slate-800 text-slate-600 text-xs font-black py-2.5 rounded-xl cursor-not-allowed border border-slate-700 select-none">🆘 DISTRESS</button>
@@ -5123,93 +5164,356 @@ window.logAdminSettingsActivity = async (action, details) => {
                     </div>
                 </div>
 
-                <!-- NAVTEX -->
-                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <!-- NAVTEX — FURUNO NX-700 style -->
+                <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">NAVTEX RECEIVER</span>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">NAVTEX RECEIVER</span>
+                            <div class="text-[8px] text-slate-600">FURUNO NX-700</div>
+                        </div>
                         <span class="text-[9px] text-amber-400 font-bold">518 kHz</span>
                     </div>
-                    <!-- Thermal paper display -->
-                    <div id="navtex-out" class="mx-3 mt-3 bg-[#f4efdf] rounded-xl p-3 h-52 overflow-y-auto font-mono text-[9px] text-[#2a1f00] leading-[1.55] shadow-inner border border-amber-200/30">
-                        <div class="text-[#888]">FURUNO NX-700 NAVTEX RECEIVER<br>━━━━━━━━━━━━━━━━━━━━━<br>FREQ : 518 kHz INTL<br>STATION: ALL<br>━━━━━━━━━━━━━━━━━━━━━<br><span class="text-[#aaa]">Awaiting messages…<br>Press SELF TEST or RECEIVE</span></div>
-                    </div>
-                    <div class="p-3 grid grid-cols-2 gap-2">
-                        <button onclick="nxTest()" class="bg-slate-700 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-xs font-bold py-2.5 rounded-xl transition">🧪 Self Test</button>
-                        <button onclick="nxReceive()" class="bg-amber-950 hover:bg-amber-900 active:scale-95 text-amber-200 text-xs font-bold py-2.5 rounded-xl transition">📥 Receive</button>
-                        <button onclick="nxClear()" class="col-span-2 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🗑 Clear</button>
-                    </div>
-                    <div class="px-3 pb-3 space-y-1">
-                        <div class="text-[9px] text-slate-600 font-black uppercase tracking-wider mb-1">Message Types</div>
-                        ${['A=Nav Warning','B=Met Warning','D=SAR','G=GPS/GNSS','L=Subfacts'].map(t=>`<div class="text-[9px] text-slate-500">${t}</div>`).join('')}
+                    <!-- Printer housing -->
+                    <div class="p-3 space-y-2">
+                        <!-- Frequency selector -->
+                        <div class="flex gap-1">
+                            ${[['518','INTL','amber'],['490','NAT','blue'],['4209.5','HF','green']].map(([f,l,c])=>
+                            `<button onclick="nxFreq('${f}')" id="nx-freq-${f.replace('.','')}" class="flex-1 text-[8px] font-black py-1 rounded-lg border transition ${f==='518'?`bg-${c}-900 text-${c}-300 border-${c}-700`:`bg-slate-800 text-slate-500 border-slate-700 hover:bg-slate-700`}">${f}<br><span class="font-normal">${l}</span></button>`).join('')}
+                        </div>
+                        <!-- Station filter -->
+                        <div class="flex items-center gap-1">
+                            <div class="text-[8px] text-slate-600 shrink-0">STN:</div>
+                            <select id="nx-station" class="flex-1 bg-slate-800 text-slate-300 text-[8px] rounded border border-slate-700 px-1 py-0.5">
+                                <option>ALL</option><option>STATION A</option><option>STATION B</option><option>STATION D</option>
+                            </select>
+                            <div class="text-[8px] text-slate-600 shrink-0">MSG:</div>
+                            <select id="nx-msgtype" class="flex-1 bg-slate-800 text-slate-300 text-[8px] rounded border border-slate-700 px-1 py-0.5">
+                                <option>ALL</option><option>A-Nav Warn</option><option>B-Met Warn</option><option>D-SAR</option>
+                            </select>
+                        </div>
+                        <!-- Thermal paper -->
+                        <div class="relative">
+                            <!-- Paper feed visual -->
+                            <div class="h-2 bg-gradient-to-b from-slate-700 to-slate-800 rounded-t-lg border-x border-t border-slate-600 flex items-center px-2">
+                                <div class="flex gap-0.5">
+                                    ${Array(8).fill(0).map(()=>'<div class="w-0.5 h-1 bg-slate-600 rounded"></div>').join('')}
+                                </div>
+                            </div>
+                            <div id="navtex-out" class="bg-[#f4efdf] rounded-b-xl p-3 h-52 overflow-y-auto font-mono text-[9px] text-[#2a1f00] leading-[1.55] shadow-inner border border-amber-200/30 border-t-0">
+                                <div class="text-[#888]">FURUNO NX-700 NAVTEX RECEIVER<br>━━━━━━━━━━━━━━━━━━━━━<br>FREQ : 518 kHz INTL<br>STATION: ALL<br>━━━━━━━━━━━━━━━━━━━━━<br><span class="text-[#aaa]">Awaiting messages…<br>Press SELF TEST or RECEIVE</span></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="nxTest()" class="bg-slate-700 hover:bg-amber-900/60 active:scale-95 text-amber-300 text-[10px] font-bold py-2 rounded-xl transition">🧪 Test</button>
+                            <button onclick="nxReceive()" class="bg-amber-950 hover:bg-amber-900 active:scale-95 text-amber-200 text-[10px] font-bold py-2 rounded-xl transition">📥 Receive</button>
+                            <button onclick="nxClear()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-[10px] font-bold py-2 rounded-xl transition">🗑 Clear</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button onclick="nxMsgType('D')" class="bg-red-950/60 hover:bg-red-900/60 active:scale-95 text-red-300 text-[9px] font-bold py-1.5 rounded-xl transition">📡 SAR (D)</button>
+                            <button onclick="nxMsgType('A')" class="bg-blue-950/60 hover:bg-blue-900/60 active:scale-95 text-blue-300 text-[9px] font-bold py-1.5 rounded-xl transition">⚓ Nav (A)</button>
+                        </div>
+                        <div class="text-[8px] text-slate-600 space-y-0.5">
+                            <div class="font-black text-slate-500 uppercase">Message Types</div>
+                            ${['A=Nav Warning','B=Met Warning','D=SAR Info','G=GPS/GNSS','L=Subfacts','U=Area Notice'].map(t=>`<div>${t}</div>`).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- EPIRB + SART + MF/HF -->
+            <!-- MF/HF DSC — ICOM IC-M802 style -->
+            <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                    <div>
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">MF/HF DSC RADIO</span>
+                        <div class="text-[8px] text-slate-600">ICOM IC-M802 · SSB 2–27 MHz · J3E</div>
+                    </div>
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80] animate-pulse"></span><span class="text-[9px] text-green-400 font-bold">ON</span></span>
+                </div>
+                <div class="p-3 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- LCD -->
+                        <div class="bg-[#0d1f0d] border-2 border-green-900/60 rounded-xl p-3 font-mono shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+                            <div class="text-green-700 text-[8px] uppercase">Frequency · Mode</div>
+                            <div id="mfhf-f" class="text-green-300 text-2xl font-black" style="text-shadow:0 0 10px #4ade8055">2182.0 kHz</div>
+                            <div id="mfhf-m" class="text-green-600 text-[9px] mt-0.5">J3E · MF DISTRESS WATCH</div>
+                            <div id="mfhf-dsc" class="text-green-800 text-[8px] mt-1">DSC WATCH: 2187.5 kHz</div>
+                            <div class="mt-2 h-1 bg-green-950 rounded-full overflow-hidden">
+                                <div id="mfhf-sig" class="h-full bg-green-500 rounded-full transition-all" style="width:15%"></div>
+                            </div>
+                            <div class="text-[7px] text-green-800 mt-0.5">SIGNAL STRENGTH</div>
+                        </div>
+                        <!-- Mode/BW selects -->
+                        <div class="space-y-2">
+                            <div>
+                                <div class="text-[8px] text-slate-600 mb-1">MODE</div>
+                                <div class="flex gap-1">
+                                    ${[['J3E','SSB'],['J2B','NBDP'],['H3E','AM']].map(([m,l])=>
+                                    `<button onclick="mfMode('${m}')" id="mfhf-mode-${m}" class="flex-1 text-[8px] font-black py-1 rounded border transition ${m==='J3E'?'bg-green-900 text-green-300 border-green-700':'bg-slate-800 text-slate-500 border-slate-700 hover:bg-slate-700'}">${m}<br><span class="font-normal text-[7px]">${l}</span></button>`).join('')}
+                                </div>
+                            </div>
+                            <button onclick="mfDscDistress()" class="w-full bg-red-950/70 hover:bg-red-900 active:scale-95 border border-red-800/50 text-red-300 text-[10px] font-black py-2 rounded-xl transition">⚠ DSC DISTRESS ALERT</button>
+                            <button onclick="mfDscUrgency()" class="w-full bg-orange-950/70 hover:bg-orange-900 active:scale-95 border border-orange-800/50 text-orange-300 text-[10px] font-black py-2 rounded-xl transition">🔔 DSC URGENCY (PAN)</button>
+                        </div>
+                    </div>
+                    <!-- Frequency bank -->
+                    <div>
+                        <div class="text-[8px] text-slate-600 font-black uppercase mb-1">Distress & Working Frequencies</div>
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-1">
+                            ${[
+                                ['2182.0','MF DIST'],['2187.5','MF DSC'],['4125.0','HF D-1'],
+                                ['6215.0','HF D-2'],['8291.0','HF D-3'],['12290.0','HF D-4'],
+                                ['16420.0','HF D-5'],['4207.5','HF DSC'],['6312.0','HF DSC'],
+                            ].map(([f,m])=>
+                            `<button onclick="mfSet('${f} kHz','${m}')" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 text-[8px] font-bold py-1.5 rounded-lg transition border border-slate-700 leading-tight">${f}<br><span class="text-[7px] text-slate-500">${m}</span></button>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portable VHF -->
+            <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="bg-[#111] px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                    <div>
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">PORTABLE VHF RADIO</span>
+                        <div class="text-[8px] text-slate-600">Waterproof · IPX7 · Handheld</div>
+                    </div>
+                    <span class="text-[9px] text-blue-400 font-bold">LIFEBOAT UNIT</span>
+                </div>
+                <div class="p-3 flex gap-4 items-start">
+                    <!-- SVG handheld radio -->
+                    <svg width="70" height="130" viewBox="0 0 70 130" class="shrink-0">
+                        <rect x="8" y="10" width="54" height="110" rx="10" fill="#f97316" stroke="#c2410c" stroke-width="1.5"/>
+                        <rect x="13" y="15" width="44" height="35" rx="5" fill="#0d1f0d" stroke="#16a34a" stroke-width="1"/>
+                        <text x="35" y="29" text-anchor="middle" font-family="monospace" font-size="6" fill="#4ade80">CH 16</text>
+                        <text x="35" y="40" text-anchor="middle" font-family="monospace" font-size="5" fill="#16a34a">156.800 MHz</text>
+                        <rect x="15" y="55" width="40" height="14" rx="3" fill="#dc2626"/>
+                        <text x="35" y="65" text-anchor="middle" font-family="monospace" font-size="7" font-weight="bold" fill="white">PTT</text>
+                        <circle cx="20" cy="80" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <circle cx="35" cy="80" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <circle cx="50" cy="80" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <circle cx="20" cy="95" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <circle cx="35" cy="95" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <circle cx="50" cy="95" r="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+                        <text x="20" y="98" text-anchor="middle" font-size="5" fill="#94a3b8">▲</text>
+                        <text x="50" y="98" text-anchor="middle" font-size="5" fill="#94a3b8">▼</text>
+                        <rect x="25" y="108" width="20" height="7" rx="2" fill="#1e293b"/>
+                        <text x="35" y="114" text-anchor="middle" font-size="5" fill="#4ade80">16/9</text>
+                        <rect x="28" y="2" width="14" height="10" rx="2" fill="#374151"/>
+                        <line x1="35" y1="0" x2="35" y2="8" stroke="#94a3b8" stroke-width="1.5"/>
+                        <circle cx="57" cy="20" r="3" fill="#4ade80" opacity="0.8" class="animate-pulse"/>
+                    </svg>
+                    <div class="flex-1 space-y-2">
+                        <div class="bg-slate-900 rounded-xl p-2 text-[9px] text-slate-400 space-y-1">
+                            <div class="text-slate-300 font-black text-[10px]">GMDSS Requirement</div>
+                            <div>• Minimum <span class="text-teal-400 font-bold">3 portable VHF radios</span> per vessel</div>
+                            <div>• Waterproof (IPX7 — 1m/30min)</div>
+                            <div>• Floatable or float-free</div>
+                            <div>• Channel 16 + working channels</div>
+                            <div>• Minimum 8 hours battery</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button onclick="pvhfPTT()" class="bg-orange-900 hover:bg-orange-800 active:scale-95 text-orange-200 text-[10px] font-black py-2 rounded-xl transition">🎙 PTT</button>
+                            <button onclick="pvhfCh16()" class="bg-teal-900 hover:bg-teal-800 active:scale-95 text-teal-200 text-[10px] font-black py-2 rounded-xl transition">CH 16</button>
+                        </div>
+                        <div id="pvhf-status" class="text-[9px] text-slate-600 text-center">Channel 16 · Standby</div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- TAB: BEACONS -->
+            <div id="tab-beacons" class="hidden space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- EPIRB -->
-                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+
+                <!-- EPIRB — Physical SVG device -->
+                <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">EPIRB</span>
-                        <span class="text-[9px] text-slate-500">406 / 121.5 MHz</span>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">EPIRB</span>
+                            <div class="text-[8px] text-slate-600">406 / 121.5 MHz · Cat I</div>
+                        </div>
+                        <span class="text-[9px] text-slate-500">AUTO FLOAT-FREE</span>
                     </div>
                     <div class="p-3 space-y-3">
-                        <div id="epirb-panel" class="rounded-xl border border-slate-700 p-4 text-center bg-slate-800/50">
-                            <div class="text-3xl mb-2">🛰️</div>
+                        <!-- Physical EPIRB SVG illustration -->
+                        <div class="flex justify-center">
+                            <svg width="90" height="180" viewBox="0 0 90 180" id="epirb-svg">
+                                <!-- Bracket/housing base -->
+                                <rect x="28" y="155" width="34" height="18" rx="3" fill="#374151" stroke="#4b5563" stroke-width="1"/>
+                                <rect x="22" y="158" width="10" height="12" rx="2" fill="#1f2937"/>
+                                <rect x="58" y="158" width="10" height="12" rx="2" fill="#1f2937"/>
+                                <text x="45" y="167" text-anchor="middle" font-size="5" fill="#6b7280">BRACKET</text>
+                                <!-- Hydrostatic release -->
+                                <rect x="32" y="148" width="26" height="10" rx="3" fill="#78350f" stroke="#92400e" stroke-width="1"/>
+                                <text x="45" y="155" text-anchor="middle" font-size="5" fill="#fde68a">HRU</text>
+                                <!-- Main body — orange cylinder -->
+                                <rect x="22" y="50" width="46" height="100" rx="10" fill="#f97316" stroke="#c2410c" stroke-width="2" id="epirb-body"/>
+                                <!-- Body highlight -->
+                                <rect x="24" y="52" width="8" height="96" rx="4" fill="rgba(255,255,255,0.15)"/>
+                                <!-- Water activation sensor band -->
+                                <rect x="22" y="120" width="46" height="12" rx="0" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
+                                <text x="45" y="129" text-anchor="middle" font-size="5" fill="#78350f" font-weight="bold">WATER SENSOR</text>
+                                <!-- Registration panel -->
+                                <rect x="30" y="90" width="30" height="22" rx="3" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+                                <text x="45" y="100" text-anchor="middle" font-size="4.5" fill="#9ca3af">MMSI</text>
+                                <text x="45" y="108" text-anchor="middle" font-size="4" fill="#6ee7b7">525 001 2345</text>
+                                <!-- Activation switch -->
+                                <rect x="32" y="68" width="26" height="14" rx="4" fill="#991b1b" stroke="#7f1d1d" stroke-width="1.5" id="epirb-switch"/>
+                                <text x="45" y="77" text-anchor="middle" font-size="5.5" fill="white" font-weight="bold">ON/OFF</text>
+                                <!-- Top cap -->
+                                <ellipse cx="45" cy="52" rx="23" ry="6" fill="#c2410c" stroke="#9a3412" stroke-width="1"/>
+                                <!-- Strobe LED -->
+                                <circle cx="45" cy="40" r="8" fill="#fde047" stroke="#ca8a04" stroke-width="1.5" id="epirb-strobe" opacity="0.3"/>
+                                <circle cx="45" cy="40" r="4" fill="white" id="epirb-strobe-core"/>
+                                <text x="45" y="43" text-anchor="middle" font-size="4" fill="#78350f">LED</text>
+                                <!-- Antenna -->
+                                <rect x="43" y="5" width="4" height="32" rx="2" fill="#9ca3af" stroke="#6b7280" stroke-width="0.5"/>
+                                <line x1="35" y1="12" x2="43" y2="20" stroke="#6b7280" stroke-width="1"/>
+                                <line x1="55" y1="12" x2="47" y2="20" stroke="#6b7280" stroke-width="1"/>
+                                <!-- Status LED dot -->
+                                <circle cx="65" cy="60" r="4" fill="#4ade80" id="epirb-led" opacity="0.8"/>
+                            </svg>
+                        </div>
+                        <div id="epirb-panel" class="rounded-xl border border-slate-700 p-3 text-center bg-slate-800/50">
                             <div id="epirb-state" class="text-[11px] font-black text-green-400 uppercase">ARMED · STANDBY</div>
-                            <div class="text-[9px] text-slate-500 mt-1">Auto hydrostatic release</div>
-                            <div id="epirb-blink" class="mx-auto mt-2 w-3 h-3 rounded-full bg-green-600"></div>
+                            <div class="text-[9px] text-slate-500 mt-1">Auto hydrostatic release · Float-free</div>
+                            <div id="epirb-info" class="text-[8px] text-slate-600 mt-1">406 MHz + 121.5 MHz homing · 48h bat</div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="eTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🧪 Test</button>
+                            <button onclick="eTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🧪 Self Test</button>
                             <button id="epirb-act-btn" onclick="eAct()" class="bg-red-900 hover:bg-red-800 active:scale-95 text-red-300 text-xs font-bold py-2 rounded-xl transition">🆘 Activate</button>
                         </div>
-                        <div class="text-[9px] text-slate-600 text-center">MMSI: 525 001 2345 · 48h bat</div>
+                        <div class="text-[8px] text-slate-600 space-y-0.5">
+                            <div class="font-black text-slate-500">EPIRB Types:</div>
+                            <div>Cat I — Auto float-free, auto activate</div>
+                            <div>Cat II — Manual activation only</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- SART -->
-                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <!-- SART — Physical SVG device -->
+                <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">SART</span>
-                        <span class="text-[9px] text-slate-500">9 GHz Radar</span>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">SART</span>
+                            <div class="text-[8px] text-slate-600">9 GHz · Radar Transponder</div>
+                        </div>
+                        <span class="text-[9px] text-slate-500">X-BAND RADAR</span>
                     </div>
                     <div class="p-3 space-y-3">
-                        <div id="sart-panel" class="rounded-xl border border-slate-700 p-4 text-center bg-slate-800/50">
-                            <div class="text-3xl mb-2">📡</div>
+                        <!-- Physical SART SVG -->
+                        <div class="flex justify-center">
+                            <svg width="90" height="180" viewBox="0 0 90 180" id="sart-svg">
+                                <!-- Lanyard attachment -->
+                                <path d="M 38 168 Q 45 175 52 168" fill="none" stroke="#6b7280" stroke-width="2"/>
+                                <circle cx="45" cy="168" r="3" fill="#4b5563"/>
+                                <!-- Handle/grip bottom -->
+                                <rect x="30" y="140" width="30" height="28" rx="8" fill="#c2410c" stroke="#9a3412" stroke-width="1.5"/>
+                                <!-- Grip texture -->
+                                ${Array(5).fill(0).map((_,i)=>`<line x1="32" y1="${148+i*4}" x2="58" y2="${148+i*4}" stroke="#9a3412" stroke-width="1" opacity="0.5"/>`).join('')}
+                                <!-- Main body -->
+                                <rect x="25" y="55" width="40" height="88" rx="8" fill="#f97316" stroke="#c2410c" stroke-width="2" id="sart-body"/>
+                                <!-- Body highlight -->
+                                <rect x="27" y="57" width="7" height="84" rx="3.5" fill="rgba(255,255,255,0.15)"/>
+                                <!-- Status LED -->
+                                <circle cx="62" cy="68" r="5" fill="#fbbf24" id="sart-led" opacity="0.5"/>
+                                <!-- LED label -->
+                                <text x="62" y="80" text-anchor="middle" font-size="4" fill="#6b7280">LED</text>
+                                <!-- Activation switch -->
+                                <rect x="32" y="70" width="26" height="16" rx="5" fill="#1f2937" stroke="#374151" stroke-width="1.5"/>
+                                <rect id="sart-switch-inner" x="34" y="72" width="10" height="12" rx="4" fill="#374151"/>
+                                <text x="51" y="81" text-anchor="middle" font-size="5" fill="#9ca3af">ACT</text>
+                                <!-- Info label -->
+                                <rect x="30" y="95" width="30" height="32" rx="3" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+                                <text x="45" y="106" text-anchor="middle" font-size="4.5" fill="#9ca3af">9 GHz</text>
+                                <text x="45" y="114" text-anchor="middle" font-size="4" fill="#6b7280">X-BAND</text>
+                                <text x="45" y="122" text-anchor="middle" font-size="4" fill="#6b7280">RADAR</text>
+                                <!-- Top cap -->
+                                <ellipse cx="45" cy="57" rx="20" ry="5" fill="#c2410c" stroke="#9a3412" stroke-width="1"/>
+                                <!-- Helical antenna -->
+                                <rect x="43" y="10" width="4" height="44" rx="2" fill="#9ca3af"/>
+                                <!-- Antenna coils -->
+                                ${Array(6).fill(0).map((_,i)=>`<ellipse cx="45" cy="${14+i*6}" rx="8" ry="2" fill="none" stroke="#6b7280" stroke-width="1.5" opacity="0.7"/>`).join('')}
+                                <!-- Radar reflector fins -->
+                                <polygon points="45,10 35,20 45,14" fill="#6b7280" opacity="0.6"/>
+                                <polygon points="45,10 55,20 45,14" fill="#6b7280" opacity="0.6"/>
+                            </svg>
+                        </div>
+                        <div id="sart-panel" class="rounded-xl border border-slate-700 p-3 text-center bg-slate-800/50">
                             <div id="sart-state" class="text-[11px] font-black text-yellow-400 uppercase">STANDBY</div>
-                            <div class="text-[9px] text-slate-500 mt-1">Awaiting radar interrogation</div>
-                            <div id="sart-blink" class="mx-auto mt-2 w-3 h-3 rounded-full bg-yellow-600/50"></div>
+                            <div class="text-[9px] text-slate-500 mt-1">Awaiting 9 GHz radar interrogation</div>
+                            <div id="sart-info" class="text-[8px] text-slate-600 mt-1">96h standby · 8h active · 12 rings on radar</div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <button onclick="sTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-xs font-bold py-2 rounded-xl transition">🧪 Test</button>
                             <button id="sart-act-btn" onclick="sAct()" class="bg-orange-900 hover:bg-orange-800 active:scale-95 text-orange-300 text-xs font-bold py-2 rounded-xl transition">🔴 Activate</button>
                         </div>
-                        <div class="text-[9px] text-slate-600 text-center">Battery: 96 hrs standby</div>
+                        <div class="text-[8px] text-slate-600 space-y-0.5">
+                            <div class="font-black text-slate-500">When activated:</div>
+                            <div>• 12 concentric rings on radar screen</div>
+                            <div>• Innermost ring = SART position</div>
+                            <div>• Visible up to 10 nm on radar</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- MF/HF DSC -->
-                <div class="bg-[#1c1c1e] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
+                <!-- Inmarsat SES -->
+                <div class="bg-[#1a1a1c] border border-slate-600 rounded-2xl overflow-hidden shadow-2xl">
                     <div class="bg-[#111] px-3 py-2 border-b border-slate-700 flex items-center justify-between">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">MF/HF DSC RADIO</span>
-                        <span class="text-[9px] text-slate-500">SSB 2–27 MHz</span>
+                        <div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">INMARSAT SES</span>
+                            <div class="text-[8px] text-slate-600">Fleet One · Sat Terminal</div>
+                        </div>
+                        <span class="text-[9px] text-blue-400 font-bold">A3 AREA</span>
                     </div>
                     <div class="p-3 space-y-3">
-                        <div class="bg-[#162416] border border-green-900/40 rounded-xl p-3 font-mono">
-                            <div class="text-green-700 text-[9px]">FREQUENCY</div>
-                            <div id="mfhf-f" class="text-green-300 text-2xl font-black">2182.0 kHz</div>
-                            <div id="mfhf-m" class="text-green-600 text-[9px] mt-0.5">J3E · MF DISTRESS WATCH</div>
+                        <!-- Sat terminal SVG -->
+                        <div class="flex justify-center">
+                            <svg width="110" height="120" viewBox="0 0 110 120">
+                                <!-- Terminal unit body -->
+                                <rect x="5" y="50" width="100" height="65" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+                                <!-- Screen -->
+                                <rect x="10" y="55" width="90" height="40" rx="4" fill="#0d1f0d" stroke="#166534" stroke-width="1"/>
+                                <text x="55" y="68" text-anchor="middle" font-size="6" fill="#4ade80" font-family="monospace" id="inm-line1">INMARSAT FLEET ONE</text>
+                                <text x="55" y="77" text-anchor="middle" font-size="5" fill="#16a34a" font-family="monospace" id="inm-line2">SES: ONLINE</text>
+                                <text x="55" y="86" text-anchor="middle" font-size="5" fill="#15803d" font-family="monospace" id="inm-line3">SAT: IOR · SNR: 18dB</text>
+                                <!-- Keypad -->
+                                <rect x="10" y="100" width="90" height="12" rx="3" fill="#0f172a"/>
+                                ${Array(9).fill(0).map((_,i)=>`<rect x="${12+i*10}" y="102" width="8" height="8" rx="1.5" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>`).join('')}
+                                <!-- Satellite dish -->
+                                <ellipse cx="55" cy="30" rx="40" ry="12" fill="#f97316" stroke="#c2410c" stroke-width="1.5"/>
+                                <ellipse cx="55" cy="28" rx="36" ry="9" fill="none" stroke="#c2410c" stroke-width="1" opacity="0.5"/>
+                                <line x1="55" y1="30" x2="55" y2="50" stroke="#9ca3af" stroke-width="2"/>
+                                <line x1="30" y1="38" x2="55" y2="50" stroke="#6b7280" stroke-width="1"/>
+                                <line x1="80" y1="38" x2="55" y2="50" stroke="#6b7280" stroke-width="1"/>
+                                <!-- Signal arcs -->
+                                <path d="M 65 20 Q 80 15 85 25" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3,2" id="inm-sig1"/>
+                                <path d="M 70 15 Q 90 8 97 22" fill="none" stroke="#60a5fa" stroke-width="1" stroke-dasharray="2,3" id="inm-sig2" opacity="0.6"/>
+                            </svg>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            ${[['2182.0','MF DISTRESS'],['4125.0','HF DISTRESS 1'],['6215.0','HF DISTRESS 2'],['8291.0','HF DISTRESS 3']].map(([f,m])=>
-                            `<button onclick="mfSet('${f} kHz','${m}')" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-[10px] font-bold py-2 rounded-xl transition">${f}</button>`).join('')}
+                        <div id="inm-status" class="rounded-xl border border-blue-900/50 p-3 bg-blue-950/30 text-center">
+                            <div id="inm-state" class="text-[11px] font-black text-blue-400">REGISTERED · ONLINE</div>
+                            <div class="text-[8px] text-slate-500 mt-1">IOR Beam · SNR: 18 dB</div>
                         </div>
-                        <div class="text-[9px] text-slate-600 text-center">DSC watch on 2187.5 kHz</div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button onclick="inmDistress()" class="bg-red-950/70 hover:bg-red-900 active:scale-95 text-red-300 text-[9px] font-black py-2 rounded-xl transition">🆘 Distress</button>
+                            <button onclick="inmSendMsg()" class="bg-blue-950/70 hover:bg-blue-900 active:scale-95 text-blue-300 text-[9px] font-black py-2 rounded-xl transition">📨 Send MSG</button>
+                            <button onclick="inmEGC()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-[9px] font-bold py-2 rounded-xl transition">📡 EGC Rx</button>
+                            <button onclick="inmTest()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-300 text-[9px] font-bold py-2 rounded-xl transition">🧪 Test</button>
+                        </div>
+                        <div class="text-[8px] text-slate-600 space-y-0.5">
+                            <div class="font-black text-slate-500">Services:</div>
+                            <div>• Voice · Fax · Data · Telex</div>
+                            <div>• EGC (SafetyNET / FleetNET)</div>
+                            <div>• GMDSS Distress priority</div>
+                        </div>
                     </div>
                 </div>
             </div>
+            </div>
 
+            <!-- TAB: EXTRAS -->
+            <div id="tab-extras" class="hidden space-y-4">
             <!-- DSC Distress Step-by-Step Workflow -->
             <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
                 <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
@@ -5218,7 +5522,93 @@ window.logAdminSettingsActivity = async (action, details) => {
                 </div>
                 <div id="dsc-workflow" class="p-4 space-y-2"></div>
             </div>
+            </div>
 
+            <!-- TAB: MAYDAY -->
+            <div id="tab-mayday" class="hidden space-y-4">
+            <div class="bg-red-950/30 border border-red-800/50 rounded-2xl overflow-hidden">
+                <div class="bg-red-900/50 px-4 py-3 border-b border-red-800/50">
+                    <div class="text-sm font-black text-red-300 uppercase tracking-widest">🆘 MAYDAY Voice Procedure — Reference Card</div>
+                    <div class="text-[9px] text-red-400 mt-0.5">IMO/STCW Standard — Speak clearly and slowly on CH 16</div>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="bg-red-900/20 border border-red-800/30 rounded-xl p-3">
+                        <div class="text-[10px] font-black text-red-300 mb-2 uppercase">Step-by-step MAYDAY call</div>
+                        <div class="space-y-2 font-mono text-[10px]">
+                            ${[
+                                ['1','MAYDAY MAYDAY MAYDAY','Spoken 3 times'],
+                                ['2','THIS IS [vessel name] [vessel name] [vessel name]','Vessel name 3 times'],
+                                ['3','MMSI: [your MMSI number]','9-digit MMSI'],
+                                ['4','MAYDAY [vessel name]','Once more'],
+                                ['5','POSITION: [lat/lon or bearing/distance from landmark]','GPS or visual fix'],
+                                ['6','NATURE OF DISTRESS: [sinking/fire/medical/flooding]','Brief description'],
+                                ['7','NUMBER OF PERSONS ON BOARD: [number]','POB count'],
+                                ['8','ANY OTHER INFORMATION: [sea state/vessel description/action taken]','Optional but helpful'],
+                                ['9','OVER','Wait for acknowledgement'],
+                            ].map(([n,text,desc])=>`
+                            <div class="flex gap-2 items-start border-b border-red-900/30 pb-2">
+                                <span class="shrink-0 w-5 h-5 rounded-full bg-red-800 text-red-200 text-[9px] font-black flex items-center justify-center">${n}</span>
+                                <div>
+                                    <div class="text-red-200 font-black">${text}</div>
+                                    <div class="text-red-400/70 text-[8px] font-sans">${desc}</div>
+                                </div>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                    <!-- Practice -->
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-3">
+                        <div class="text-[10px] font-black text-teal-400 mb-2">Practice Scenario</div>
+                        <div id="mayday-scenario" class="text-[10px] text-slate-300 mb-3 leading-relaxed">
+                            MV <span class="text-teal-400 font-bold">PUMMA STAR</span> · MMSI: 525 001 2345<br>
+                            Position: 16°45.2'N 120°23.8'E<br>
+                            Situation: Engine room fire, flooding
+                        </div>
+                        <button onclick="maydayDrill()" class="w-full bg-red-900/60 hover:bg-red-800 active:scale-95 text-red-200 text-xs font-black py-2.5 rounded-xl transition">▶ Start MAYDAY Drill</button>
+                        <div id="mayday-drill-out" class="mt-2 hidden font-mono text-[9px] text-red-200 bg-red-950/40 rounded-xl p-3 leading-relaxed"></div>
+                    </div>
+                    <!-- PAN-PAN -->
+                    <div class="bg-orange-950/30 border border-orange-800/40 rounded-xl p-3">
+                        <div class="text-[10px] font-black text-orange-300 mb-2">🔔 PAN-PAN (Urgency) Call Format</div>
+                        <div class="font-mono text-[9px] text-orange-200 space-y-1">
+                            <div>PAN-PAN PAN-PAN PAN-PAN</div>
+                            <div>ALL STATIONS ALL STATIONS ALL STATIONS</div>
+                            <div>THIS IS [vessel] [vessel] [vessel]</div>
+                            <div>MMSI: [number]</div>
+                            <div>POSITION: [position]</div>
+                            <div>URGENCY: [medical/person overboard/mechanical]</div>
+                            <div>POB: [number] · OVER</div>
+                        </div>
+                    </div>
+                    <!-- SECURITE -->
+                    <div class="bg-blue-950/30 border border-blue-800/40 rounded-xl p-3">
+                        <div class="text-[10px] font-black text-blue-300 mb-2">🔵 SÉCURITÉ (Safety) Call Format</div>
+                        <div class="font-mono text-[9px] text-blue-200 space-y-1">
+                            <div>SÉCURITÉ SÉCURITÉ SÉCURITÉ</div>
+                            <div>ALL STATIONS / COAST GUARD [name]</div>
+                            <div>THIS IS [vessel/station]</div>
+                            <div>NAVIGATIONAL HAZARD: [description]</div>
+                            <div>POSITION: [position] · OVER</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- TAB: EVENT LOG -->
+            <div id="tab-log" class="hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+                <div class="bg-slate-800 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                    <div class="text-sm font-black text-teal-400 uppercase tracking-widest">📋 Emergency Event Log</div>
+                    <button onclick="gClearLog()" class="text-[10px] bg-slate-700 hover:bg-red-900/60 text-slate-400 hover:text-red-300 px-3 py-1 rounded-lg transition">🗑 Clear</button>
+                </div>
+                <div id="g-event-log" class="p-4 space-y-2 max-h-96 overflow-y-auto font-mono text-[9px]">
+                    <div class="text-slate-600">No events logged. Activate equipment to log events.</div>
+                </div>
+            </div>
+            </div>
+
+            <!-- TAB: REFERENCE -->
+            <div id="tab-ref" class="space-y-4 hidden">
             <!-- Sea Areas -->
             <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
                 <div class="bg-slate-800 px-4 py-3 border-b border-slate-700">
@@ -5269,13 +5659,264 @@ window.logAdminSettingsActivity = async (action, details) => {
                     </table>
                 </div>
             </div>
+            </div>
         </div>`;
-        }
 
+            <!-- old content removed -->
         function initGmdss(){
-            window._g = { ch:16, coverLifted:false, dscStep:0, epirb:'standby', sart:'standby', pttTimer:null, _distressTimer:null, _distressHeld:0 };
+            window._g = {
+                ch:16, coverLifted:false, dscStep:0,
+                epirb:'standby', sart:'standby',
+                pttTimer:null, _distressTimer:null, _distressHeld:0,
+                vol:5, sql:3, scanning:false, scanTimer:null,
+                mfhfMode:'J3E', eventLog:[], dscLog:[]
+            };
             renderWorkflow();
             renderDscDisplay();
+            // Show first tab
+            gTab('tab-radios');
+        }
+
+        // ── Tab switcher ──────────────────────────────────────────────────
+        function gTab(id){
+            ['tab-radios','tab-beacons','tab-extras','tab-mayday','tab-log','tab-ref'].forEach(t=>{
+                const el=document.getElementById(t);
+                const btn=document.getElementById('btn-'+t);
+                if(el) el.classList.toggle('hidden', t!==id);
+                if(btn){
+                    btn.classList.toggle('bg-teal-700',t===id);
+                    btn.classList.toggle('text-white',t===id);
+                    btn.classList.toggle('bg-slate-800',t!==id);
+                    btn.classList.toggle('text-slate-400',t!==id);
+                }
+            });
+        }
+
+        // ── Event Logger ──────────────────────────────────────────────────
+        function gLogEvent(icon, msg){
+            if(!window._g) return;
+            const now = new Date();
+            const ts = now.toTimeString().slice(0,8);
+            window._g.eventLog.unshift({ts, icon, msg});
+            const el = document.getElementById('g-event-log');
+            if(!el) return;
+            el.innerHTML = window._g.eventLog.map(e=>
+                `<div class="flex gap-2 items-start border-b border-slate-800 pb-1.5 mb-1.5">
+                    <span class="text-slate-500 shrink-0">${e.ts}</span>
+                    <span class="shrink-0">${e.icon}</span>
+                    <span class="text-slate-300">${e.msg}</span>
+                </div>`
+            ).join('') || '<div class="text-slate-600">No events.</div>';
+        }
+
+        function gClearLog(){
+            if(window._g) window._g.eventLog=[];
+            const el=document.getElementById('g-event-log');
+            if(el) el.innerHTML='<div class="text-slate-600">Log cleared.</div>';
+        }
+
+        // ── DSC Call Log ──────────────────────────────────────────────────
+        function gLogDsc(type, detail){
+            if(!window._g) return;
+            const now = new Date().toTimeString().slice(0,5);
+            window._g.dscLog.unshift(`${now} ${type}: ${detail}`);
+            if(window._g.dscLog.length>10) window._g.dscLog.pop();
+            const el=document.getElementById('g-dsc-log');
+            if(el) el.innerHTML = window._g.dscLog.map(l=>`<div class="text-slate-400 border-b border-slate-800 pb-0.5">${l}</div>`).join('');
+        }
+
+        // ── Volume / Squelch knobs ─────────────────────────────────────────
+        function gVolUp(){
+            if(!window._g) return;
+            window._g.vol = Math.min(8, window._g.vol+1);
+            const el=document.getElementById('g-vol-ind');
+            if(el) el.textContent='▮'.repeat(window._g.vol)+'▯'.repeat(8-window._g.vol);
+            gBeep('ch');
+        }
+        function gSqlUp(){
+            if(!window._g) return;
+            window._g.sql = (window._g.sql%5)+1;
+            const el=document.getElementById('g-sql-ind');
+            const ind=document.getElementById('g-squelch-ind');
+            if(el) el.textContent='▮'.repeat(window._g.sql)+'▯'.repeat(5-window._g.sql);
+            if(ind) ind.textContent='SQL:'+window._g.sql;
+            gBeep('ch');
+        }
+
+        // ── Channel Scanner ──────────────────────────────────────────────
+        function gScan(){
+            if(!window._g) return;
+            if(window._g.scanning){
+                clearInterval(window._g.scanTimer);
+                window._g.scanning=false;
+                const ind=document.getElementById('g-scan-ind');
+                if(ind) ind.classList.add('hidden');
+                const btn=document.getElementById('g-scan-btn');
+                if(btn){ btn.textContent='⟳ SCAN'; btn.classList.remove('bg-yellow-700'); }
+                return;
+            }
+            window._g.scanning=true;
+            const ind=document.getElementById('g-scan-ind');
+            if(ind) ind.classList.remove('hidden');
+            const btn=document.getElementById('g-scan-btn');
+            if(btn){ btn.textContent='⏹ STOP'; btn.classList.add('bg-yellow-700'); }
+            const scanChs=[16,6,8,12,13,67,70,72,77];
+            let idx=0;
+            window._g.scanTimer=setInterval(()=>{
+                if(!window._g.scanning){ clearInterval(window._g.scanTimer); return; }
+                idx=(idx+1)%scanChs.length;
+                gChSet(scanChs[idx]);
+            },800);
+            gLogEvent('⟳','Channel scan started');
+        }
+
+        // ── NAVTEX frequency & message type buttons ───────────────────────
+        function nxFreq(f){
+            ['518','490','42095'].forEach(x=>{
+                const b=document.getElementById('nx-freq-'+x);
+                if(b){ b.className=b.className.replace(/bg-\w+-900 text-\w+-300 border-\w+-700/,'bg-slate-800 text-slate-500 border-slate-700 hover:bg-slate-700'); }
+            });
+            const btn=document.getElementById('nx-freq-'+f.replace('.',''));
+            if(btn) btn.className=btn.className.replace('bg-slate-800 text-slate-500 border-slate-700 hover:bg-slate-700','bg-amber-900 text-amber-300 border-amber-700');
+            const el=document.getElementById('navtex-out');
+            if(el){ const d=document.createElement('div'); d.className='text-[#555] border-t border-amber-200/20 mt-1 pt-1'; d.textContent=`Frequency changed to ${f} kHz`; el.appendChild(d); el.scrollTop=el.scrollHeight; }
+            gLogEvent('📡',`NAVTEX frequency: ${f} kHz`);
+        }
+        function nxMsgType(t){
+            const types={'A':'Navigation Warning','B':'Meteorological Warning','D':'SAR Information','G':'GPS/GNSS Info'};
+            const el=document.getElementById('navtex-out');
+            if(!el) return;
+            gBeep('navtex');
+            setTimeout(()=>{
+                const msgs={'A':`ZCZC PA01\nNAVIGATIONAL WARNING\nSEA AREA: PHILIPPINE SEA\n1. SUBMERGED OBJECT REPORTED\n   POSITION: 16-30N 120-15E\n   MARINERS ADVISED TO NAVIGATE\n   WITH CAUTION IN THE AREA.\nNNNN`,'D':`ZCZC PD01\nSAR INFORMATION\nOPERATION SEARCH AND RESCUE\nVESSEL: MV AURORA\nLAST POSITION: 15-45N 119-30E\nSAR UNITS DISPATCHED.\nNNNN`};
+                const m=msgs[t]||`ZCZC P${t}01\nMESSAGE TYPE ${t}\n${types[t]||'NAVTEX MESSAGE'}\nNNNN`;
+                const d=document.createElement('div');
+                d.className='border-t border-amber-200/20 mt-2 pt-2 whitespace-pre-wrap';
+                d.textContent=m;
+                el.appendChild(d);
+                el.scrollTop=el.scrollHeight;
+                gLogEvent('📡',`NAVTEX Type-${t} message received`);
+            },400);
+        }
+
+        // ── MF/HF Mode ─────────────────────────────────────────────────────
+        function mfMode(m){
+            if(!window._g) return;
+            window._g.mfhfMode=m;
+            ['J3E','J2B','H3E'].forEach(x=>{
+                const b=document.getElementById('mfhf-mode-'+x);
+                if(b){
+                    b.className=b.className.replace(x===m?'bg-slate-800 text-slate-500 border-slate-700':'bg-green-900 text-green-300 border-green-700',x===m?'bg-green-900 text-green-300 border-green-700':'bg-slate-800 text-slate-500 border-slate-700');
+                }
+            });
+            const el=document.getElementById('mfhf-m');
+            const modeNames={'J3E':'SSB VOICE','J2B':'NBDP TELEX','H3E':'AM MODE'};
+            if(el) el.textContent=m+' · '+modeNames[m];
+            gBeep('ch');
+            gLogEvent('📻',`MF/HF mode: ${m} (${modeNames[m]})`);
+        }
+        function mfDscDistress(){
+            const f=document.getElementById('mfhf-f'), m=document.getElementById('mfhf-m'), sig=document.getElementById('mfhf-sig');
+            if(f) f.textContent='2187.5 kHz';
+            if(m) m.textContent='DSC · DISTRESS ALERT TX';
+            if(sig){ sig.style.width='90%'; sig.style.background='#ef4444'; }
+            gBeep('epirb');
+            gLogEvent('🆘','MF/HF DSC Distress Alert transmitted on 2187.5 kHz');
+            setTimeout(()=>{ if(m) m.textContent='J3E · DISTRESS ALERT SENT'; if(sig){ sig.style.width='15%'; sig.style.background=''; } },3000);
+        }
+        function mfDscUrgency(){
+            const f=document.getElementById('mfhf-f'), m=document.getElementById('mfhf-m');
+            if(f) f.textContent='2187.5 kHz';
+            if(m) m.textContent='DSC · PAN-PAN URGENCY TX';
+            gBeep('ch');
+            gLogEvent('🔔','MF/HF DSC PAN-PAN Urgency transmitted');
+            setTimeout(()=>{ if(m) m.textContent='J3E · PAN-PAN SENT'; },2000);
+        }
+
+        // ── Portable VHF ────────────────────────────────────────────────────
+        function pvhfPTT(){
+            const el=document.getElementById('pvhf-status');
+            if(el){ el.textContent='◉ TRANSMITTING CH 16…'; el.style.color='#f87171'; }
+            gBeep('ch');
+            gLogEvent('🎙','Portable VHF PTT activated');
+            setTimeout(()=>{ if(el){ el.textContent='Channel 16 · Standby'; el.style.color=''; } },1500);
+        }
+        function pvhfCh16(){
+            const el=document.getElementById('pvhf-status');
+            if(el){ el.textContent='Channel 16 · 156.800 MHz · Standby'; el.style.color='#4ade80'; }
+            gBeep('ch');
+        }
+
+        // ── Inmarsat SES ─────────────────────────────────────────────────────
+        function inmDistress(){
+            const s=document.getElementById('inm-state'), l1=document.getElementById('inm-line2');
+            if(s){ s.textContent='⚠ DISTRESS ALERT SENT'; s.style.color='#f87171'; }
+            if(l1){ l1.textContent='DIST ALERT: TRANSMITTED'; l1.style.fill='#f87171'; }
+            gBeep('epirb');
+            gLogEvent('🆘','Inmarsat SES Distress Alert transmitted');
+            setTimeout(()=>{
+                if(s){ s.textContent='ACK RECEIVED · RCC NOTIFIED'; s.style.color='#4ade80'; }
+                if(l1){ l1.textContent='RCC: ACKNOWLEDGED'; l1.style.fill=''; }
+                gLogEvent('✅','Inmarsat Distress ACK received from RCC');
+            },3000);
+        }
+        function inmSendMsg(){
+            gBeep('ch');
+            const l2=document.getElementById('inm-line3');
+            if(l2){ l2.textContent='MSG: TRANSMITTING…'; }
+            gLogEvent('📨','Inmarsat SES message sent');
+            setTimeout(()=>{ if(l2) l2.textContent='MSG: DELIVERED'; },1500);
+        }
+        function inmEGC(){
+            gBeep('navtex');
+            const l1=document.getElementById('inm-line2'), l2=document.getElementById('inm-line3');
+            if(l1) l1.textContent='EGC: RECEIVING…';
+            gLogEvent('📡','Inmarsat EGC SafetyNET reception started');
+            setTimeout(()=>{
+                if(l1) l1.textContent='EGC: MSG RECEIVED';
+                if(l2) l2.textContent='SAFETYNET: WX WARN PH';
+                gLogEvent('📡','EGC SafetyNET WX Warning received');
+            },2000);
+        }
+        function inmTest(){
+            gBeep('ch');
+            const s=document.getElementById('inm-state');
+            if(s){ s.textContent='SELF TEST IN PROGRESS…'; s.style.color='#fbbf24'; }
+            setTimeout(()=>{ if(s){ s.textContent='TEST OK · REGISTERED · ONLINE'; s.style.color='#60a5fa'; } },1800);
+        }
+
+        // ── MAYDAY drill ─────────────────────────────────────────────────────
+        function maydayDrill(){
+            const out=document.getElementById('mayday-drill-out');
+            if(!out) return;
+            out.classList.remove('hidden');
+            const steps=[
+                '📻 Switch VHF radio to CH 16…',
+                '🔐 Lift DISTRESS button cover…',
+                '⏱ Hold DISTRESS button 5 seconds…',
+                '📡 DSC Distress Alert transmitted!',
+                '⏳ Wait for acknowledgement (15 min)…',
+                '🎙 Begin MAYDAY voice call:',
+                '"MAYDAY MAYDAY MAYDAY"',
+                '"THIS IS MV PUMMA STAR PUMMA STAR PUMMA STAR"',
+                '"MMSI: 525 001 2345"',
+                '"MAYDAY MV PUMMA STAR"',
+                '"POSITION: 16°45.2\'N 120°23.8\'E"',
+                '"ENGINE ROOM FIRE — FLOODING"',
+                '"10 PERSONS ON BOARD"',
+                '"REQUIRE IMMEDIATE ASSISTANCE"',
+                '"OVER"',
+                '✅ MAYDAY drill complete. Stand by for response.',
+            ];
+            out.textContent='';
+            gLogEvent('🆘','MAYDAY Drill started');
+            steps.forEach((s,i)=>{
+                setTimeout(()=>{
+                    out.textContent+=s+'\n';
+                    out.scrollTop=out.scrollHeight;
+                    if(i===steps.length-1) gLogEvent('✅','MAYDAY Drill completed');
+                },i*700);
+            });
         }
 
         // ── Audio helpers ──────────────────────────────────────────────────
@@ -5492,6 +6133,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             const el=document.getElementById('g-purpose');
             if(el){ el.textContent=hints[type]||'DSC Menu open'; }
             gBeep('ch');
+            gLogDsc(type.toUpperCase(), hints[type]||'DSC menu');
+            gLogEvent('📻','DSC '+type+' call menu opened');
         }
         function gResetWorkflow(){
             if(window._g){
@@ -5590,53 +6233,79 @@ window.logAdminSettingsActivity = async (action, details) => {
             gBeep('ch');
             const s=document.getElementById('epirb-state');
             if(s){ s.textContent='SELF TEST…'; s.style.color='#fbbf24'; }
+            gLogEvent('🧪','EPIRB Self Test initiated');
             setTimeout(()=>{
                 const s2=document.getElementById('epirb-state');
                 if(s2){ s2.textContent='TEST OK — ARMED · STANDBY'; s2.style.color='#4ade80'; }
+                gLogEvent('✅','EPIRB Self Test: PASS');
             },1500);
         }
         function eAct(){
             if(!window._g) return;
-            const btn=document.getElementById('epirb-act-btn'), s=document.getElementById('epirb-state'), b=document.getElementById('epirb-blink');
+            const btn=document.getElementById('epirb-act-btn'), s=document.getElementById('epirb-state');
+            const strobe=document.getElementById('epirb-strobe'), led=document.getElementById('epirb-led');
             if(window._g.epirb==='active'){
                 window._g.epirb='standby';
                 if(btn){ btn.textContent='🆘 Activate'; btn.classList.remove('bg-green-800'); btn.classList.add('bg-red-900'); }
                 if(s){ s.textContent='ARMED · STANDBY'; s.style.color='#4ade80'; }
-                if(b){ b.style.background='#16a34a'; b.classList.remove('animate-ping'); }
+                if(strobe) strobe.style.opacity='0.3';
+                if(led){ led.setAttribute('fill','#4ade80'); led.style.opacity='0.8'; }
+                gLogEvent('⏹','EPIRB deactivated');
                 return;
             }
             window._g.epirb='active';
             gBeep('epirb');
             if(btn){ btn.textContent='⏹ Deactivate'; btn.classList.add('bg-green-800'); btn.classList.remove('bg-red-900'); }
-            if(s){ s.textContent='⚠ TRANSMITTING 406 MHz'; s.style.color='#f87171'; }
-            if(b){ b.style.background='#ef4444'; b.classList.add('animate-ping'); }
+            if(s){ s.textContent='⚠ TRANSMITTING 406 MHz + 121.5 MHz'; s.style.color='#f87171'; }
+            if(strobe){ strobe.style.opacity='1'; strobe.style.transition='opacity 0.3s'; }
+            if(led){ led.setAttribute('fill','#ef4444'); }
+            gLogEvent('🆘','EPIRB ACTIVATED — 406 MHz distress signal transmitted');
+            // Strobe flash animation
+            let strobeOn=true;
+            window._g.strobeTimer=setInterval(()=>{
+                if(window._g.epirb!=='active'){ clearInterval(window._g.strobeTimer); return; }
+                if(strobe) strobe.style.opacity=strobeOn?'1':'0.1';
+                strobeOn=!strobeOn;
+            },500);
         }
 
         // ── SART ───────────────────────────────────────────────────────────
         function sTest(){
             gBeep('sart');
-            const s=document.getElementById('sart-state'), b=document.getElementById('sart-blink');
+            const s=document.getElementById('sart-state');
             if(s){ s.textContent='TEST SWEEP…'; s.style.color='#fbbf24'; }
+            gLogEvent('🧪','SART Self Test initiated');
             setTimeout(()=>{
                 const s2=document.getElementById('sart-state');
                 if(s2){ s2.textContent='TEST OK — STANDBY'; s2.style.color='#fbbf24'; }
+                gLogEvent('✅','SART Self Test: PASS');
             },1200);
         }
         function sAct(){
             if(!window._g) return;
-            const btn=document.getElementById('sart-act-btn'), s=document.getElementById('sart-state'), b=document.getElementById('sart-blink');
+            const btn=document.getElementById('sart-act-btn'), s=document.getElementById('sart-state');
+            const led=document.getElementById('sart-led');
             if(window._g.sart==='active'){
                 window._g.sart='standby';
                 if(btn){ btn.textContent='🔴 Activate'; btn.classList.remove('bg-green-800'); btn.classList.add('bg-orange-900'); }
                 if(s){ s.textContent='STANDBY'; s.style.color='#fbbf24'; }
-                if(b){ b.style.background='rgba(202,138,4,0.5)'; b.classList.remove('animate-ping'); }
+                if(led){ led.setAttribute('fill','#fbbf24'); led.style.opacity='0.5'; }
+                gLogEvent('⏹','SART deactivated');
                 return;
             }
             window._g.sart='active';
             gBeep('sart');
             if(btn){ btn.textContent='⏹ Deactivate'; btn.classList.add('bg-green-800'); btn.classList.remove('bg-orange-900'); }
-            if(s){ s.textContent='⚠ RADAR ACTIVE — 12 rings visible'; s.style.color='#f97316'; }
-            if(b){ b.style.background='#f97316'; b.classList.add('animate-ping'); }
+            if(s){ s.textContent='⚠ RADAR ACTIVE — 12 rings visible on X-band'; s.style.color='#f97316'; }
+            if(led){ led.setAttribute('fill','#f97316'); led.style.opacity='1'; }
+            gLogEvent('🔴','SART ACTIVATED — 9 GHz radar transponder active, 12 concentric rings');
+            // LED flash
+            let on=true;
+            window._g.sartLedTimer=setInterval(()=>{
+                if(window._g.sart!=='active'){ clearInterval(window._g.sartLedTimer); return; }
+                if(led) led.style.opacity=on?'1':'0.2';
+                on=!on;
+            },300);
         }
 
         // ── MF/HF ──────────────────────────────────────────────────────────
@@ -5948,11 +6617,28 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.nxTest           = nxTest;
         window.nxReceive        = nxReceive;
         window.nxClear          = nxClear;
+        window.nxFreq           = nxFreq;
+        window.nxMsgType        = nxMsgType;
         window.eTest            = eTest;
         window.eAct             = eAct;
         window.sTest            = sTest;
         window.sAct             = sAct;
         window.mfSet            = mfSet;
+        window.mfMode           = mfMode;
+        window.mfDscDistress    = mfDscDistress;
+        window.mfDscUrgency     = mfDscUrgency;
+        window.pvhfPTT          = pvhfPTT;
+        window.pvhfCh16         = pvhfCh16;
+        window.inmDistress      = inmDistress;
+        window.inmSendMsg       = inmSendMsg;
+        window.inmEGC           = inmEGC;
+        window.inmTest          = inmTest;
+        window.maydayDrill      = maydayDrill;
+        window.gTab             = gTab;
+        window.gScan            = gScan;
+        window.gVolUp           = gVolUp;
+        window.gSqlUp           = gSqlUp;
+        window.gClearLog        = gClearLog;
         window.initGmdss        = initGmdss;
         window.buildGmdss       = buildGmdss;
 
