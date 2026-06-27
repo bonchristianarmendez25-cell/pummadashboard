@@ -1,0 +1,36 @@
+name: Deploy to Firebase Hosting on merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Inject a build timestamp into index.html so Firebase always
+      # sees a new version, preventing the "current active version" 400 error.
+      - name: Inject build version timestamp
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sed -i "s|</head>|<meta name=\"build-time\" content=\"$BUILD_TIME\"></head>|" index.html
+          echo "Injected build timestamp: $BUILD_TIME"
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUMMA_COMPETENCY_DASHBOARD }}
+          channelId: live
+          projectId: pumma-competency-dashboard
+        # If files are identical to live, Firebase returns 400.
+        # The timestamp injection above prevents this, but this is a safety net.
+        continue-on-error: false
