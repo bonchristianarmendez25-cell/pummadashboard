@@ -4881,37 +4881,37 @@ window.logAdminSettingsActivity = async (action, details) => {
                 });
             })();
         }
-        // Bell audio — uses the same oscillator pattern as the working bell in playBlast
+        // Bell audio — same linearRamp envelope pattern as whistle and morse (proven audible)
         async function playBell(type, btnEl){
             const ctx = getRorAudioCtx();
             if(!ctx){alert('Web Audio not supported in this browser.');return;}
             await ctx.resume();
-            // Identical to playBlast 'B' handler — proven to work
-            function ringStroke(t){
-                for(let i=0;i<6;i++){
+            // Single bell stroke: fast attack, slow linear decay — same pattern as whistle/morse
+            function ringStroke(t, vol){
+                [880, 1100, 1320].forEach((freq, hi)=>{
                     const o=ctx.createOscillator(); const g=ctx.createGain();
                     o.connect(g); g.connect(ctx.destination);
-                    o.frequency.value=880+(i*40); o.type='sine';
-                    g.gain.setValueAtTime(0.35, t+i*0.15);
-                    g.gain.exponentialRampToValueAtTime(0.001, t+i*0.15+0.25);
-                    o.start(t+i*0.15); o.stop(t+i*0.15+0.28);
-                }
+                    o.frequency.value=freq; o.type='sine';
+                    const v = vol / (hi+1);
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(v, t+0.008);   // fast attack
+                    g.gain.linearRampToValueAtTime(0, t+0.9);      // slow bell decay
+                    o.start(t); o.stop(t+0.95);
+                });
             }
             let t = ctx.currentTime + 0.08;
-            let totalMs = 0;
             if(type==='anchor'){
                 // Rule 35(g): rapid ringing ~5 sec — 8 strokes, 0.6s apart
-                for(let i=0;i<8;i++){ ringStroke(t); t+=0.6; }
-                totalMs = Math.ceil((t - ctx.currentTime)*1000) + 300;
+                for(let i=0;i<8;i++){ ringStroke(t, 0.55); t+=0.6; }
             } else if(type==='aground'){
                 // Rule 35(h): 3 distinct strokes, rapid ring, 3 distinct strokes
-                for(let i=0;i<3;i++){ ringStroke(t); t+=1.0; }  // 3 slow strokes
-                t+=0.4;                                            // pause
-                for(let i=0;i<7;i++){ ringStroke(t); t+=0.55; } // rapid ring
-                t+=0.4;                                            // pause
-                for(let i=0;i<3;i++){ ringStroke(t); t+=1.0; }  // 3 slow strokes after
-                totalMs = Math.ceil((t - ctx.currentTime)*1000) + 300;
+                for(let i=0;i<3;i++){ ringStroke(t, 0.6); t+=1.0; }
+                t+=0.3;
+                for(let i=0;i<7;i++){ ringStroke(t, 0.45); t+=0.55; }
+                t+=0.3;
+                for(let i=0;i<3;i++){ ringStroke(t, 0.6); t+=1.0; }
             }
+            const totalMs = Math.ceil((t - ctx.currentTime)*1000) + 300;
             if(btnEl){
                 btnEl.disabled=true; btnEl.textContent='🔔 Ringing…';
                 setTimeout(()=>{ btnEl.disabled=false; btnEl.textContent='▶ Play'; }, totalMs);
