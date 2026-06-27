@@ -8,29 +8,38 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 22
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
-      # Inject a build timestamp into index.html so Firebase always
-      # sees a new version, preventing the "current active version" 400 error.
-      - name: Inject build version timestamp
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+
+      # Stamp a unique build time into index.html so Firebase never
+      # sees identical files and throws the "current active version" 400.
+      - name: Stamp build timestamp
         run: |
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          sed -i "s|</head>|<meta name=\"build-time\" content=\"$BUILD_TIME\"></head>|" index.html
-          echo "Injected build timestamp: $BUILD_TIME"
+          COMMIT_SHA="${{ github.sha }}"
+          sed -i "s|</head>|<meta name=\"build-version\" content=\"${COMMIT_SHA}-${BUILD_TIME}\"></head>|" index.html
+          echo "Stamped: ${COMMIT_SHA}-${BUILD_TIME}"
+
+      # Write the service account JSON to a temp file for authentication
+      - name: Authenticate to Firebase
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUMMA_COMPETENCY_DASHBOARD }}' > /tmp/sa.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json" >> $GITHUB_ENV
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUMMA_COMPETENCY_DASHBOARD }}
-          channelId: live
-          projectId: pumma-competency-dashboard
-        # If files are identical to live, Firebase returns 400.
-        # The timestamp injection above prevents this, but this is a safety net.
-        continue-on-error: false
+        run: |
+          firebase deploy --only hosting --project pumma-competency-dashboard --non-interactive
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f /tmp/sa.json
