@@ -4950,7 +4950,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         const DSC_STEPS = [
             {id:0, title:'Standby',           desc:'Radio on Ch 16. DSC watch active on Ch 70. Continuous watch maintained.',                                                                        action:null},
             {id:1, title:'Lift Distress Cover',desc:'Lift the red safety cover over the DISTRESS button to prevent accidental activation.',                                                         action:'lift-cover'},
-            {id:2, title:'Hold DISTRESS 5 sec',desc:'Press and hold the DISTRESS button for 5 seconds. The radio auto-composes a DSC alert with MMSI, nature of distress, and GPS position.',      action:'hold-distress'},
+            {id:2, title:'Hold DISTRESS 5 sec',desc:'Press AND HOLD the DISTRESS button for 5 seconds. A countdown appears. The radio auto-composes a DSC alert with MMSI, nature of distress, and GPS position.',      action:'hold-distress'},
             {id:3, title:'DSC Alert Sent',     desc:'Alert transmitted on Ch 70 (DSC) to all ships and coast stations. Radio automatically switches to Ch 16 for voice.',                          action:'auto'},
             {id:4, title:'Voice MAYDAY Call',  desc:'On Ch 16 voice: "MAYDAY MAYDAY MAYDAY — This is [vessel name] [MMSI] — MAYDAY [vessel] — Position [LAT/LON] — [nature] — [persons] — OVER"', action:'voice'},
             {id:5, title:'Await Acknowledge',  desc:'Maintain watch on Ch 16. Coast Guard or ship will respond with DSC acknowledgment then voice. Switch to working channel as directed.',          action:'wait'},
@@ -4999,7 +4999,9 @@ window.logAdminSettingsActivity = async (action, details) => {
                     </div>
                     <!-- PTT -->
                     <div class="px-3 pt-2">
-                        <button id="g-ptt" onmousedown="gPTT(true)" onmouseup="gPTT(false)" ontouchstart="gPTT(true)" ontouchend="gPTT(false)"
+                        <button id="g-ptt" 
+                            onmousedown="gPTT(true,event)" onmouseup="gPTT(false,event)" onmouseleave="gPTT(false,event)"
+                            ontouchstart="gPTT(true,event)" ontouchend="gPTT(false,event)" ontouchcancel="gPTT(false,event)"
                             class="w-full bg-slate-600 hover:bg-slate-500 active:bg-green-800 text-white text-sm font-black py-3.5 rounded-2xl transition select-none border border-slate-500">
                             🎙 PTT — HOLD TO TALK
                         </button>
@@ -5010,7 +5012,10 @@ window.logAdminSettingsActivity = async (action, details) => {
                             <div class="text-[9px] text-red-400 text-center mb-2 font-black uppercase tracking-widest">⚠ DISTRESS BUTTON</div>
                             <div class="flex gap-2">
                                 <button id="g-cover" onclick="gCover()" class="flex-1 bg-slate-700 hover:bg-red-900/60 active:scale-95 text-slate-300 text-xs font-bold py-2.5 rounded-xl transition">🔐 Lift Cover</button>
-                                <button id="g-distress" onclick="gDistress()" disabled class="flex-1 bg-slate-800 text-slate-600 text-xs font-black py-2.5 rounded-xl cursor-not-allowed border border-slate-700">🆘 DISTRESS</button>
+                                <button id="g-distress" 
+                                    onmousedown="gDistressDown(event)" onmouseup="gDistressUp(event)" onmouseleave="gDistressUp(event)"
+                                    ontouchstart="gDistressDown(event)" ontouchend="gDistressUp(event)" ontouchcancel="gDistressUp(event)"
+                                    disabled class="flex-1 bg-slate-800 text-slate-600 text-xs font-black py-2.5 rounded-xl cursor-not-allowed border border-slate-700 select-none">🆘 DISTRESS</button>
                             </div>
                             <div id="g-distress-hint" class="text-[9px] text-slate-600 text-center mt-2">Lift cover first to enable button</div>
                         </div>
@@ -5167,38 +5172,82 @@ window.logAdminSettingsActivity = async (action, details) => {
         }
 
         function initGmdss(){
-            window._g = { ch:16, coverLifted:false, dscStep:0, epirb:'standby', sart:'standby', pttTimer:null };
+            window._g = { ch:16, coverLifted:false, dscStep:0, epirb:'standby', sart:'standby', pttTimer:null, _distressTimer:null, _distressHeld:0 };
             renderWorkflow();
             renderDscDisplay();
         }
 
         // ── Audio helpers ──────────────────────────────────────────────────
+        // PTT static noise node (persists while PTT is held)
+        window._gPttNoise = null;
+        window._gPttNoiseGain = null;
+
+        function gStartStatic(){
+            const ctx = getRorAudioCtx(); if(!ctx) return;
+            ctx.resume().then(()=>{
+                if(window._gPttNoise) return; // already running
+                const bufSize = ctx.sampleRate * 0.5;
+                const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+                const data = buf.getChannelData(0);
+                for(let i=0;i<bufSize;i++) data[i]=(Math.random()*2-1);
+                const src = ctx.createBufferSource();
+                src.buffer = buf; src.loop = true;
+                const bpf = ctx.createBiquadFilter();
+                bpf.type = 'bandpass'; bpf.frequency.value = 1200; bpf.Q.value = 0.5;
+                const gain = ctx.createGain();
+                gain.gain.value = 0.12;
+                src.connect(bpf); bpf.connect(gain); gain.connect(ctx.destination);
+                src.start();
+                window._gPttNoise = src;
+                window._gPttNoiseGain = gain;
+            });
+        }
+
+        function gStopStatic(){
+            if(window._gPttNoise){
+                try{ window._gPttNoise.stop(); } catch(e){}
+                window._gPttNoise = null;
+                window._gPttNoiseGain = null;
+            }
+        }
+
         function gBeep(type){
-            const ctx = getRorAudioCtx(); if(!ctx) return; ctx.resume();
-            const t = ctx.currentTime;
-            function tone(freq, start, dur, vol){
-                const o=ctx.createOscillator(), g=ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.value=freq; o.type='sine';
-                g.gain.setValueAtTime(0, t+start);
-                g.gain.linearRampToValueAtTime(vol, t+start+0.008);
-                g.gain.linearRampToValueAtTime(0, t+start+dur);
-                o.start(t+start); o.stop(t+start+dur+0.01);
-            }
-            if(type==='ch')     { tone(900,0,0.06,0.3); tone(1200,0.08,0.06,0.3); }
-            if(type==='ptt-on') { tone(1050,0,0.04,0.35); }
-            if(type==='ptt-off'){ tone(800,0,0.04,0.3); }
-            if(type==='dsc-tx') { // DSC alert sweep
-                for(let i=0;i<6;i++){ tone(1200+i*80, i*0.18, 0.15, 0.4); }
-            }
-            if(type==='ack'){   tone(880,0,0.1,0.4); tone(1100,0.12,0.1,0.4); tone(1320,0.24,0.15,0.45); }
-            if(type==='epirb'){ // pulsing alarm
-                for(let i=0;i<4;i++){ tone(2200,i*0.5,0.3,0.5); tone(1700,i*0.5+0.3,0.15,0.3); }
-            }
-            if(type==='sart'){  // radar-like sweeping
-                for(let i=0;i<5;i++){ tone(9400-(i*300),i*0.12,0.1,0.4); }
-            }
-            if(type==='navtex'){ tone(518/100,0,0.05,0.2); tone(900,0.06,0.08,0.3); }
+            const ctx = getRorAudioCtx(); if(!ctx) return;
+            ctx.resume().then(()=>{
+                const t = ctx.currentTime;
+                function tone(freq, start, dur, vol, wave){
+                    const o=ctx.createOscillator(), g=ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.frequency.value=freq; o.type=wave||'sine';
+                    g.gain.setValueAtTime(0, t+start);
+                    g.gain.linearRampToValueAtTime(vol, t+start+0.008);
+                    g.gain.linearRampToValueAtTime(0, t+start+dur);
+                    o.start(t+start); o.stop(t+start+dur+0.01);
+                }
+                if(type==='ch')     { tone(900,0,0.06,0.3); tone(1200,0.08,0.06,0.3); }
+                if(type==='ptt-on') { tone(1050,0,0.04,0.35); tone(1400,0.05,0.03,0.2); }
+                if(type==='ptt-off'){ tone(800,0,0.05,0.3); tone(600,0.06,0.04,0.2); }
+                if(type==='dsc-tx') { // DSC alert sweep — 5-tone frequency-shift keying burst
+                    for(let i=0;i<8;i++){ tone(1000+i*100, i*0.15, 0.13, 0.45,'square'); }
+                    tone(2200, 8*0.15, 0.25, 0.5);
+                }
+                if(type==='ack'){
+                    tone(880,0,0.12,0.4); tone(1100,0.14,0.12,0.4); tone(1320,0.28,0.18,0.45); tone(1100,0.48,0.1,0.3);
+                }
+                if(type==='epirb'){ // pulsing 406 MHz emergency alarm simulation
+                    for(let i=0;i<5;i++){ tone(2200,i*0.45,0.25,0.5); tone(1600,i*0.45+0.25,0.12,0.3); }
+                }
+                if(type==='sart'){  // radar 9GHz sweep — descending tones
+                    for(let i=0;i<8;i++){ tone(3000-(i*200),i*0.1,0.08,0.4,'sawtooth'); }
+                }
+                if(type==='navtex'){ // 518 Hz NAVTEX carrier beep (was 5.18 Hz — bug fix)
+                    tone(518,0,0.08,0.25); tone(900,0.10,0.1,0.3); tone(518,0.22,0.06,0.2);
+                }
+                if(type==='countdown-tick'){ tone(1400,0,0.04,0.25); }
+                if(type==='distress-sent'){
+                    for(let i=0;i<3;i++){ tone(2400,i*0.25,0.18,0.5,'square'); tone(1800,i*0.25+0.18,0.05,0.3); }
+                }
+            });
         }
 
         // ── VHF DSC Radio ──────────────────────────────────────────────────
@@ -5222,63 +5271,120 @@ window.logAdminSettingsActivity = async (action, details) => {
             const chEl=document.getElementById('g-ch');
             const frEl=document.getElementById('g-freq');
             const puEl=document.getElementById('g-purpose');
+            const watchEl=document.getElementById('g-dsc-watch');
             if(chEl) chEl.textContent = String(ch).padStart(2,'0');
             if(frEl) frEl.textContent = info.freq;
             if(puEl) puEl.textContent = info.purpose;
-            // Color display red on ch16
+            if(watchEl){
+                if(ch===70) watchEl.textContent='◉ DSC CHANNEL ACTIVE';
+                else if(ch===16) watchEl.textContent='▶ DSC WATCH CH70';
+                else watchEl.textContent='▶ DSC WATCH CH70 | WORKING CH'+String(ch).padStart(2,'0');
+            }
+            // Color display: red on ch16, purple on ch70, green otherwise
             if(chEl){ chEl.style.color = ch===16?'#f87171': ch===70?'#c084fc':'#86efac'; }
         }
-        function gPTT(down){
+        function gPTT(down, evt){
+            if(evt && evt.type && evt.type.startsWith('touch')) { if(evt.cancelable) evt.preventDefault(); }
             const btn=document.getElementById('g-ptt');
             const tx=document.getElementById('g-tx');
             if(down){
                 gBeep('ptt-on');
-                if(btn){ btn.style.background='#166534'; btn.textContent='🎙 TRANSMITTING…'; }
+                gStartStatic();
+                if(btn){ btn.style.background='#166534'; btn.textContent='🎙 TRANSMITTING…'; btn.style.boxShadow='0 0 12px rgba(22,101,52,0.8)'; }
                 if(tx) tx.classList.remove('hidden');
+                // advance workflow if on voice step
+                if(window._g && window._g.dscStep===4) gAdvanceWorkflow(4);
             } else {
+                gStopStatic();
                 gBeep('ptt-off');
-                if(btn){ btn.style.background=''; btn.textContent='🎙 PTT — HOLD TO TALK'; }
+                if(btn){ btn.style.background=''; btn.textContent='🎙 PTT — HOLD TO TALK'; btn.style.boxShadow=''; }
                 if(tx) tx.classList.add('hidden');
             }
         }
         function gCover(){
             if(!window._g) return;
             if(window._g.coverLifted){
-                // re-lock
+                // re-lock — cancel any in-progress distress hold
+                clearInterval(window._g._distressTimer);
+                window._g._distressTimer = null;
+                window._g._distressHeld = 0;
                 window._g.coverLifted=false;
                 const cb=document.getElementById('g-cover'), db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
                 if(cb){ cb.textContent='🔐 Lift Cover'; cb.classList.remove('bg-red-800','text-red-200'); cb.classList.add('bg-slate-700','text-slate-300'); }
-                if(db){ db.disabled=true; db.classList.remove('bg-red-600','text-white','cursor-pointer'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); }
+                if(db){ db.disabled=true; db.textContent='🆘 DISTRESS'; db.classList.remove('bg-red-600','text-white','cursor-pointer'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); db.style.boxShadow=''; }
                 if(dh) dh.textContent='Lift cover first to enable button';
+                if(window._g.dscStep===1) gAdvanceWorkflow(1); // keep at step 1
                 return;
             }
             window._g.coverLifted=true;
+            window._g._distressHeld = 0;
             const cb=document.getElementById('g-cover'), db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
             if(cb){ cb.textContent='🔓 Cover Open'; cb.classList.add('bg-red-800','text-red-200'); cb.classList.remove('bg-slate-700','text-slate-300'); }
             if(db){ db.disabled=false; db.classList.add('bg-red-600','text-white','cursor-pointer'); db.classList.remove('bg-slate-800','text-slate-600','cursor-not-allowed'); }
-            if(dh) dh.textContent='Cover lifted — press and hold DISTRESS to transmit alert';
+            if(dh) dh.textContent='Cover open — HOLD DISTRESS for 5 seconds to transmit alert';
             gAdvanceWorkflow(1);
         }
-        function gDistress(){
+
+        // DISTRESS hold-to-activate: press and hold 5 seconds
+        function gDistressDown(evt){
+            if(evt && evt.type && evt.type.startsWith('touch')) { if(evt.cancelable) evt.preventDefault(); }
             if(!window._g||!window._g.coverLifted) return;
+            if(window._g._distressTimer) return; // already counting
+            window._g._distressHeld = 0;
             gAdvanceWorkflow(2);
-            const db=document.getElementById('g-distress');
-            if(db){ db.textContent='⏳ Sending…'; db.disabled=true; }
-            gBeep('dsc-tx');
+            const db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
+            if(db) db.style.boxShadow='0 0 16px rgba(239,68,68,0.9)';
+            window._g._distressTimer = setInterval(()=>{
+                window._g._distressHeld = (window._g._distressHeld||0) + 1;
+                gBeep('countdown-tick');
+                const remaining = 5 - window._g._distressHeld;
+                if(db && window._g._distressHeld < 5) db.textContent = `🆘 HOLD… ${remaining}s`;
+                if(dh) dh.textContent = `Holding… ${remaining} second${remaining!==1?'s':''} remaining`;
+                if(window._g._distressHeld >= 5){
+                    clearInterval(window._g._distressTimer);
+                    window._g._distressTimer = null;
+                    gDistressFire();
+                }
+            }, 1000);
+        }
+
+        function gDistressUp(evt){
+            if(evt && evt.type && evt.type.startsWith('touch')) { if(evt.cancelable) evt.preventDefault(); }
+            if(!window._g) return;
+            if(window._g._distressTimer && window._g._distressHeld < 5){
+                clearInterval(window._g._distressTimer);
+                window._g._distressTimer = null;
+                window._g._distressHeld = 0;
+                const db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
+                if(db){ db.textContent='🆘 DISTRESS'; db.style.boxShadow=''; }
+                if(dh) dh.textContent='Held too briefly — hold for full 5 seconds to send';
+                if(window._g.dscStep===2) gAdvanceWorkflow(1); // revert to step 1
+            }
+        }
+
+        function gDistressFire(){
+            if(!window._g||!window._g.coverLifted) return;
+            gBeep('distress-sent');
+            gAdvanceWorkflow(3);
+            const db=document.getElementById('g-distress'), dh=document.getElementById('g-distress-hint');
+            if(db){ db.textContent='📡 Alert Sent'; db.disabled=true; db.style.boxShadow=''; db.classList.remove('bg-red-600'); db.classList.add('bg-green-800'); }
+            if(dh) dh.textContent='DSC distress alert transmitted on Ch 70 — switching to Ch 16…';
             setTimeout(()=>{
-                gAdvanceWorkflow(3);
+                gBeep('dsc-tx');
                 gChSet(16); // auto-switch to Ch16
                 const tx=document.getElementById('g-tx'); if(tx) tx.classList.remove('hidden');
-                setTimeout(()=>{ const tx2=document.getElementById('g-tx'); if(tx2) tx2.classList.add('hidden'); },1500);
+                setTimeout(()=>{ const tx2=document.getElementById('g-tx'); if(tx2) tx2.classList.add('hidden'); },1800);
                 gAdvanceWorkflow(4);
-                // Simulate CG response after 5s
+                // Simulate CG response after 6s
                 setTimeout(()=>{
                     gBeep('ack');
                     gAdvanceWorkflow(5);
-                    const rx=document.getElementById('g-rx'); if(rx){ rx.classList.remove('hidden'); setTimeout(()=>rx.classList.add('hidden'),3000); }
-                    setTimeout(()=>gAdvanceWorkflow(6), 2000);
-                },5000);
-            },2500);
+                    const rx=document.getElementById('g-rx'); if(rx){ rx.classList.remove('hidden'); setTimeout(()=>rx.classList.add('hidden'),4000); }
+                    const dh2=document.getElementById('g-distress-hint');
+                    if(dh2) dh2.textContent='CG response received — maintain Ch 16 watch';
+                    setTimeout(()=>gAdvanceWorkflow(6), 2500);
+                }, 6000);
+            }, 2000);
         }
         function gDscMenu(type){
             const hints={routine:'Routine call: select vessel MMSI/group, then press SEND.',urgency:'Urgency (PAN PAN): select urgency, add position, press SEND.'};
@@ -5287,10 +5393,17 @@ window.logAdminSettingsActivity = async (action, details) => {
             gBeep('ch');
         }
         function gResetWorkflow(){
-            if(window._g){ window._g.dscStep=0; window._g.coverLifted=false; }
+            if(window._g){
+                clearInterval(window._g._distressTimer);
+                window._g._distressTimer = null;
+                window._g._distressHeld = 0;
+                window._g.dscStep=0;
+                window._g.coverLifted=false;
+            }
+            gStopStatic();
             const cb=document.getElementById('g-cover'),db=document.getElementById('g-distress'),dh=document.getElementById('g-distress-hint');
             if(cb){ cb.textContent='🔐 Lift Cover'; cb.classList.remove('bg-red-800','text-red-200'); cb.classList.add('bg-slate-700','text-slate-300'); }
-            if(db){ db.textContent='🆘 DISTRESS'; db.disabled=true; db.classList.remove('bg-red-600','text-white','cursor-pointer'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); }
+            if(db){ db.textContent='🆘 DISTRESS'; db.disabled=true; db.style.boxShadow=''; db.classList.remove('bg-red-600','text-white','cursor-pointer','bg-green-800'); db.classList.add('bg-slate-800','text-slate-600','cursor-not-allowed'); }
             if(dh) dh.textContent='Lift cover first to enable button';
             gChSet(16);
             renderWorkflow();
@@ -5313,7 +5426,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                         <div class="text-[10px] font-black uppercase tracking-wide ${titleC}">${s.title}</div>
                         <div class="text-[9px] leading-relaxed mt-0.5 ${descC}">${s.desc}</div>
                         ${active&&s.action&&s.action!=='auto'?`<div class="mt-1.5 text-[9px] text-teal-400 font-bold animate-pulse">
-                            ${s.action==='lift-cover'?'→ Click "Lift Cover" on the radio panel above':s.action==='hold-distress'?'→ Click the 🆘 DISTRESS button on the radio panel':s.action==='voice'?'→ Hold PTT and broadcast your MAYDAY voice call':s.action==='wait'?'→ Maintain Ch 16 watch — simulated CG response incoming…':''}
+                            ${s.action==='lift-cover'?'→ Click "Lift Cover" on the radio panel above':s.action==='hold-distress'?'→ PRESS AND HOLD the 🆘 DISTRESS button for 5 seconds':s.action==='voice'?'→ Hold PTT and broadcast your MAYDAY voice call':s.action==='wait'?'→ Maintain Ch 16 watch — simulated CG response incoming…':''}
                         </div>`:''}
                     </div>
                 </div>`;
@@ -5335,22 +5448,36 @@ window.logAdminSettingsActivity = async (action, details) => {
             gBeep('navtex');
             const el=document.getElementById('navtex-out'); if(!el) return;
             el.innerHTML='';
-            nxAppend('<span style="color:#555">SELF TEST IN PROGRESS…</span>');
-            setTimeout(()=>nxAppend('<span style="color:#555">RECEIVER OK · MEMORY OK · ANTENNA OK</span>'),600);
-            setTimeout(()=>nxAppend('<span style="color:#555">SELF TEST PASSED ✓</span>'),1200);
+            nxAppend('<span style="color:#888">SELF TEST IN PROGRESS…</span>');
+            setTimeout(()=>nxAppend('<span style="color:#666">RECEIVER………OK</span>'),500);
+            setTimeout(()=>nxAppend('<span style="color:#666">MEMORY…………OK</span>'),900);
+            setTimeout(()=>nxAppend('<span style="color:#666">ANTENNA………OK</span>'),1300);
+            setTimeout(()=>{
+                gBeep('navtex');
+                nxAppend('<span style="color:#333;font-weight:bold">SELF TEST PASSED ✓</span>');
+                nxAppend('<span style="color:#aaa">Ready to receive on 518 kHz</span>');
+            },1800);
         }
         function nxReceive(){
             gBeep('navtex');
-            let delay=0;
+            const el=document.getElementById('navtex-out'); if(!el) return;
+            el.innerHTML='<span style="color:#888">SCANNING 518 kHz…</span><br>';
+            let delay=400;
             NAVTEX_MESSAGES.forEach((m,i)=>{
                 setTimeout(()=>{
-                    nxAppend(`<br><b>ZCZC ${m.station[0]}${m.type}${String(i+1).padStart(2,'0')}</b>`);
-                    nxAppend(`<span style="color:#666">${m.time} — ${m.cat}</span>`);
-                    nxAppend(m.body.replace(/\n/g,'<br>'));
-                    nxAppend('NNNN');
+                    gBeep('navtex');
+                    nxAppend(`<br><b style="color:#222">ZCZC ${m.station[0]}${m.type}${String(i+1).padStart(2,'0')}</b>`);
+                    nxAppend(`<span style="color:#555">${m.time} UTC — <b>${m.cat}</b> [${m.station}]</span>`);
+                    nxAppend('<span style="color:#444">'+m.body.replace(/\n/g,'<br>')+'</span>');
+                    nxAppend('<b style="color:#222">NNNN</b>');
+                    nxAppend('');
                 },delay);
-                delay+=800;
+                delay+=1000;
             });
+            setTimeout(()=>{
+                gBeep('navtex');
+                nxAppend('<span style="color:#888">━━━ END OF MESSAGES ━━━</span>');
+            }, delay+200);
         }
         function nxClear(){
             const el=document.getElementById('navtex-out');
