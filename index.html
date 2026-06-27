@@ -105,8 +105,8 @@
                     <button onclick="openAdminLoginModal()" class="w-full bg-brand-blue dark:bg-brand-green text-white py-3 rounded-lg font-bold hover:bg-blue-800 dark:hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-md"><i data-lucide="user-cog" class="w-4 h-4"></i> Instructor / Admin Login</button>
                     <button onclick="recoverAdminPin()" class="text-[10px] text-slate-400 mt-2 hover:text-brand-blue dark:hover:text-white underline transition">Forgot Instructor PIN?</button>
                 </div>
-                <button type="button" id="cadet-login-btn" onclick="loginAsCadet(event)" disabled class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-creamBg"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
-                <p id="cadet-login-status" class="text-[10px] text-slate-400 mt-1.5 flex items-center justify-center gap-1"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Connecting to server...</p>
+                <button type="button" id="cadet-login-btn" onclick="loginAsCadet(event)" class="w-full bg-brand-creamBg dark:bg-slate-700 text-brand-black dark:text-white border border-brand-creamBorder dark:border-slate-600 py-3 rounded-lg font-bold hover:bg-brand-creamAccent transition flex justify-center items-center gap-2 shadow-sm"><i data-lucide="user" class="w-4 h-4"></i> Cadet View Mode</button>
+                <p id="cadet-login-status" class="text-[10px] text-slate-400 mt-1.5 flex items-center justify-center gap-1"><i data-lucide="wifi" class="w-3 h-3"></i> Syncing data in background…</p>
             </div>
             <p class="text-[9px] text-slate-400/70 mt-6 font-semibold uppercase tracking-widest">Note: New or recovered instructor accounts default to PIN: 1234</p>
         </div>
@@ -7629,8 +7629,15 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.loginAsCadet = async (event) => {
             if (event) event.preventDefault();
             
+            // Data may still be syncing on first load — show a status message
+            // rather than blocking with an alert. Button is no longer disabled,
+            // so the user can try immediately; if cadets haven't arrived yet,
+            // we show a friendly prompt and let them retry in 2s automatically.
             if (!window.cadets || window.cadets.length === 0) {
-                alert("System is still loading cadet data. Please wait a moment and try again.");
+                const statusEl = document.getElementById('cadet-login-status');
+                if (statusEl) statusEl.innerHTML = '<i data-lucide="loader-2" class="w-3 h-3 animate-spin text-amber-400"></i> <span class="text-amber-400">Still syncing — please tap Login again in a moment…</span>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => { if (statusEl && !window.cadetsLoaded) statusEl.innerHTML = '<i data-lucide="wifi" class="w-3 h-3 text-slate-400"></i> <span class="text-slate-400">Ready — tap Login to enter.</span>'; if (typeof lucide !== 'undefined') lucide.createIcons(); }, 2000);
                 return;
             }
             
@@ -10827,18 +10834,18 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
         // Firebase domain, Firestore rules rejecting the read, etc.) the button
         // would otherwise stay disabled forever with no explanation. Force it
         // open after 12s and tell the user what's going on.
+        // Reduced from 12s → 4s: button is already enabled immediately above,
+        // so this just updates the status text on very slow connections.
         setTimeout(() => {
             if (!window.cadetsLoaded) {
-                console.warn('Cadet data did not load within 12s — enabling login anyway.');
-                window.setCadetLoginStatus('<i data-lucide="alert-triangle" class="w-3 h-3 text-amber-500"></i> <span class="text-amber-500">Slow connection — data may be incomplete.</span>', true);
+                console.warn('Cadet data did not load within 4s — data may be incomplete.');
+                window.setCadetLoginStatus('<i data-lucide="alert-triangle" class="w-3 h-3 text-amber-500"></i> <span class="text-amber-500">Slow connection — you can still log in, data syncing.</span>', false);
             }
-        }, 12000);
+        }, 4000);
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', startApp);
-        } else {
-            startApp();
-        }
+        // DOM is ready when module scripts run (they execute after body parses).
+        // Call startApp() immediately — avoids one extra event-loop tick.
+        startApp();
 
         onAuthStateChanged(auth, (user) => {
             if (!user) return;
@@ -10923,8 +10930,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 // no longer wait for a round-trip to Firestore before they can log in.
                 if (!window.cadetsLoaded) {
                     window.cadetsLoaded = true;
-                    const cadetBtn = document.getElementById('cadet-login-btn');
-                    if (cadetBtn) cadetBtn.disabled = false;
+                    // Button is already enabled from page load — just clean up status text
                     const statusEl = document.getElementById('cadet-login-status');
                     if (statusEl) statusEl.remove();
                 }
