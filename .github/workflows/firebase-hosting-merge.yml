@@ -22,4 +22,4 @@ jobs:
       - name: Deploy to Firebase Hosting
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PUMMA_COMPETENCY_DASHBOARD }}' > /tmp/sa.json
-          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json firebase deploy --only hosting:pumma-competency-dashboard --project pumma-competency-dashboard
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json firebase deploy --only hosting:pumma-competency-dashboard --project pumma-competency-dashboard --force
