@@ -161,6 +161,7 @@
                 <button onclick="exportExcel()" class="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-800 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Export Excel"><i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export Excel</span></button>
                 <button onclick="exportAllPhotosZip()" id="export-photos-btn" class="bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 text-xs flex items-center gap-1.5 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed" title="Backup all evidence photos as a ZIP before they're auto-deleted after 1 year"><i data-lucide="archive" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export All Photos</span></button>
                 <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-1.5 font-semibold transition" title="Masterlist"><i data-lucide="printer" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Masterlist</span></button>
+                <button id="observer-view-toggle" onclick="toggleObserverView()" class="hidden bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Switch to Cadet View"><i data-lucide="eye" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Cadet View</span></button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Sign Out"><i data-lucide="log-out" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Sign Out</span></button>
             </div>
             <div class="flex gap-4 items-center cadet-controls hidden">
@@ -170,6 +171,22 @@
             </div>
         </div>
     </header>
+
+    <!-- Observer Cadet View Banner — only visible when isObserver switches to cadet mode -->
+    <div id="observer-cadet-bar" class="hidden sticky top-0 z-30 bg-emerald-700 dark:bg-emerald-800 text-white px-4 py-2 no-print shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-3 text-xs font-semibold">
+            <span class="flex items-center gap-1.5 font-black uppercase tracking-wide text-emerald-100"><i data-lucide="eye" class="w-4 h-4"></i> Observer · Cadet View</span>
+            <span class="text-emerald-300 hidden sm:inline">|</span>
+            <span class="text-emerald-200">Viewing as:</span>
+            <select id="observer-cadet-select" onchange="observerSwitchCadet(this.value)" class="bg-emerald-800 dark:bg-emerald-900 border border-emerald-500 text-white rounded px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer max-w-[200px]"></select>
+            <span class="text-emerald-300 text-[10px] hidden md:inline italic">Read-only — all editing is disabled in this mode</span>
+            <div class="ml-auto flex items-center gap-2">
+                <button onclick="toggleObserverView()" class="bg-white text-emerald-800 hover:bg-emerald-50 active:scale-95 px-3 py-1.5 rounded font-black text-xs flex items-center gap-1.5 transition shadow-sm">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Back to Admin View
+                </button>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full no-print" id="main-content">
         
@@ -7428,6 +7445,103 @@ window.logAdminSettingsActivity = async (action, details) => {
             setTimeout(() => { location.reload(); }, 500);
         };
 
+        // ── Observer dual-view toggle ──────────────────────────────────────
+        // Allows Observer accounts to flip between full Admin dashboard and
+        // a read-only Cadet perspective for any cadet they choose.
+
+        window.toggleObserverView = () => {
+            if (!window.isObserverAccount) return;
+
+            if (window.observerViewMode === 'admin') {
+                // ── Switch to Cadet View ──
+                const available = (window.cadets || []).filter(c => !c.isObserver)
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                if (!available.length) { alert('No cadets available to view.'); return; }
+
+                // Populate the banner dropdown
+                const sel = document.getElementById('observer-cadet-select');
+                if (sel) {
+                    sel.innerHTML = available.map(c =>
+                        `<option value="${c.id}">${c.name}${c.studentId ? ' · ' + c.studentId : ''}</option>`
+                    ).join('');
+                    // Pre-select currently selected cadet if any
+                    if (window.selectedCadetId && available.find(c => c.id === window.selectedCadetId)) {
+                        sel.value = window.selectedCadetId;
+                    }
+                }
+
+                window.observerViewMode = 'cadet';
+                window.currentUserRole = 'cadet';
+
+                // Swap UI panels
+                document.querySelectorAll('.admin-controls').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.cadet-controls').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('left-panel-admin').classList.add('hidden');
+                document.getElementById('eval-right-panel').className =
+                    'col-span-1 lg:col-span-12 flex flex-col gap-6 max-w-4xl mx-auto w-full';
+
+                // Show observer banner
+                const bar = document.getElementById('observer-cadet-bar');
+                if (bar) bar.classList.remove('hidden');
+
+                // Load selected cadet (or first in list)
+                const targetId = (window.selectedCadetId && available.find(c => c.id === window.selectedCadetId))
+                    ? window.selectedCadetId : available[0].id;
+                window.selectCadet(targetId);
+
+                // Disable editing controls (read-only for observer)
+                setTimeout(() => {
+                    document.querySelectorAll('.cadet-disable').forEach(el => {
+                        el.disabled = true;
+                        el.classList.add('opacity-70', 'cursor-not-allowed');
+                    });
+                }, 200);
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            } else {
+                // ── Switch back to Admin View ──
+                window.observerViewMode = 'admin';
+                window.currentUserRole = 'admin';
+
+                // Swap UI panels back
+                document.querySelectorAll('.cadet-controls').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('left-panel-admin').classList.remove('hidden');
+                document.getElementById('eval-right-panel').className =
+                    'lg:col-span-4 flex flex-col gap-6';
+
+                // Hide observer banner
+                const bar = document.getElementById('observer-cadet-bar');
+                if (bar) bar.classList.add('hidden');
+
+                // Re-enable all controls
+                document.querySelectorAll('.cadet-disable').forEach(el => {
+                    el.disabled = false;
+                    el.classList.remove('opacity-70', 'cursor-not-allowed');
+                });
+
+                // Keep toggle button visible for next switch
+                const obsToggle = document.getElementById('observer-view-toggle');
+                if (obsToggle) obsToggle.classList.remove('hidden');
+
+                window.recalculateMetrics();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        };
+
+        // Called by the cadet dropdown inside the observer banner
+        window.observerSwitchCadet = (cadetId) => {
+            if (!cadetId || !window.isObserverAccount) return;
+            window.selectCadet(cadetId);
+            setTimeout(() => {
+                document.querySelectorAll('.cadet-disable').forEach(el => {
+                    el.disabled = true;
+                    el.classList.add('opacity-70', 'cursor-not-allowed');
+                });
+            }, 200);
+        };
+
         window.changeAdminPin = async () => {
             const instructors = await window._fetchFreshInstructors();
             const myIndex = instructors.findIndex(i => i.username === window.currentAdminUsername);
@@ -7713,11 +7827,17 @@ window.logAdminSettingsActivity = async (action, details) => {
                     window.currentObserverName = c.name;
                     window.currentAdminName = c.name;
                     window.currentAdminUsername = null;
+                    window.observerViewMode = 'admin';
 
                     document.getElementById('auth-overlay').classList.add('hidden');
                     document.body.classList.remove('overflow-hidden');
                     document.querySelectorAll('.cadet-controls').forEach(el => el.classList.add('hidden'));
                     document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('hidden'));
+
+                    // Show the observer view-switch toggle in the header
+                    const obsToggle = document.getElementById('observer-view-toggle');
+                    if (obsToggle) obsToggle.classList.remove('hidden');
+
                     if(typeof lucide !== 'undefined') lucide.createIcons();
 
                     const now = new Date().toLocaleString();
@@ -7871,6 +7991,270 @@ window.logAdminSettingsActivity = async (action, details) => {
         
         window.closeAuditLogsModal = () => { const m = document.getElementById('audit-logs-modal'); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } };
 
+        // ═══════════════════════════════════════════════════════════════════
+        // SHARED HELPER — builds the "Cadet Dashboard View" sheet.
+        //   cadetOrId  → a cadet object (single) OR null (roster of all cadets)
+        // Returns an XLSX worksheet object ready to append.
+        // ═══════════════════════════════════════════════════════════════════
+        window.buildCadetViewSheet = (cadetOrId) => {
+            const XLSX = window.XLSX;
+            const navy  = { font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: '263F77' } }, alignment: { horizontal: 'center', vertical: 'center' } };
+            const green = { font: { italic: true, sz: 9, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: '406F27' } }, alignment: { horizontal: 'center' } };
+            const sectionHdr = { font: { bold: true, sz: 9, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: '1C305C' } }, alignment: { horizontal: 'left', vertical: 'center' } };
+            const lbl   = { font: { bold: true, sz: 9, color: { rgb: '406F27' }, name: 'Arial' }, alignment: { horizontal: 'left', vertical: 'center' } };
+            const val   = { font: { sz: 9, name: 'Arial' }, alignment: { horizontal: 'left', vertical: 'center' } };
+            const passS = { font: { bold: true, sz: 9, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: '406F27' } }, alignment: { horizontal: 'center' } };
+            const failS = { font: { bold: true, sz: 9, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: 'CC2200' } }, alignment: { horizontal: 'center' } };
+            const tblHdr= { font: { bold: true, sz: 9, color: { rgb: 'FFFFFF' }, name: 'Arial' }, fill: { fgColor: { rgb: '1C305C' } }, alignment: { horizontal: 'center', vertical: 'center' } };
+            const even  = { fill: { fgColor: { rgb: 'F3EFE7' } }, font: { sz: 9, name: 'Arial' }, alignment: { vertical: 'center' } };
+            const odd   = { fill: { fgColor: { rgb: 'FFFFFF' } }, font: { sz: 9, name: 'Arial' }, alignment: { vertical: 'center' } };
+            const numFmt= { font: { sz: 9, name: 'Arial' }, alignment: { horizontal: 'center', vertical: 'center' } };
+
+            const dateStr = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            // ── Resolve single cadet vs roster ────────────────────────────────
+            let c = null;
+            if (cadetOrId) {
+                c = typeof cadetOrId === 'object' ? cadetOrId : (window.cadets || []).find(x => x.id === cadetOrId);
+            }
+
+            if (c) {
+                // ── SINGLE CADET PROFILE CARD ─────────────────────────────────
+                const rows = [];
+                const push  = (a, b, aStyle, bStyle) => rows.push({ a: a ?? '', b: b ?? '', aS: aStyle, bS: bStyle });
+                const blank = () => rows.push(null);
+
+                // Header
+                rows.push({ header: `CADET DASHBOARD VIEW — ${c.name}` });
+                rows.push({ sub: `Generated: ${dateStr}` });
+                blank();
+
+                // Profile section
+                rows.push({ section: 'CADET PROFILE' });
+                push('Full Name',    c.name || '—', lbl, val);
+                push('Student ID',   c.studentId || `PUMMA-0${c.classNum}-${(c.id||'').slice(-4)}`, lbl, val);
+                push('Class',        c.classNum === 3 ? '3rd Class Midshipmen' : '4th Class Midshipmen', lbl, val);
+                push('Section',      (c.section || '—').toUpperCase(), lbl, val);
+                push('Email',        c.email || 'Not registered', lbl, val);
+                push('Officer',      c.officer ? 'YES (Corp Officer)' : 'No', lbl, val);
+                push('Star Cadet',   c.starCadet ? '⭐ YES' : 'No', lbl, val);
+                blank();
+
+                // Academic performance
+                rows.push({ section: 'ACADEMIC PERFORMANCE (GWA)' });
+                push('GWA — Semester 1', c.gwaSem1 || c.gwa || '—', lbl, val);
+                push('GWA — Semester 2', c.gwaSem2 || '—', lbl, val);
+                push('GWA — Semester 3', c.gwaSem3 || '—', lbl, val);
+                push('Mean GWA (Average)', (c.gwa || 0).toFixed(2), lbl, { ...numFmt, font: { bold: true, sz: 9, name: 'Arial' } });
+                blank();
+
+                // Merit points
+                rows.push({ section: 'MERIT POINTS' });
+                push('Merit Points — Semester 1', c.meritsSem1 || 0, lbl, numFmt);
+                push('Merit Points — Semester 2', c.meritsSem2 || 0, lbl, numFmt);
+                push('Merit Points — Semester 3', c.meritsSem3 || 0, lbl, numFmt);
+                push('Cumulative Total Merits',   c.totalMeritsSum || 0, lbl, { ...numFmt, font: { bold: true, sz: 9, name: 'Arial', color: { rgb: '263F77' } } });
+                blank();
+
+                // Regimental scores
+                rows.push({ section: 'REGIMENTAL COMPONENT SCORES' });
+                push('Academic (CS)',        c.academicCS   || '—', lbl, numFmt);
+                push('Leadership (CS)',      c.leadershipCS || '—', lbl, numFmt);
+                push('Patriotism (CS)',      c.patriotismCS != null ? c.patriotismCS.toFixed(1) : '—', lbl, numFmt);
+                push('Technical (CS)',       c.technicalCS  || '—', lbl, numFmt);
+                push('Soft Skills (CS)',     c.softCS       || '—', lbl, numFmt);
+                blank();
+
+                // Final evaluation
+                rows.push({ section: 'FINAL EVALUATION' });
+                const gradeNum = parseFloat(c.specificGradePercent) || 0;
+                const isPassing = gradeNum >= 75;
+                push('Specific Grade %',  `${c.specificGradePercent || 0}%`, lbl, { ...numFmt, font: { bold: true, sz: 10, name: 'Arial', color: { rgb: isPassing ? '406F27' : 'CC2200' } } });
+                push('Final Rating',      (c.finalRating || 0).toFixed(2), lbl, numFmt);
+                push('Base Rating',       (c.baseRating  || c.finalRating || 0).toFixed(2), lbl, numFmt);
+                const totalBonus = c.totalBonusPercent != null ? c.totalBonusPercent : (c.bonusPercent || 0) + (c.autoBonus || 0) + (c.starCadet ? 2 : 0);
+                push('Total Bonus Applied', totalBonus > 0 ? `+${totalBonus.toFixed(2)}%` : 'None', lbl, val);
+                push('Merit Penalty',     c.meritPenalty > 0 ? `-${c.meritPenalty.toFixed(2)}%` : 'None', lbl, val);
+                push('Overall Status',    isPassing ? 'PASSING' : 'FAILING', lbl, isPassing ? passS : failS);
+                blank();
+
+                // PUMMA Grades
+                const pg = c.pummaGrades;
+                if (pg && (pg.pre || pg.mid || pg.sem || pg.fin)) {
+                    rows.push({ section: 'PUMMA TERM GRADES' });
+                    rows.push({ tableRow: ['Term', 'Class Standing (CS)', 'Periodical Test (PT)', 'Final Grade (FG)', 'Status'] });
+                    const fmt = v => v !== '' && v !== undefined && !isNaN(v) ? parseFloat(Number(v).toFixed(1)) : '—';
+                    const termRows = [
+                        ['PRELIM',     pg.pre || {}],
+                        ['MIDTERM',    pg.mid || {}],
+                        ['SEMI-FINAL', pg.sem || {}],
+                        ['FINAL',      pg.fin || {}],
+                    ];
+                    termRows.forEach(([name, t]) => {
+                        const fgVal = fmt(t.fg);
+                        const status = fgVal !== '—' ? (fgVal >= 75 ? 'PASS' : 'FAIL') : '—';
+                        rows.push({ dataRow: [name, fmt(t.cs), fmt(t.pt), fgVal, status], status });
+                    });
+                    blank();
+                }
+
+                // Incidents
+                const incidents = c.incidents || [];
+                if (incidents.length > 0) {
+                    rows.push({ section: `INCIDENTS / VIOLATIONS (${incidents.length})` });
+                    rows.push({ tableRow: ['Date', 'Violation', 'Points', 'Semester'] });
+                    incidents.forEach(i => rows.push({ dataRow: [i.date || '—', i.name || '—', i.points || 0, i.sem || '—'] }));
+                    blank();
+                }
+
+                // Appeals
+                const appeals = (c.appeals || []).slice().reverse();
+                if (appeals.length > 0) {
+                    rows.push({ section: `APPEALS / REQUESTS (${appeals.length})` });
+                    rows.push({ tableRow: ['Date', 'Type', 'Message', 'Status'] });
+                    appeals.forEach(a => rows.push({ dataRow: [a.date || '—', a.type || 'General Request', (a.message || '').substring(0, 60), a.status || 'Pending'] }));
+                    blank();
+                }
+
+                // Access log
+                const accessLogs = (c.accessLogs || []).slice(0, 10);
+                if (accessLogs.length > 0) {
+                    rows.push({ section: 'RECENT ACCESS LOG (Last 10)' });
+                    rows.push({ tableRow: ['Date & Time', 'Action', 'Device'] });
+                    accessLogs.forEach(l => rows.push({ dataRow: [l.date || '—', l.action || '—', l.device || '—'] }));
+                }
+
+                // ── Build the actual sheet ──────────────────────────────────
+                const aoa = [];
+                const styleMap = [];
+                const merges = [];
+
+                rows.forEach(r => {
+                    const rowIdx = aoa.length;
+                    if (!r) { aoa.push(['', '']); styleMap.push([]); return; }
+                    if (r.header) {
+                        aoa.push([r.header, '']);
+                        styleMap.push([navy, null]);
+                        merges.push({ s:{r:rowIdx,c:0}, e:{r:rowIdx,c:3} });
+                        return;
+                    }
+                    if (r.sub) {
+                        aoa.push([r.sub, '']);
+                        styleMap.push([green, null]);
+                        merges.push({ s:{r:rowIdx,c:0}, e:{r:rowIdx,c:3} });
+                        return;
+                    }
+                    if (r.section) {
+                        aoa.push([r.section, '', '', '']);
+                        styleMap.push([sectionHdr, sectionHdr, sectionHdr, sectionHdr]);
+                        merges.push({ s:{r:rowIdx,c:0}, e:{r:rowIdx,c:3} });
+                        return;
+                    }
+                    if (r.tableRow) {
+                        aoa.push(r.tableRow);
+                        styleMap.push(r.tableRow.map(() => tblHdr));
+                        return;
+                    }
+                    if (r.dataRow) {
+                        aoa.push(r.dataRow);
+                        const bg = aoa.length % 2 === 0 ? even : odd;
+                        const rowStyles = r.dataRow.map((v, ci) => {
+                            if (r.status && ci === r.dataRow.length - 1) {
+                                return v === 'PASS' ? passS : v === 'FAIL' ? failS : bg;
+                            }
+                            return bg;
+                        });
+                        styleMap.push(rowStyles);
+                        return;
+                    }
+                    // label + value row
+                    aoa.push([r.a, '', r.b, '']);
+                    styleMap.push([r.aS || lbl, null, r.bS || val, null]);
+                    merges.push({ s:{r:rowIdx,c:0}, e:{r:rowIdx,c:1} });
+                    merges.push({ s:{r:rowIdx,c:2}, e:{r:rowIdx,c:3} });
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                ws['!cols'] = [{ wch: 30 }, { wch: 4 }, { wch: 32 }, { wch: 4 }];
+                ws['!merges'] = merges;
+                styleMap.forEach((rowStyles, ri) => {
+                    rowStyles.forEach((s, ci) => {
+                        if (!s) return;
+                        const ref = XLSX.utils.encode_cell({ r: ri, c: ci });
+                        if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+                        ws[ref].s = s;
+                    });
+                });
+                return ws;
+
+            } else {
+                // ── ALL-CADETS ROSTER VIEW ────────────────────────────────────
+                const allCadets = (window.cadets || []).filter(c => !c.isObserver)
+                    .sort((a, b) => parseFloat(b.specificGradePercent || 0) - parseFloat(a.specificGradePercent || 0));
+
+                const headers = ['#', 'Name', 'Student ID', 'Class', 'Section', 'Mean GWA', 'Cum. Merits', 'Grade %', 'Final Rating', 'Officer', 'Star', 'Status'];
+                const dataRows = allCadets.map((c, i) => {
+                    const gradeNum = parseFloat(c.specificGradePercent) || 0;
+                    return [
+                        i + 1,
+                        c.name || '—',
+                        c.studentId || `PUMMA-0${c.classNum}-${(c.id||'').slice(-4)}`,
+                        c.classNum === 3 ? '3rd Class' : '4th Class',
+                        (c.section || '—').toUpperCase(),
+                        parseFloat((c.gwa || 0).toFixed(2)),
+                        c.totalMeritsSum || 0,
+                        `${c.specificGradePercent || 0}%`,
+                        parseFloat((c.finalRating || 0).toFixed(2)),
+                        c.officer ? 'Officer' : '—',
+                        c.starCadet ? '⭐' : '—',
+                        gradeNum >= 75 ? 'PASSING' : 'FAILING',
+                    ];
+                });
+
+                const aoa = [
+                    ['CADET DASHBOARD VIEW — Class Roster', '', '', '', '', '', '', '', '', '', '', ''],
+                    [`Generated: ${dateStr} · Total Cadets: ${allCadets.length}`, '', '', '', '', '', '', '', '', '', '', ''],
+                    [],
+                    headers,
+                    ...dataRows
+                ];
+
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                ws['!cols'] = [{ wch: 4 }, { wch: 32 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 6 }, { wch: 10 }];
+                ws['!merges'] = [
+                    { s:{r:0,c:0}, e:{r:0,c:11} },
+                    { s:{r:1,c:0}, e:{r:1,c:11} }
+                ];
+                ws['!freeze'] = { xSplit: 0, ySplit: 4 };
+
+                // Title & sub styles
+                if (ws['A1']) ws['A1'].s = navy;
+                if (ws['A2']) ws['A2'].s = green;
+
+                // Header row (row index 3)
+                headers.forEach((_, ci) => {
+                    const ref = XLSX.utils.encode_cell({ r: 3, c: ci });
+                    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+                    ws[ref].s = tblHdr;
+                });
+
+                // Data rows
+                dataRows.forEach((row, ri) => {
+                    const excelRow = ri + 4;
+                    const bg = ri % 2 === 0 ? even : odd;
+                    row.forEach((v, ci) => {
+                        const ref = XLSX.utils.encode_cell({ r: excelRow, c: ci });
+                        if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+                        const gradeNum2 = parseFloat((window.cadets||[]).filter(x=>!x.isObserver).sort((a,b)=>parseFloat(b.specificGradePercent||0)-parseFloat(a.specificGradePercent||0))[ri]?.specificGradePercent) || 0;
+                        if (ci === 11) ws[ref].s = gradeNum2 >= 75 ? passS : failS;
+                        else ws[ref].s = { ...bg, alignment: { horizontal: ci > 1 ? 'center' : 'left', vertical: 'center' } };
+                    });
+                });
+
+                return ws;
+            }
+        };
+
         window.exportAuditLogsXLSX = () => {
             const logs = window.appSettings.auditLogs || [];
             if (logs.length === 0) return alert("No activity logs to export.");
@@ -7971,6 +8355,11 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
+            // ── Sheet 3: Cadet Dashboard View ────────────────────────────────
+            // Show the single selected cadet's profile, or the full roster if none selected
+            const cadetViewWs = window.buildCadetViewSheet(window.selectedCadetId || null);
+            XLSX.utils.book_append_sheet(wb, cadetViewWs, window.selectedCadetId ? "Cadet Profile View" : "Cadet Roster View");
+
             XLSX.writeFile(wb, `PUMMA_Activity_Ledger_${new Date().toISOString().slice(0,10)}.xlsx`);
         };
         window.exportAuditLogsCSV = window.exportAuditLogsXLSX; // legacy alias
@@ -8059,6 +8448,11 @@ window.logAdminSettingsActivity = async (action, details) => {
             });
 
             XLSX.utils.book_append_sheet(wb, wsSummary2, "Summary");
+
+            // ── Sheet 3: Cadet Dashboard View ────────────────────────────────
+            // Always show full class roster — this export has no single-cadet context
+            const cadetRosterWs = window.buildCadetViewSheet(null);
+            XLSX.utils.book_append_sheet(wb, cadetRosterWs, "Cadet Roster View");
 
             XLSX.writeFile(wb, `PUMMA_Admin_Access_${new Date().toISOString().slice(0,10)}.xlsx`);
         };
@@ -8249,6 +8643,15 @@ window.logAdminSettingsActivity = async (action, details) => {
             });
 
             XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+            // ── Sheet 3: Cadet Dashboard View ────────────────────────────────
+            // Single cadet selected → full personal profile card
+            // Global (all cadets) → ranked roster
+            const targetCadet = window.selectedCadetId
+                ? (window.cadets || []).find(x => x.id === window.selectedCadetId) || null
+                : null;
+            const cadetViewWs2 = window.buildCadetViewSheet(targetCadet);
+            XLSX.utils.book_append_sheet(wb, cadetViewWs2, targetCadet ? "Cadet Profile View" : "Cadet Roster View");
 
             // ── Download ──────────────────────────────────────────────────────
             const label = isGlobal ? 'Global' : (logsToExport[0]?.cadetName?.replace(/[^A-Z0-9]/gi, '_') || 'Cadet');
@@ -11313,6 +11716,24 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 ws['!rows'] = [{ hpt: 22 }, { hpt: 16 }, { hpt: 16 }, { hpt: 16 }, { hpt: 16 }, { hpt: 16 }, { hpt: 16 }, { hpt: 16 }, { hpt: 20 }, { hpt: 20 }];
 
                 XLSX.utils.book_append_sheet(wb, ws, "Master Gradesheet");
+
+                // ── Cadet Dashboard View sheet ──
+                // Build profile cards for every cadet in this section
+                // Each cadet gets their own personal view appended as one combined roster sheet
+                const gradesheetCadetWs = window.buildCadetViewSheet(null);
+                // Override with filtered section-only roster
+                const sectionCadets = sortedCadets;
+                if (sectionCadets.length > 0 && window.buildCadetViewSheet) {
+                    // Temporarily swap global cadets to just this section for the roster view
+                    const _allCadets = window.cadets;
+                    window.cadets = sectionCadets;
+                    const sectionRosterWs = window.buildCadetViewSheet(null);
+                    window.cadets = _allCadets;
+                    XLSX.utils.book_append_sheet(wb, sectionRosterWs, "Cadet Dashboard View");
+                } else {
+                    XLSX.utils.book_append_sheet(wb, gradesheetCadetWs, "Cadet Dashboard View");
+                }
+
                 XLSX.writeFile(wb, `PUMMA_MasterSheet_${courseCode.replace(' ','')} _${targetSec}.xlsx`);
 
             } else {
@@ -11386,6 +11807,16 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 });
 
                 XLSX.utils.book_append_sheet(wb, ws, `${termName} Gradesheet`);
+
+                // ── Cadet Dashboard View sheet ──
+                if (sortedCadets.length > 0 && window.buildCadetViewSheet) {
+                    const _allCadets2 = window.cadets;
+                    window.cadets = sortedCadets;
+                    const termRosterWs = window.buildCadetViewSheet(null);
+                    window.cadets = _allCadets2;
+                    XLSX.utils.book_append_sheet(wb, termRosterWs, "Cadet Dashboard View");
+                }
+
                 XLSX.writeFile(wb, `PUMMA_${termName}_${courseCode.replace(' ','')} _${targetSec}.xlsx`);
             }
         };
