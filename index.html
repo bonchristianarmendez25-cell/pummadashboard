@@ -162,6 +162,7 @@
                 <button onclick="exportAllPhotosZip()" id="export-photos-btn" class="bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 text-xs flex items-center gap-1.5 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed" title="Backup all evidence photos as a ZIP before they're auto-deleted after 1 year"><i data-lucide="archive" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Export All Photos</span></button>
                 <button onclick="printMasterlist()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded border border-brand-creamBorder dark:border-slate-600 text-xs flex items-center gap-1.5 font-semibold transition" title="Masterlist"><i data-lucide="printer" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Masterlist</span></button>
                 <button id="observer-view-toggle" onclick="observerOpenPicker()" class="hidden bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Switch to Cadet View"><i data-lucide="eye" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Cadet View</span></button>
+                <button id="observer-account-btn" onclick="openObserverAccountModal()" class="hidden bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1.5 rounded border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-1.5 font-semibold transition" title="My Observer Account"><i data-lucide="user-cog" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">My Account</span></button>
                 <button onclick="handleSignOut()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/50 text-red-700 dark:text-red-300 px-2.5 py-1.5 rounded border border-red-200 dark:border-red-800 text-xs flex items-center gap-1.5 font-semibold transition" title="Sign Out"><i data-lucide="log-out" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Sign Out</span></button>
             </div>
             <div class="flex gap-4 items-center cadet-controls hidden">
@@ -8067,6 +8068,10 @@ window.logAdminSettingsActivity = async (action, details) => {
                     const tog = document.getElementById('observer-view-toggle');
                     if (tog) tog.classList.remove('hidden');
 
+                    // Show the My Account button for this observer
+                    const acctBtn = document.getElementById('observer-account-btn');
+                    if (acctBtn) acctBtn.classList.remove('hidden');
+
                     if(typeof lucide !== 'undefined') lucide.createIcons();
 
                     const now = new Date().toLocaleString();
@@ -8146,6 +8151,94 @@ window.logAdminSettingsActivity = async (action, details) => {
             alert(`Password reset to: ${defP}`);
             c.password = defP;
         };
+
+        // ── Observer Account Self-Service ──────────────────────────────────────
+        window.openObserverAccountModal = () => {
+            const m = document.getElementById('observer-account-modal');
+            if (!m) return;
+            const obsName = window.currentObserverName || window.currentAdminName || '';
+            const obs = (window.cadets || []).find(c => c.name === obsName && c.isObserver);
+            document.getElementById('obs-account-name-display').textContent = obsName || 'Observer';
+            document.getElementById('obs-account-email-display').textContent = (obs && obs.email) ? obs.email : 'Not registered yet';
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.closeObserverAccountModal = () => {
+            const m = document.getElementById('observer-account-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        window.changeObserverPassword = async () => {
+            const obsName = window.currentObserverName || window.currentAdminName;
+            const obs = (window.cadets || []).find(c => c.name === obsName && c.isObserver);
+            if (!obs) { alert('Observer account not found. Please log out and log in again.'); return; }
+
+            const defaultPwd = obs.studentId || `OBS-${obs.id.substring(obs.id.length - 4)}`;
+            const expectedPwd = obs.password || defaultPwd;
+            const isDefaultPwd = !obs.password;
+
+            const hintMsg = isDefaultPwd
+                ? `Enter your CURRENT Password:
+(Your default password is: ${expectedPwd})`
+                : 'Enter your CURRENT Password:';
+
+            const oldP = await customPrompt(hintMsg, 'Current Password');
+            if (oldP === null) return;
+            if (oldP.trim() !== expectedPwd) {
+                alert('Incorrect current password. If you forgot it, ask your Instructor to reset it.');
+                return;
+            }
+
+            const newP = await customPrompt('Enter your NEW Password:
+(Minimum 4 characters)', 'New Password');
+            if (!newP || newP.trim() === '') return;
+            if (newP.trim().length < 4) { alert('Password must be at least 4 characters long.'); return; }
+            if (newP.trim() === expectedPwd) { alert('New password must be different from your current password.'); return; }
+
+            const confP = await customPrompt('Confirm your NEW Password:', 'Confirm Password');
+            if (!confP || newP.trim() !== confP.trim()) { alert('Passwords do not match. Please try again.'); return; }
+
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', obs.id), { password: newP.trim() });
+                obs.password = newP.trim();
+                alert('✅ Password changed successfully! Your new password is active immediately.');
+            } catch(e) {
+                console.error('changeObserverPassword error:', e);
+                alert('Failed to save password. Please check your connection and try again.');
+            }
+        };
+
+        window.updateObserverEmail = async () => {
+            const obsName = window.currentObserverName || window.currentAdminName;
+            const obs = (window.cadets || []).find(c => c.name === obsName && c.isObserver);
+            if (!obs) { alert('Observer account not found. Please log out and log in again.'); return; }
+
+            const currentEmail = obs.email ? obs.email : 'Not registered';
+            const newEmail = await customPrompt(
+                `Update Email Address
+Current: ${currentEmail}
+
+Enter your official Panpacific University email:`,
+                'email@panpacific.edu.ph'
+            );
+            if (newEmail === null) return;
+            if (newEmail.trim() === '') { alert('Email address cannot be empty.'); return; }
+            if (!newEmail.includes('@')) { alert('Please enter a valid email address.'); return; }
+
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', obs.id), { email: newEmail.trim() });
+                obs.email = newEmail.trim();
+                const emailEl = document.getElementById('obs-account-email-display');
+                if (emailEl) emailEl.textContent = newEmail.trim();
+                alert(`✅ Email updated to: ${newEmail.trim()}`);
+            } catch(e) {
+                console.error('updateObserverEmail error:', e);
+                alert('Failed to save email. Please check your connection and try again.');
+            }
+        };
+        // ── End Observer Account Self-Service ───────────────────────────────
 
         window.clearCadetEmail = async () => {
             if (!window.selectedCadetId || window.currentUserRole !== 'admin') return;
@@ -10981,7 +11074,63 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 </tr>`;
             });
             
-            html += `</table></body></html>`;
+            html += `</table>
+    <!-- ══════════════════════════════════════════════════════════
+         OBSERVER ACCOUNT SETTINGS MODAL
+    ═══════════════════════════════════════════════════════════════ -->
+    <div id="observer-account-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[90] p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm border border-emerald-200 dark:border-emerald-800 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-emerald-700 dark:bg-emerald-800 px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="user-cog" class="w-5 h-5 text-emerald-200"></i>
+                    <div>
+                        <div class="text-white font-black text-sm uppercase tracking-wide">My Account</div>
+                        <div id="obs-account-name-display" class="text-emerald-200 text-[11px] font-medium">Observer</div>
+                    </div>
+                </div>
+                <button onclick="closeObserverAccountModal()" class="text-emerald-300 hover:text-white transition p-1 rounded-lg hover:bg-white/10">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+
+                <!-- Current Email Display -->
+                <div class="bg-slate-50 dark:bg-slate-900 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i data-lucide="at-sign" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Registered Email</span>
+                    </div>
+                    <div id="obs-account-email-display" class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">—</div>
+                    <button onclick="updateObserverEmail()" class="mt-2 w-full text-[11px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 py-1.5 rounded-lg font-semibold border border-slate-300 dark:border-slate-600 transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="pencil" class="w-3 h-3"></i> Update Email
+                    </button>
+                </div>
+
+                <!-- Change Password -->
+                <div class="bg-slate-50 dark:bg-slate-900 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="key" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Password</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5 leading-relaxed">Change your observer account password. You will need to enter your current password first.</p>
+                    <button onclick="changeObserverPassword()" class="w-full text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Change My Password
+                    </button>
+                </div>
+
+                <!-- Info note -->
+                <div class="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 text-[10px] text-amber-700 dark:text-amber-300">
+                    <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 mt-0.5"></i>
+                    <span>If you forget your password, ask your Instructor to reset it from the Admin panel. Default password is your registered Student ID.</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body></html>`;
             
             const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
             const url = window.URL.createObjectURL(blob);
