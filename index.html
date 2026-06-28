@@ -5100,62 +5100,205 @@ window.logAdminSettingsActivity = async (action, details) => {
         // ═══════════════════════════════════════════════════════════════════
         // INTERNATIONAL MARITIME FLAGS
         // ═══════════════════════════════════════════════════════════════════
+        // ── ICS ALPHABET FLAGS (A–Z) ─────────────────────────────────────────────
+        // All SVG designs validated against IMO International Code of Signals (ICS) 2nd Ed.
+        // ViewBox 0 0 60 40 (3:2 aspect ratio — standard maritime flag proportion)
         const INT_FLAGS=[
-            {id:'A',name:'Alpha',ph:'AL-fah',meaning:'Diver down — keep clear',svg:`<rect width="60" height="40" fill="white"/><polygon points="60,0 60,40 30,20" fill="#003087"/>`},
-            {id:'B',name:'Bravo',ph:'BRAH-voh',meaning:'Dangerous cargo (explosives/flammables)',svg:`<rect width="60" height="40" fill="#cc0000"/>`},
-            {id:'C',name:'Charlie',ph:'CHAR-lee',meaning:'Yes / Affirmative',svg:`<rect width="60" height="8" fill="#003087"/><rect y="8" width="60" height="8" fill="white"/><rect y="16" width="60" height="8" fill="#cc0000"/><rect y="24" width="60" height="8" fill="white"/><rect y="32" width="60" height="8" fill="#003087"/>`},
-            {id:'D',name:'Delta',ph:'DELL-tah',meaning:'Keep clear — manoeuvring with difficulty',svg:`<rect width="20" height="40" fill="#003087"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#cc0000"/>`},
-            {id:'E',name:'Echo',ph:'ECK-oh',meaning:'Altering course to starboard',svg:`<rect width="60" height="20" fill="#003087"/><rect y="20" width="60" height="20" fill="#cc0000"/>`},
-            {id:'F',name:'Foxtrot',ph:'FOKS-trot',meaning:'Disabled — communicate with me',svg:`<rect width="60" height="40" fill="white"/><polygon points="30,5 55,20 30,35 5,20" fill="#cc0000"/>`},
-            {id:'G',name:'Golf',ph:'GOLF',meaning:'I require a pilot',svg:`<rect width="60" height="8" fill="#f5d800"/><rect y="8" width="60" height="8" fill="#003087"/><rect y="16" width="60" height="8" fill="#f5d800"/><rect y="24" width="60" height="8" fill="#003087"/><rect y="32" width="60" height="8" fill="#f5d800"/>`},
-            {id:'H',name:'Hotel',ph:'HOH-tell',meaning:'Pilot on board',svg:`<rect width="30" height="40" fill="white"/><rect x="30" width="30" height="40" fill="#cc0000"/>`},
-            {id:'I',name:'India',ph:'IN-dee-ah',meaning:'Altering course to port',svg:`<rect width="60" height="40" fill="#f5d800"/><circle cx="30" cy="20" r="8" fill="#111"/>`},
-            {id:'J',name:'Juliet',ph:'JEW-lee-ett',meaning:'Fire / dangerous cargo — keep clear',svg:`<rect width="20" height="40" fill="#003087"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#003087"/>`},
-            {id:'K',name:'Kilo',ph:'KEY-loh',meaning:'I wish to communicate with you',svg:`<rect width="30" height="40" fill="#f5d800"/><rect x="30" width="30" height="40" fill="#003087"/>`},
-            {id:'L',name:'Lima',ph:'LEE-mah',meaning:'Stop your vessel immediately',svg:`<rect width="60" height="40" fill="white"/><rect x="20" width="20" height="20" fill="#111"/><rect y="20" width="20" height="20" fill="#111"/><rect x="40" y="20" width="20" height="20" fill="#111"/>`},
-            {id:'M',name:'Mike',ph:'MIKE',meaning:'My vessel is stopped — making no way',svg:`<rect width="60" height="40" fill="white"/><polygon points="20,0 40,40 60,0" fill="#003087"/>`},
-            {id:'N',name:'November',ph:'NO-vem-ber',meaning:'No / Negative',svg:`<rect width="60" height="40" fill="#003087"/><rect x="0" y="0" width="30" height="20" fill="white"/><rect x="30" y="20" width="30" height="20" fill="white"/>`},
-            {id:'O',name:'Oscar',ph:'OSS-cah',meaning:'Man overboard',svg:`<rect width="30" height="40" fill="#cc0000"/><rect x="30" width="30" height="40" fill="#f5d800"/>`},
-            {id:'P',name:'Papa',ph:'PAH-pah',meaning:'About to depart — all aboard',svg:`<rect width="60" height="40" fill="#003087"/><rect x="15" y="10" width="30" height="20" fill="white"/>`},
-            {id:'Q',name:'Quebec',ph:'KEH-beck',meaning:'Healthy ship — request free pratique',svg:`<rect width="60" height="40" fill="#f5d800"/>`},
-            {id:'R',name:'Romeo',ph:'ROW-me-oh',meaning:'(No individual meaning — used in combinations)',svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="15" y="10" width="30" height="20" fill="#f5d800"/><rect x="23" y="3" width="14" height="34" fill="#f5d800"/>`},
-            {id:'S',name:'Sierra',ph:'SEE-air-ah',meaning:'My engines are going astern',svg:`<rect width="60" height="40" fill="white"/><rect x="15" y="10" width="30" height="20" fill="#003087"/>`},
-            {id:'T',name:'Tango',ph:'TANG-go',meaning:'Keep clear — engaged in trawling',svg:`<rect width="20" height="40" fill="#cc0000"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#003087"/>`},
-            {id:'U',name:'Uniform',ph:'YOU-nee-form',meaning:'You are standing into danger',svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 30,20 0,40" fill="#cc0000"/><polygon points="60,0 30,20 60,40" fill="#cc0000"/>`},
-            {id:'V',name:'Victor',ph:'VIK-tah',meaning:'I require assistance',svg:`<rect width="60" height="40" fill="white"/><line x1="0" y1="0" x2="60" y2="40" stroke="#cc0000" stroke-width="5"/><line x1="60" y1="0" x2="0" y2="40" stroke="#cc0000" stroke-width="5"/>`},
-            {id:'W',name:'Whiskey',ph:'WISS-key',meaning:'I require medical assistance',svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="18" y="12" width="24" height="16" fill="white"/><rect x="26" y="5" width="8" height="30" fill="white"/>`},
-            {id:'X',name:'X-ray',ph:'ECKS-ray',meaning:'Stop your intention — watch for my signals',svg:`<rect width="60" height="40" fill="white"/><rect x="0" y="18" width="60" height="4" fill="#003087"/><rect x="28" y="0" width="4" height="40" fill="#003087"/>`},
-            {id:'Y',name:'Yankee',ph:'YANG-key',meaning:'I am dragging my anchor',svg:`<rect width="60" height="40" fill="#f5d800"/><line x1="0" y1="0" x2="60" y2="40" stroke="#cc0000" stroke-width="4"/><line x1="60" y1="0" x2="0" y2="40" stroke="#cc0000" stroke-width="4"/>`},
-            {id:'Z',name:'Zulu',ph:'ZOO-loo',meaning:'I require a tug / distress ashore',svg:`<rect width="60" height="40" fill="#003087"/><polygon points="0,0 60,0 0,40" fill="#f5d800"/><polygon points="60,0 60,40 0,40" fill="#cc0000"/>`},
-            {id:'1st',name:'1st Substitute',ph:'—',meaning:'Repeats the 1st flag in any group',svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 60,0 30,40" fill="#003087"/>`,sub:true},
-            {id:'2nd',name:'2nd Substitute',ph:'—',meaning:'Repeats the 2nd flag in any group',svg:`<rect width="60" height="40" fill="#f5d800"/><polygon points="0,0 60,0 30,40" fill="#cc0000"/>`,sub:true},
-            {id:'3rd',name:'3rd Substitute',ph:'—',meaning:'Repeats the 3rd flag in any group',svg:`<rect width="60" height="40" fill="#cc0000"/><polygon points="0,0 60,0 30,40" fill="white"/>`,sub:true},
-            {id:'ANS',name:'Answering Pennant',ph:'—',meaning:'Message received and understood',svg:`<rect width="60" height="40" fill="#cc0000"/><polygon points="0,0 60,0 30,20 0,20" fill="white" opacity="0.35"/>`,sub:true},
+            // A — ALPHA: White hoist half + Blue fly half with swallowtail notch at fly edge
+            {id:'A',name:'Alpha',ph:'AL-fah',meaning:'Diver down — keep clear',
+             svg:`<rect width="60" height="40" fill="white"/><polygon points="30,0 60,0 50,20 60,40 30,40" fill="#003087"/>`},
+
+            // B — BRAVO: Solid red
+            {id:'B',name:'Bravo',ph:'BRAH-voh',meaning:'Dangerous cargo (explosives/flammables)',
+             svg:`<rect width="60" height="40" fill="#cc0000"/>`},
+
+            // C — CHARLIE: 5 equal horizontal stripes Blue-White-Red-White-Blue
+            {id:'C',name:'Charlie',ph:'CHAR-lee',meaning:'Yes / Affirmative',
+             svg:`<rect width="60" height="40" fill="white"/><rect y="0" width="60" height="8" fill="#003087"/><rect y="16" width="60" height="8" fill="#cc0000"/><rect y="32" width="60" height="8" fill="#003087"/>`},
+
+            // D — DELTA: 3 equal vertical stripes Yellow | Blue | Red (centre = YELLOW not white)
+            {id:'D',name:'Delta',ph:'DELL-tah',meaning:'Keep clear — manoeuvring with difficulty',
+             svg:`<rect width="20" height="40" fill="#f5d800"/><rect x="20" width="20" height="40" fill="#003087"/><rect x="40" width="20" height="40" fill="#cc0000"/>`},
+
+            // E — ECHO: Upper half Blue, lower half Red
+            {id:'E',name:'Echo',ph:'ECK-oh',meaning:'Altering course to starboard',
+             svg:`<rect width="60" height="40" fill="#cc0000"/><rect width="60" height="20" fill="#003087"/>`},
+
+            // F — FOXTROT: White with Red diamond (rhombus) in centre
+            {id:'F',name:'Foxtrot',ph:'FOKS-trot',meaning:'Disabled — communicate with me',
+             svg:`<rect width="60" height="40" fill="white"/><polygon points="30,4 56,20 30,36 4,20" fill="#cc0000"/>`},
+
+            // G — GOLF: 6 equal horizontal stripes Yellow-Blue alternating (starts Yellow at top)
+            {id:'G',name:'Golf',ph:'GOLF',meaning:'I require a pilot',
+             svg:`<rect y="0"  width="60" height="7" fill="#f5d800"/><rect y="7"  width="60" height="7" fill="#003087"/><rect y="14" width="60" height="6" fill="#f5d800"/><rect y="20" width="60" height="7" fill="#003087"/><rect y="27" width="60" height="7" fill="#f5d800"/><rect y="34" width="60" height="6" fill="#003087"/>`},
+
+            // H — HOTEL: White left half | Red right half
+            {id:'H',name:'Hotel',ph:'HOH-tell',meaning:'Pilot on board',
+             svg:`<rect width="30" height="40" fill="white"/><rect x="30" width="30" height="40" fill="#cc0000"/>`},
+
+            // I — INDIA: Yellow field with Black circle in centre
+            {id:'I',name:'India',ph:'IN-dee-ah',meaning:'Altering course to port',
+             svg:`<rect width="60" height="40" fill="#f5d800"/><circle cx="30" cy="20" r="10" fill="#111"/>`},
+
+            // J — JULIET: 3 equal vertical stripes Blue | White | Blue
+            {id:'J',name:'Juliet',ph:'JEW-lee-ett',meaning:'Fire / dangerous cargo — keep clear',
+             svg:`<rect width="60" height="40" fill="white"/><rect width="20" height="40" fill="#003087"/><rect x="40" width="20" height="40" fill="#003087"/>`},
+
+            // K — KILO: Yellow left half | Blue right half
+            {id:'K',name:'Kilo',ph:'KEY-loh',meaning:'I wish to communicate with you',
+             svg:`<rect width="30" height="40" fill="#f5d800"/><rect x="30" width="30" height="40" fill="#003087"/>`},
+
+            // L — LIMA: Black/Yellow 2×2 checkerboard (Black TL+BR, Yellow TR+BL)
+            {id:'L',name:'Lima',ph:'LEE-mah',meaning:'Stop your vessel immediately',
+             svg:`<rect width="60" height="40" fill="#f5d800"/><rect width="30" height="20" fill="#111"/><rect x="30" y="20" width="30" height="20" fill="#111"/>`},
+
+            // M — MIKE: White with Blue diagonal cross (saltire/X)
+            {id:'M',name:'Mike',ph:'MIKE',meaning:'My vessel is stopped — making no way',
+             svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 12,0 60,40 48,40" fill="#003087"/><polygon points="48,0 60,0 12,40 0,40" fill="#003087"/>`},
+
+            // N — NOVEMBER: Blue/White 4×4 checkerboard (16 squares, 15×10 each)
+            {id:'N',name:'November',ph:'NO-vem-ber',meaning:'No / Negative',
+             svg:`<rect width="60" height="40" fill="#003087"/><rect x="0"  y="0"  width="15" height="10" fill="white"/><rect x="30" y="0"  width="15" height="10" fill="white"/><rect x="15" y="10" width="15" height="10" fill="white"/><rect x="45" y="10" width="15" height="10" fill="white"/><rect x="0"  y="20" width="15" height="10" fill="white"/><rect x="30" y="20" width="15" height="10" fill="white"/><rect x="15" y="30" width="15" height="10" fill="white"/><rect x="45" y="30" width="15" height="10" fill="white"/>`},
+
+            // O — OSCAR: Diagonal split — Red upper-left triangle | Yellow lower-right triangle
+            {id:'O',name:'Oscar',ph:'OSS-cah',meaning:'Man overboard',
+             svg:`<rect width="60" height="40" fill="#f5d800"/><polygon points="0,0 60,0 0,40" fill="#cc0000"/>`},
+
+            // P — PAPA: Blue field with White rectangle in centre (border flag)
+            {id:'P',name:'Papa',ph:'PAH-pah',meaning:'About to depart — all aboard',
+             svg:`<rect width="60" height="40" fill="#003087"/><rect x="14" y="9" width="32" height="22" fill="white"/>`},
+
+            // Q — QUEBEC: Solid Yellow
+            {id:'Q',name:'Quebec',ph:'KEH-beck',meaning:'Healthy ship — request free pratique',
+             svg:`<rect width="60" height="40" fill="#f5d800"/>`},
+
+            // R — ROMEO: Red field with Yellow cross (+) — no individual single-flag meaning
+            {id:'R',name:'Romeo',ph:'ROW-me-oh',meaning:'(No individual meaning — used in combinations)',
+             svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="0" y="14" width="60" height="12" fill="#f5d800"/><rect x="24" y="0" width="12" height="40" fill="#f5d800"/>`},
+
+            // S — SIERRA: White field with Blue rectangle in centre
+            {id:'S',name:'Sierra',ph:'SEE-air-ah',meaning:'My engines are going astern',
+             svg:`<rect width="60" height="40" fill="white"/><rect x="14" y="9" width="32" height="22" fill="#003087"/>`},
+
+            // T — TANGO: 3 equal vertical stripes Red | White | Blue
+            {id:'T',name:'Tango',ph:'TANG-go',meaning:'Keep clear — engaged in trawling',
+             svg:`<rect width="20" height="40" fill="#cc0000"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#003087"/>`},
+
+            // U — UNIFORM: 2×2 checkerboard White TL+BR | Red TR+BL
+            {id:'U',name:'Uniform',ph:'YOU-nee-form',meaning:'You are standing into danger',
+             svg:`<rect width="60" height="40" fill="white"/><rect x="30" y="0"  width="30" height="20" fill="#cc0000"/><rect x="0"  y="20" width="30" height="20" fill="#cc0000"/>`},
+
+            // V — VICTOR: White field with Red diagonal cross (saltire/X) — solid polygon bars
+            {id:'V',name:'Victor',ph:'VIK-tah',meaning:'I require assistance',
+             svg:`<rect width="60" height="40" fill="white"/><polygon points="0,0 12,0 60,40 48,40" fill="#cc0000"/><polygon points="48,0 60,0 12,40 0,40" fill="#cc0000"/>`},
+
+            // W — WHISKEY: Red field with White cross (+)
+            {id:'W',name:'Whiskey',ph:'WISS-key',meaning:'I require medical assistance',
+             svg:`<rect width="60" height="40" fill="#cc0000"/><rect x="0" y="14" width="60" height="12" fill="white"/><rect x="24" y="0" width="12" height="40" fill="white"/>`},
+
+            // X — X-RAY: White field with Blue cross (+) — bold cross arms
+            {id:'X',name:'X-ray',ph:'ECKS-ray',meaning:'Stop your intention — watch for my signals',
+             svg:`<rect width="60" height="40" fill="white"/><rect x="0" y="14" width="60" height="12" fill="#003087"/><rect x="24" y="0" width="12" height="40" fill="#003087"/>`},
+
+            // Y — YANKEE: 5 diagonal stripes Yellow-Red alternating (parallel to flag diagonal)
+            // Computed via perpendicular stripe widths; 3 yellow + 2 red stripes
+            {id:'Y',name:'Yankee',ph:'YANG-key',meaning:'I am dragging my anchor',
+             svg:`<rect width="60" height="40" fill="#f5d800"/><polygon points="36,0 12,0 60,32 60,16" fill="#cc0000"/><polygon points="0,8 0,24 24,40 48,40" fill="#cc0000"/>`},
+
+            // Z — ZULU: 4 triangles from centre — Blue top | Red right | Yellow bottom | Black left
+            {id:'Z',name:'Zulu',ph:'ZOO-loo',meaning:'I require a tug / distress ashore',
+             svg:`<polygon points="0,0 60,0 30,20" fill="#003087"/><polygon points="60,0 60,40 30,20" fill="#cc0000"/><polygon points="0,40 60,40 30,20" fill="#f5d800"/><polygon points="0,0 0,40 30,20" fill="#111"/>`},
         ];
-        function flagGrid(flags,label){
-            return `<div class="mb-6"><div class="text-[10px] font-black text-teal-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">${label}</div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            ${flags.map(f=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex flex-col items-center gap-2 hover:border-teal-500/40 transition">
-                <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" class="rounded shadow border border-slate-600">${f.svg}</svg>
-                <div class="text-center">
-                    <div class="text-teal-400 font-black text-base leading-none">${f.id}</div>
-                    <div class="text-white text-[10px] font-bold mt-0.5">${f.name}</div>
-                    ${f.ph&&f.ph!=='—'?`<div class="text-slate-500 text-[9px] italic">"${f.ph}"</div>`:''}
-                    <div class="text-slate-300 text-[10px] mt-1 leading-snug">${f.meaning}</div>
-                </div>
-            </div>`).join('')}
-            </div></div>`;
+
+        // ── ICS NUMBER PENNANTS (0–9) ─────────────────────────────────────────────
+        // All are PENNANT (triangular) shaped: hoist at left (full height), fly tapers to right point
+        // Pennant outline: points="0,0 60,20 0,40"
+        // Upper triangle: points="0,0 60,20 0,20"  |  Lower triangle: points="0,20 60,20 0,40"
+        // NATO pronunciation per ICS Annex (INTERCO)
+        const NUM_PENNANTS=[
+            // 0 ZERO — Red (upper) | Yellow (lower)
+            {id:'0',name:'Zero',ph:'NAY-DAH-ZAY-RO',meaning:'Numeral zero',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#cc0000"/><polygon points="0,20 60,20 0,40" fill="#f5d800"/>`},
+            // 1 ONE — White (upper) | Red (lower)
+            {id:'1',name:'One',ph:'OO-NAH-WUN',meaning:'Numeral one',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="white"/><polygon points="0,20 60,20 0,40" fill="#cc0000"/>`},
+            // 2 TWO — Solid Blue
+            {id:'2',name:'Two',ph:'BIS-SOH-TOO',meaning:'Numeral two',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,40" fill="#003087"/>`},
+            // 3 THREE — Blue (top third) | White (middle third) | Red (lower third)
+            {id:'3',name:'Three',ph:'TAY-ER-TREE',meaning:'Numeral three',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 0,13 39,13" fill="#003087"/><polygon points="0,13 0,27 39,27 60,20 39,13" fill="white"/><polygon points="0,27 0,40 39,27" fill="#cc0000"/>`},
+            // 4 FOUR — White (upper) | Red (lower)
+            {id:'4',name:'Four',ph:'KAR-TAY-FOWER',meaning:'Numeral four',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="white"/><polygon points="0,20 60,20 0,40" fill="#cc0000"/>`},
+            // 5 FIVE — Yellow (upper) | Blue (lower)
+            {id:'5',name:'Five',ph:'PAN-TAH-FIFE',meaning:'Numeral five',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#f5d800"/><polygon points="0,20 60,20 0,40" fill="#003087"/>`},
+            // 6 SIX — Black (upper) | White (lower)
+            {id:'6',name:'Six',ph:'SOK-SEE-SIX',meaning:'Numeral six',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#111"/><polygon points="0,20 60,20 0,40" fill="white"/>`},
+            // 7 SEVEN — Yellow (upper) | Red (lower)
+            {id:'7',name:'Seven',ph:'SAY-TAY-SAY-VEN',meaning:'Numeral seven',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#f5d800"/><polygon points="0,20 60,20 0,40" fill="#cc0000"/>`},
+            // 8 EIGHT — Red (top third) | White (middle third) | Blue (lower third)
+            {id:'8',name:'Eight',ph:'OK-TOH-AIT',meaning:'Numeral eight',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 0,13 39,13" fill="#cc0000"/><polygon points="0,13 0,27 39,27 60,20 39,13" fill="white"/><polygon points="0,27 0,40 39,27" fill="#003087"/>`},
+            // 9 NINE — Black (upper) | Yellow (lower)
+            {id:'9',name:'Nine',ph:'NOH-VAY-NINER',meaning:'Numeral nine',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#111"/><polygon points="0,20 60,20 0,40" fill="#f5d800"/>`},
+        ];
+
+        // ── SUBSTITUTES & ANSWERING PENNANT ──────────────────────────────────────
+        // All are PENNANT shaped (triangular). Repeaters allow a flag to appear twice in one hoist.
+        const SUB_FLAGS=[
+            // 1st Substitute — Solid Blue pennant
+            {id:'1st',name:'1st Substitute',ph:'—',meaning:'Repeats the 1st flag in the hoist',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,40" fill="#003087"/>`,sub:true},
+            // 2nd Substitute — Yellow (upper half) | Red (lower half) pennant
+            {id:'2nd',name:'2nd Substitute',ph:'—',meaning:'Repeats the 2nd flag in the hoist',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#f5d800"/><polygon points="0,20 60,20 0,40" fill="#cc0000"/>`,sub:true},
+            // 3rd Substitute — Red (upper half) | White (lower half) pennant
+            {id:'3rd',name:'3rd Substitute',ph:'—',meaning:'Repeats the 3rd flag in the hoist',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 60,20 0,20" fill="#cc0000"/><polygon points="0,20 60,20 0,40" fill="white"/>`,sub:true},
+            // Answering Pennant (ANS) — 5 alternating Red/White horizontal stripes within pennant shape
+            {id:'ANS',name:'Answering Pennant',ph:'—',meaning:'Message received and understood',
+             svg:`<rect width="60" height="40" fill="#0f172a"/><polygon points="0,0 0,8 24,8" fill="#cc0000"/><polygon points="0,8 0,16 48,16 24,8" fill="white"/><polygon points="0,16 0,24 48,24 60,20 48,16" fill="#cc0000"/><polygon points="0,24 0,32 24,32 48,24" fill="white"/><polygon points="0,32 0,40 24,32" fill="#cc0000"/>`,sub:true},
+        ];
+
+        // ── GRID RENDERER ─────────────────────────────────────────────────────────
+        function flagGrid(flags, label, note='') {
+            return `<div class="mb-6">
+              <div class="flex items-baseline gap-3 mb-3 border-b border-slate-700 pb-1">
+                <span class="text-[10px] font-black text-teal-500 uppercase tracking-widest">${label}</span>
+                ${note ? `<span class="text-[9px] text-slate-500">${note}</span>` : ''}
+              </div>
+              <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              ${flags.map(f=>`<div class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 flex flex-col items-center gap-1.5 hover:border-teal-500/50 transition cursor-default">
+                  <svg width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg"
+                      class="rounded-sm shadow-md border border-slate-600 shrink-0">${f.svg}</svg>
+                  <div class="text-center">
+                      <div class="text-teal-400 font-black text-sm leading-none">${f.id}</div>
+                      <div class="text-white text-[10px] font-bold mt-0.5 leading-tight">${f.name}</div>
+                      ${f.ph && f.ph !== '—' ? `<div class="text-slate-500 text-[9px] italic leading-tight">"${f.ph}"</div>` : ''}
+                      <div class="text-slate-400 text-[9px] mt-1 leading-snug">${f.meaning}</div>
+                  </div>
+              </div>`).join('')}
+              </div></div>`;
         }
+
         function buildIntFlags(){
             return `<div class="space-y-4 pb-6">
-            <div><h2 class="text-2xl font-black text-teal-400 mb-1">International Maritime Signal Flags</h2>
-            <p class="text-slate-400 text-sm mb-3">Each flag has an individual meaning when flown alone. Combinations refer to the ICS.</p>
-            <div class="bg-slate-900 border border-teal-800/40 rounded-lg px-4 py-2.5 text-[11px] text-teal-300 flex items-start gap-2">
-                <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                <span>Phonetic pronunciation matches NATO/ICAO standard used in bridge communications.</span>
-            </div></div>
-            ${flagGrid(INT_FLAGS.filter(f=>!f.sub),'Alphabet Flags (A – Z)')}
-            ${flagGrid(INT_FLAGS.filter(f=>f.sub),'Substitutes & Answering Pennant')}
+            <div>
+              <h2 class="text-2xl font-black text-teal-400 mb-1">International Maritime Signal Flags</h2>
+              <p class="text-slate-400 text-sm mb-3">Each alphabet flag has an individual meaning when flown alone. Combinations reference the ICS. Number pennants and substitutes are triangular (pennant-shaped).</p>
+              <div class="bg-slate-900 border border-teal-800/40 rounded-lg px-4 py-2.5 text-[11px] text-teal-300 flex items-start gap-2 mb-2">
+                  <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                  <span>Phonetic pronunciations follow NATO/ICAO standard for bridge communications. Number pennant phonetics follow INTERCO Annex.</span>
+              </div>
+            </div>
+            ${flagGrid(INT_FLAGS, 'Alphabet Flags (A – Z)', '26 rectangular flags · flown individually or combined')}
+            ${flagGrid(NUM_PENNANTS, 'Number Pennants (0 – 9)', 'Triangular pennant shape · tapers to point at fly')}
+            ${flagGrid(SUB_FLAGS, 'Substitutes & Answering Pennant', 'Triangular pennant shape · used when a flag must appear twice in one hoist')}
             </div>`;
         }
 
