@@ -5212,6 +5212,11 @@ window.logAdminSettingsActivity = async (action, details) => {
             return window._rorAudioCtx;
         }
         async function playBlast(sig, btnEl){
+            // Bell signals (🔔) cannot be parsed as whistle blasts — delegate to playBell
+            if(sig.includes('🔔')){
+                // '🔔 3 + 🔔 5 + 3 strokes' → aground (has +), else → anchor
+                return playBell(sig.includes('+') ? 'aground' : 'anchor', btnEl);
+            }
             const ctx = getRorAudioCtx();
             if(!ctx){alert('Web Audio not supported in this browser.');return;}
             await ctx.resume(); // always await — unlocks both new and suspended contexts
@@ -7868,17 +7873,19 @@ window.logAdminSettingsActivity = async (action, details) => {
 
                     <!-- Photo / initials area (square) -->
                     <div class="relative w-full obs-photo-wrap" style="padding-top:100%;overflow:hidden;background:${col}14;">
-                        ${c.photo
-                            ? `<img src="${c.photo}" alt=""
+                        ${c.avatar
+                            ? `<img src="${c.avatar}" alt=""
                                 class="absolute inset-0 w-full h-full object-cover object-top"
-                                style="object-position:top center;"
+                                style="opacity:0;transition:opacity .25s;"
                                 onload="this.style.opacity='1';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='none';"
                                 onerror="this.style.display='none';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='flex';">`
                             : ''}
                         <div class="obs-initials-fb absolute inset-0 items-center justify-center text-2xl font-black select-none pointer-events-none"
-                             style="display:${c.photo ? 'none' : 'flex'};color:${col};background:${col}1a;">
+                             style="display:${c.avatar ? 'none' : 'flex'};color:${col};background:${col}1a;">
                             ${init}
                         </div>
+                        <!-- Section-colour gradient tint — always visible over photos -->
+                        <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(180deg,${col}35 0%,transparent 50%);"></div>
                         <div class="absolute bottom-0 left-0 right-0" style="height:3px;background:${gcol};opacity:0.85;"></div>
                         <div class="absolute top-1 left-1 text-white font-black leading-none rounded"
                              style="font-size:7px;padding:2px 4px;background:${col}dd;">${sec||'?'}</div>
@@ -7972,8 +7979,9 @@ window.logAdminSettingsActivity = async (action, details) => {
             // ── Portrait: real photo if available, otherwise styled initials ──
             const wrap = document.getElementById('obs-prev-img-wrap');
             if (wrap) {
-                if (c.photo) {
-                    wrap.innerHTML = `<img src="${c.photo}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;">`;
+                if (c.avatar) {
+                    wrap.innerHTML = `<img src="${c.avatar}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;">
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}30 0%,transparent 50%);pointer-events:none;"></div>`;
                     wrap.style.background = col + '22';
                     wrap.style.fontSize = '';
                 } else {
