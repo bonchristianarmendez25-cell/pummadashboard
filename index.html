@@ -12411,7 +12411,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             const { collection: _col, onSnapshot: _on, query: _q, orderBy: _ob, limit: _lim } =
                 await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
 
-            const chatRef = _col(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            const chatRef = _col(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
             const q = _q(chatRef, _ob('timestamp', 'asc'), _lim(CHAT_MAX_MESSAGES));
 
             chatListener = _on(q, (snap) => {
@@ -12449,8 +12449,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
         } catch (initErr) {
             console.error('Chat init failed:', initErr);
-            if (countEl) countEl.textContent = '⚠️ Failed to connect. Tap to retry.';
-            countEl?.addEventListener('click', () => { chatReady = false; chatListener = null; initChat(); }, { once: true });
+            if (countEl) countEl.innerHTML = '⚠️ Failed to connect. <button onclick="window._retryChat()" style="text-decoration:underline;font-weight:bold;background:none;border:none;color:inherit;cursor:pointer;padding:0;">Tap to retry</button>';
+            window._retryChat = () => { chatReady = false; chatListener = null; if (countEl) countEl.textContent = 'Reconnecting…'; initChat(); };
             chatReady = false;
             chatListener = null;
         }
@@ -12460,7 +12460,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!chatReady) return;
         try {
             const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
             await addDoc(chatRef, { text, role: 'system', senderName: 'System', senderId: 'system', timestamp: serverTimestamp(), reactions: {} });
         } catch(e) { console.warn('Chat system msg failed:', e); }
     }
@@ -12483,7 +12483,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!role || role === 'system') { alert('Please log in first to send messages.'); return false; }
         try {
             const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const chatRef = collection(db, 'artifacts', appId, 'public', CHAT_COLLECTION);
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
             await addDoc(chatRef, {
                 text: text || '',
                 role,
@@ -12515,7 +12515,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!chatReady) return;
         try {
             const { doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const msgRef = doc(db, 'artifacts', appId, 'public', CHAT_COLLECTION, msgId);
+            const msgRef = doc(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION, msgId);
             const snap = await getDoc(msgRef);
             if (!snap.exists()) return;
             const reactions = snap.data().reactions || {};
@@ -12671,9 +12671,9 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 class="relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-green transition-all bg-slate-100 dark:bg-slate-900 group"
                 title="${safeTitle}">
                 <img src="${g.preview}" loading="lazy"
-                    class="w-full object-contain block"
-                    style="height:auto; max-height:120px;"
-                    onerror="this.src='https://via.placeholder.com/200x110/e2e8f0/94a3b8?text=GIF'">
+                    class="w-full block"
+                    style="height:90px; object-fit:cover;"
+                    onerror="this.src='https://via.placeholder.com/200x90/e2e8f0/94a3b8?text=GIF'">
                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                     <span class="opacity-0 group-hover:opacity-100 text-white text-[10px] font-black bg-black/50 px-2 py-0.5 rounded-full transition-all">Send</span>
                 </div>
