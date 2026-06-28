@@ -12168,81 +12168,151 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         <!-- Chat Panel -->
         <div id="pumma-chat-panel"
             class="hidden flex-col w-80 sm:w-[26rem] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
-            style="height:560px; max-height:85vh;">
+            style="height:600px; max-height:90vh;">
 
             <!-- Header -->
-            <div class="bg-brand-blue text-white px-4 py-3 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="anchor" class="w-4 h-4 opacity-80"></i>
-                    <div>
-                        <p class="font-bold text-sm leading-tight">Ship's Comms ⚓</p>
+            <div class="bg-brand-blue text-white px-4 py-2.5 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i data-lucide="anchor" class="w-4 h-4 opacity-80 shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="font-bold text-sm leading-tight truncate" id="chat-room-title">Ship's Comms ⚓</p>
                         <p class="text-[10px] opacity-70" id="chat-online-count">Loading...</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleChatSound()" id="chat-sound-btn" title="Toggle sound"
-                        class="opacity-70 hover:opacity-100 transition"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
-                    <button onclick="togglePummaChat()"
-                        class="opacity-70 hover:opacity-100 transition"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-                </div>
-            </div>
-
-            <!-- Messages area -->
-            <div id="chat-messages-area"
-                class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-slate-900 custom-scrollbar">
-                <div class="text-center text-[10px] text-slate-400 py-4 flex flex-col items-center gap-1">
-                    <i data-lucide="anchor" class="w-5 h-5 opacity-30"></i>
-                    <span>Welcome to Ship's Comms — all hands on deck! ⚓🌊</span>
-                </div>
-            </div>
-
-            <!-- Typing indicator -->
-            <div id="chat-typing-indicator" class="px-4 py-1 text-[10px] text-slate-400 hidden shrink-0 italic"></div>
-
-            <!-- Upload / recording progress strip -->
-            <div id="chat-upload-status" class="hidden px-3 py-2 text-[10px] font-semibold text-brand-blue dark:text-blue-300 bg-blue-50 dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 shrink-0 flex items-center gap-2">
-                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
-                <span id="chat-upload-status-text">Uploading…</span>
-            </div>
-
-            <!-- Voice recording bar -->
-            <div id="chat-recording-bar" class="hidden px-3 py-2 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-800 shrink-0 flex items-center gap-2">
-                <span class="relative flex h-2.5 w-2.5 shrink-0">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                </span>
-                <span class="text-[11px] font-bold text-red-700 dark:text-red-300 flex-1">Recording… <span id="chat-record-timer">0:00</span></span>
-                <button onclick="cancelVoiceRecording()" class="text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-2 py-1">Cancel</button>
-                <button onclick="stopVoiceRecording()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="square" class="w-3 h-3"></i> Send</button>
-            </div>
-
-            <!-- Input area -->
-            <div class="p-3 border-t border-brand-creamBorder dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
-                <!-- Quick emoji bar -->
-                <div id="chat-quick-emoji-bar" class="flex gap-1 mb-2 overflow-x-auto scrollbar-hide"></div>
-
-                <div class="flex gap-1.5 items-end">
-                    <!-- Attachment toolbar -->
-                    <div class="flex items-center gap-0.5 pb-1 shrink-0">
-                        <button onclick="toggleEmojiPicker(event)" title="Emoji" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><span class="text-base">😊</span></button>
-                        <button onclick="toggleGifPicker(event)" title="GIF" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition text-[9px] font-black border border-current">GIF</button>
-                        <button onclick="document.getElementById('chat-image-input').click()" title="Send photo" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="image" class="w-4 h-4"></i></button>
-                        <button onclick="document.getElementById('chat-video-input').click()" title="Send video" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="video" class="w-4 h-4"></i></button>
-                        <button onclick="startVoiceRecording()" title="Send voice message" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="mic" class="w-4 h-4"></i></button>
-                        <input type="file" id="chat-image-input" accept="image/*" class="hidden" onchange="handleChatImageSelect(event)">
-                        <input type="file" id="chat-video-input" accept="video/*" class="hidden" onchange="handleChatVideoSelect(event)">
-                    </div>
-                    <textarea id="chat-input" rows="1" maxlength="300"
-                        placeholder="Send a message..."
-                        onkeydown="handleChatKey(event)"
-                        oninput="autoResizeChatInput(this); triggerTyping();"
-                        class="flex-1 resize-none bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-black dark:text-white focus:outline-none focus:border-brand-blue transition max-h-20 overflow-y-auto"></textarea>
-                    <button onclick="sendChatMessage()"
-                        class="bg-brand-blue hover:bg-blue-800 text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition active:scale-95 shadow-sm">
-                        <i data-lucide="send" class="w-4 h-4"></i>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="openFriendsPanel()" id="chat-friends-btn" title="Friends & DMs"
+                        class="relative opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span id="chat-friend-req-badge" class="absolute -top-0.5 -right-0.5 bg-red-400 text-white text-[7px] font-bold w-3.5 h-3.5 rounded-full hidden items-center justify-center">!</span>
                     </button>
+                    <button onclick="toggleChatSound()" id="chat-sound-btn" title="Toggle sound"
+                        class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                    <button onclick="togglePummaChat()"
+                        class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1 text-right" id="chat-char-count">0 / 300</p>
+            </div>
+
+            <!-- Channel Tabs -->
+            <div id="chat-channel-bar" class="flex bg-brand-blue/90 border-b border-white/10 overflow-x-auto shrink-0" style="scrollbar-width:none">
+                <button onclick="switchChatRoom('general')" id="chat-tab-general"
+                    class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    ⚓ General
+                </button>
+                <button onclick="switchChatRoom('class')" id="chat-tab-class"
+                    class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    🎓 My Class
+                </button>
+                <button onclick="switchChatRoom('section')" id="chat-tab-section"
+                    class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    🏴 My Section
+                </button>
+                <button onclick="switchChatRoom('dm')" id="chat-tab-dm"
+                    class="chat-tab-btn relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    💬 DMs
+                    <span id="chat-dm-badge" class="hidden absolute -top-0.5 right-0.5 bg-red-400 text-white text-[7px] font-bold w-3 h-3 rounded-full items-center justify-center">·</span>
+                </button>
+            </div>
+
+            <!-- Friends Panel (overlay inside chat) -->
+            <div id="chat-friends-panel" class="hidden flex-col flex-1 overflow-hidden">
+                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
+                    <span class="text-xs font-bold text-slate-700 dark:text-white">👥 Friends & DMs</span>
+                    <button onclick="closeFriendsPanel()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs">✕ Close</button>
+                </div>
+                <!-- Search cadet -->
+                <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 shrink-0">
+                    <input id="chat-friend-search" type="text" placeholder="Search cadet to add…"
+                        oninput="searchFriendCadets(this.value)"
+                        class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-brand-black dark:text-white focus:outline-none focus:border-brand-blue transition">
+                    <div id="chat-friend-search-results" class="mt-1 space-y-1 max-h-24 overflow-y-auto"></div>
+                </div>
+                <!-- Tabs: Requests / Friends -->
+                <div class="flex border-b border-slate-200 dark:border-slate-700 shrink-0">
+                    <button onclick="friendsTab('requests')" id="ftab-requests" class="flex-1 py-1.5 text-[10px] font-bold text-brand-blue dark:text-teal-400 border-b-2 border-brand-blue dark:border-teal-400">Requests <span id="freq-count" class="bg-red-100 text-red-600 rounded-full px-1.5"></span></button>
+                    <button onclick="friendsTab('friends')" id="ftab-friends" class="flex-1 py-1.5 text-[10px] font-bold text-slate-400 border-b-2 border-transparent">Friends</button>
+                </div>
+                <div id="friends-panel-content" class="flex-1 overflow-y-auto p-3 space-y-1.5"></div>
+            </div>
+
+            <!-- DM Room picker -->
+            <div id="chat-dm-picker" class="hidden flex-col flex-1 overflow-hidden">
+                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
+                    <span class="text-xs font-bold text-slate-700 dark:text-white">💬 Direct Messages</span>
+                    <button onclick="closeDmPicker()" class="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                </div>
+                <div id="chat-dm-list" class="flex-1 overflow-y-auto p-3 space-y-1.5">
+                    <div class="text-[10px] text-slate-400 text-center py-4">Add friends to start DMs</div>
+                </div>
+            </div>
+
+            <!-- Main chat area -->
+            <div id="chat-main-area" class="flex-1 flex flex-col overflow-hidden">
+                <!-- Messages area -->
+                <div id="chat-messages-area"
+                    class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-slate-900 custom-scrollbar">
+                    <div class="text-center text-[10px] text-slate-400 py-4 flex flex-col items-center gap-1">
+                        <i data-lucide="anchor" class="w-5 h-5 opacity-30"></i>
+                        <span>Welcome to Ship's Comms — all hands on deck! ⚓🌊</span>
+                    </div>
+                </div>
+
+                <!-- Typing indicator -->
+                <div id="chat-typing-indicator" class="px-4 py-1 text-[10px] text-slate-400 hidden shrink-0 italic"></div>
+
+                <!-- Upload / recording progress strip -->
+                <div id="chat-upload-status" class="hidden px-3 py-2 text-[10px] font-semibold text-brand-blue dark:text-blue-300 bg-blue-50 dark:bg-slate-900 border-t border-brand-creamBorder dark:border-slate-700 shrink-0 flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+                    <span id="chat-upload-status-text">Uploading…</span>
+                </div>
+
+                <!-- Voice recording bar -->
+                <div id="chat-recording-bar" class="hidden px-3 py-2 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-800 shrink-0 flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5 shrink-0">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                    </span>
+                    <span class="text-[11px] font-bold text-red-700 dark:text-red-300 flex-1">Recording… <span id="chat-record-timer">0:00</span></span>
+                    <button onclick="cancelVoiceRecording()" class="text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 px-2 py-1">Cancel</button>
+                    <button onclick="stopVoiceRecording()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="square" class="w-3 h-3"></i> Send</button>
+                </div>
+
+                <!-- Reply banner -->
+                <div id="chat-reply-banner" class="hidden px-3 py-1.5 bg-blue-50 dark:bg-slate-900 border-t border-blue-200 dark:border-blue-900 shrink-0 flex items-center gap-2">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[9px] text-brand-blue font-bold">Replying to</div>
+                        <div id="chat-reply-text" class="text-[10px] text-slate-500 truncate"></div>
+                    </div>
+                    <button onclick="cancelReply()" class="text-slate-400 hover:text-slate-600 text-xs shrink-0">✕</button>
+                </div>
+
+                <!-- Input area -->
+                <div class="p-3 border-t border-brand-creamBorder dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+                    <!-- Quick emoji bar -->
+                    <div id="chat-quick-emoji-bar" class="flex gap-1 mb-2 overflow-x-auto scrollbar-hide"></div>
+
+                    <div class="flex gap-1.5 items-end">
+                        <!-- Attachment toolbar -->
+                        <div class="flex items-center gap-0.5 pb-1 shrink-0">
+                            <button onclick="toggleEmojiPicker(event)" title="Emoji" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><span class="text-base">😊</span></button>
+                            <button onclick="toggleGifPicker(event)" title="GIF" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition text-[9px] font-black border border-current">GIF</button>
+                            <button onclick="document.getElementById('chat-image-input').click()" title="Send photo" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="image" class="w-4 h-4"></i></button>
+                            <button onclick="document.getElementById('chat-video-input').click()" title="Send video" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="video" class="w-4 h-4"></i></button>
+                            <button onclick="startVoiceRecording()" title="Send voice message" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"><i data-lucide="mic" class="w-4 h-4"></i></button>
+                            <input type="file" id="chat-image-input" accept="image/*" class="hidden" onchange="handleChatImageSelect(event)">
+                            <input type="file" id="chat-video-input" accept="video/*" class="hidden" onchange="handleChatVideoSelect(event)">
+                        </div>
+                        <textarea id="chat-input" rows="1" maxlength="300"
+                            placeholder="Send a message..."
+                            onkeydown="handleChatKey(event)"
+                            oninput="autoResizeChatInput(this); triggerTyping();"
+                            class="flex-1 resize-none bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-black dark:text-white focus:outline-none focus:border-brand-blue transition max-h-20 overflow-y-auto"></textarea>
+                        <button onclick="sendChatMessage()"
+                            class="bg-brand-blue hover:bg-blue-800 text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition active:scale-95 shadow-sm">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1 text-right" id="chat-char-count">0 / 300</p>
+                </div>
             </div>
         </div>
     </div>
@@ -12253,9 +12323,13 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     // Uses the same Firestore db and appId already initialized in the app
     // Waits for them to be ready before attaching listeners
 
-    const CHAT_POLL_INTERVAL = 3000; // ms between Firestore reads
-    const CHAT_MAX_MESSAGES  = 80;   // keep last 80 in memory
-    const CHAT_COLLECTION    = 'chat';
+    const CHAT_POLL_INTERVAL = 3000;
+    const CHAT_MAX_MESSAGES  = 80;
+    const CHAT_COLLECTION    = 'chat'; // general room (legacy)
+
+    // ── Multi-room state ──────────────────────────────────────────────
+    let currentChatRoom  = 'general'; // 'general' | 'class' | 'section' | dm_<id>
+    let currentRoomLabel = 'Ship\'s Comms ⚓';
 
     let chatOpen       = false;
     let chatSoundOn    = true;
@@ -12265,13 +12339,14 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     let typingTimer    = null;
     let lastTypingAt   = 0;
     let chatReady      = false;
-    // Local references to the Firestore db/appId, which live in a separate
-    // module's scope. Populated from window.db / window.appId once available
-    // (see initChat below, and the window.db/window.appId assignment near
-    // the top of the app's main module after Firebase initializes).
+    let replyTo        = null; // { id, text, senderName }
     let db, appId;
 
-    // Role badge config
+    // Friends state (stored in Firestore under public/data/friendRequests)
+    let myFriends     = []; // accepted friend cadetIds
+    let friendRequests= []; // pending incoming requests
+    let currentFriendsTab = 'requests';
+
     const ROLE_CONFIG = {
         admin:    { label: 'INSTRUCTOR', color: 'bg-brand-blue text-white',       icon: '⚓' },
         cadet:    { label: 'CADET',      color: 'bg-slate-600 text-white',         icon: '⛵' },
@@ -12293,6 +12368,312 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         }
         return { role, name };
     }
+
+    // ── Room helpers ──────────────────────────────────────────────────
+    function getRoomCollection(roomKey) {
+        if (!roomKey || roomKey === 'general') return 'chat';
+        if (roomKey === 'class') {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            const cls = c?.classNum || window.appSettings?.class || '1';
+            return `chat_class_${cls}`;
+        }
+        if (roomKey === 'section') {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            const sec = (c?.section || 'A').toUpperCase().replace(/\s+/g,'_');
+            return `chat_section_${sec}`;
+        }
+        if (roomKey.startsWith('dm_')) return roomKey; // dm_<uid1>_<uid2>
+        return 'chat';
+    }
+
+    function getRoomLabel(roomKey) {
+        if (!roomKey || roomKey === 'general') return 'Ship\'s Comms ⚓';
+        if (roomKey === 'class') {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            return `Class ${c?.classNum || '?'} Chat 🎓`;
+        }
+        if (roomKey === 'section') {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            return `Section ${(c?.section || '?').toUpperCase()} Chat 🏴`;
+        }
+        if (roomKey.startsWith('dm_')) {
+            const parts = roomKey.split('_');
+            // find friend name from cadets
+            const otherId = parts.find(p => p !== 'dm' && p !== window._chatMyId);
+            const friend = window.cadets?.find(x => x.id === otherId);
+            return `💬 ${friend ? friend.name.split(' ').slice(-1)[0] : 'DM'}`;
+        }
+        return 'Ship\'s Comms ⚓';
+    }
+
+    window.switchChatRoom = function(roomKey) {
+        // If dm, show picker instead of direct switch
+        if (roomKey === 'dm') {
+            showDmPicker();
+            updateChatTabUI('dm');
+            return;
+        }
+        closeFriendsPanel();
+        closeDmPicker();
+        currentChatRoom = roomKey;
+        currentRoomLabel = getRoomLabel(roomKey);
+        const titleEl = document.getElementById('chat-room-title');
+        if (titleEl) titleEl.textContent = currentRoomLabel;
+        updateChatTabUI(roomKey);
+        // Re-initialize listener for new room
+        if (chatListener) { chatListener(); chatListener = null; }
+        chatMessages = [];
+        chatReady = false;
+        initChat();
+    };
+
+    function updateChatTabUI(active) {
+        document.querySelectorAll('.chat-tab-btn').forEach(btn => {
+            btn.classList.remove('text-white', 'border-white');
+            btn.classList.add('text-white/60', 'border-transparent');
+        });
+        const activeBtn = document.getElementById('chat-tab-' + (active.startsWith('dm_') ? 'dm' : active));
+        if (activeBtn) {
+            activeBtn.classList.add('text-white', 'border-white');
+            activeBtn.classList.remove('text-white/60', 'border-transparent');
+        }
+    }
+
+    // ── Friends System ─────────────────────────────────────────────────
+    window.openFriendsPanel = function() {
+        document.getElementById('chat-friends-panel')?.classList.remove('hidden');
+        document.getElementById('chat-friends-panel')?.classList.add('flex');
+        document.getElementById('chat-main-area')?.classList.add('hidden');
+        document.getElementById('chat-dm-picker')?.classList.add('hidden');
+        document.getElementById('chat-dm-picker')?.classList.remove('flex');
+        loadFriendRequests();
+    };
+    window.closeFriendsPanel = function() {
+        document.getElementById('chat-friends-panel')?.classList.add('hidden');
+        document.getElementById('chat-friends-panel')?.classList.remove('flex');
+        document.getElementById('chat-main-area')?.classList.remove('hidden');
+    };
+    window.closeDmPicker = function() {
+        document.getElementById('chat-dm-picker')?.classList.add('hidden');
+        document.getElementById('chat-dm-picker')?.classList.remove('flex');
+        document.getElementById('chat-main-area')?.classList.remove('hidden');
+    };
+
+    function showDmPicker() {
+        document.getElementById('chat-dm-picker')?.classList.remove('hidden');
+        document.getElementById('chat-dm-picker')?.classList.add('flex');
+        document.getElementById('chat-main-area')?.classList.add('hidden');
+        document.getElementById('chat-friends-panel')?.classList.add('hidden');
+        document.getElementById('chat-friends-panel')?.classList.remove('flex');
+        renderDmList();
+    }
+
+    window.friendsTab = function(tab) {
+        currentFriendsTab = tab;
+        ['requests','friends'].forEach(t => {
+            const btn = document.getElementById('ftab-'+t);
+            if (btn) {
+                btn.classList.toggle('text-brand-blue', t===tab);
+                btn.classList.toggle('dark:text-teal-400', t===tab);
+                btn.classList.toggle('border-brand-blue', t===tab);
+                btn.classList.toggle('dark:border-teal-400', t===tab);
+                btn.classList.toggle('text-slate-400', t!==tab);
+                btn.classList.toggle('border-transparent', t!==tab);
+            }
+        });
+        renderFriendsContent();
+    };
+
+    window.searchFriendCadets = function(query) {
+        const results = document.getElementById('chat-friend-search-results');
+        if (!results) return;
+        if (!query || query.length < 2) { results.innerHTML = ''; return; }
+        const q = query.toLowerCase();
+        const matches = (window.cadets || [])
+            .filter(c => c.name && c.name.toLowerCase().includes(q) && c.id !== window.selectedCadetId)
+            .slice(0, 5);
+        results.innerHTML = matches.map(c => {
+            const isFriend = myFriends.includes(c.id);
+            const isPending = friendRequests.some(r => r.fromId === c.id && r.status === 'pending');
+            return `<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-2 py-1.5 border border-slate-100 dark:border-slate-700">
+                <div>
+                    <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML(c.name.split(',')[0] || c.name)}</div>
+                    <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                </div>
+                ${isFriend
+                    ? '<span class="text-[9px] text-green-500 font-bold">✓ Friends</span>'
+                    : isPending
+                    ? '<span class="text-[9px] text-amber-500 font-bold">Pending</span>'
+                    : `<button onclick="sendFriendRequest('${c.id}','${escapeHTML(c.name)}')" class="text-[9px] bg-brand-blue text-white font-bold px-2 py-1 rounded-lg hover:bg-blue-800 transition">+ Add</button>`}
+            </div>`;
+        }).join('') || '<div class="text-[10px] text-slate-400 text-center py-2">No cadets found</div>';
+    };
+
+    window.sendFriendRequest = async function(toId, toName) {
+        if (!chatReady) return;
+        const { role, name } = getChatSender();
+        const myId = window.selectedCadetId || window._chatMyId;
+        try {
+            const { collection, addDoc, serverTimestamp, query, where, getDocs } =
+                await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            // Check if already exists
+            const reqRef = collection(db, 'artifacts', appId, 'public', 'data', 'friendRequests');
+            const existing = await getDocs(query(reqRef, where('fromId','==',myId), where('toId','==',toId)));
+            if (!existing.empty) { alert('Friend request already sent!'); return; }
+            await addDoc(reqRef, {
+                fromId: myId, fromName: name,
+                toId, toName,
+                status: 'pending',
+                timestamp: serverTimestamp()
+            });
+            // Refresh search
+            searchFriendCadets(document.getElementById('chat-friend-search')?.value || '');
+            alert(`Friend request sent to ${toName.split(',')[0]}!`);
+        } catch(e) { console.warn('Friend request failed:', e); }
+    };
+
+    async function loadFriendRequests() {
+        if (!chatReady) return;
+        const myId = window.selectedCadetId || window._chatMyId;
+        try {
+            const { collection, query, where, onSnapshot } =
+                await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const reqRef = collection(db, 'artifacts', appId, 'public', 'data', 'friendRequests');
+            // Incoming pending requests TO me
+            onSnapshot(query(reqRef, where('toId','==',myId)), (snap) => {
+                friendRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const pendingCount = friendRequests.filter(r => r.status === 'pending').length;
+                const badge = document.getElementById('chat-friend-req-badge');
+                const freqCount = document.getElementById('freq-count');
+                if (badge) { badge.classList.toggle('hidden', pendingCount===0); badge.classList.toggle('flex', pendingCount>0); }
+                if (freqCount) freqCount.textContent = pendingCount > 0 ? pendingCount : '';
+                renderFriendsContent();
+            });
+            // Accepted friends (where I'm involved)
+            onSnapshot(query(reqRef, where('fromId','==',myId), where('status','==','accepted')), (snap) => {
+                const accepted = snap.docs.map(d => d.data().toId);
+                // Also listen for ones where I'm the recipient
+                onSnapshot(query(reqRef, where('toId','==',myId), where('status','==','accepted')), (snap2) => {
+                    const fromAccepted = snap2.docs.map(d => d.data().fromId);
+                    myFriends = [...new Set([...accepted, ...fromAccepted])];
+                    renderFriendsContent();
+                    renderDmList();
+                });
+            });
+        } catch(e) { console.warn('Load friends failed:', e); }
+    }
+
+    window.acceptFriendRequest = async function(reqId) {
+        if (!chatReady) return;
+        try {
+            const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const reqRef = doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', reqId);
+            await updateDoc(reqRef, { status: 'accepted' });
+        } catch(e) { console.warn('Accept request failed:', e); }
+    };
+
+    window.declineFriendRequest = async function(reqId) {
+        if (!chatReady) return;
+        try {
+            const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'friendRequests', reqId));
+        } catch(e) { console.warn('Decline request failed:', e); }
+    };
+
+    function renderFriendsContent() {
+        const el = document.getElementById('friends-panel-content');
+        if (!el) return;
+        const myId = window.selectedCadetId || window._chatMyId;
+        if (currentFriendsTab === 'requests') {
+            const pending = friendRequests.filter(r => r.status === 'pending');
+            el.innerHTML = pending.length === 0
+                ? '<div class="text-[10px] text-slate-400 text-center py-4">No pending requests</div>'
+                : pending.map(r => `
+                <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
+                    <div>
+                        <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((r.fromName||'').split(',')[0])}</div>
+                        <div class="text-[9px] text-slate-400">wants to be your friend</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="acceptFriendRequest('${r.id}')" class="text-[9px] bg-green-600 text-white font-bold px-2 py-1 rounded-lg hover:bg-green-700 transition">✓</button>
+                        <button onclick="declineFriendRequest('${r.id}')" class="text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-2 py-1 rounded-lg hover:bg-slate-300 transition">✕</button>
+                    </div>
+                </div>`).join('');
+        } else {
+            // Friends list
+            const friendCadets = (window.cadets || []).filter(c => myFriends.includes(c.id));
+            el.innerHTML = friendCadets.length === 0
+                ? '<div class="text-[10px] text-slate-400 text-center py-4">No friends yet — search and add cadets!</div>'
+                : friendCadets.map(c => {
+                    const dmKey = getDmKey(myId, c.id);
+                    return `<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
+                        <div>
+                            <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((c.name||'').split(',')[0])}</div>
+                            <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                        </div>
+                        <button onclick="openDM('${c.id}','${escapeHTML(c.name)}')" class="text-[9px] bg-brand-blue text-white font-bold px-2 py-1 rounded-lg hover:bg-blue-800 transition">💬 DM</button>
+                    </div>`;
+                }).join('');
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function getDmKey(id1, id2) {
+        // Deterministic key from two IDs
+        return 'dm_' + [id1, id2].sort().join('_');
+    }
+
+    window.openDM = function(friendId, friendName) {
+        const myId = window.selectedCadetId || window._chatMyId;
+        const dmKey = getDmKey(myId, friendId);
+        closeFriendsPanel();
+        closeDmPicker();
+        currentChatRoom = dmKey;
+        currentRoomLabel = `💬 ${(friendName||'').split(',')[0]}`;
+        const titleEl = document.getElementById('chat-room-title');
+        if (titleEl) titleEl.textContent = currentRoomLabel;
+        updateChatTabUI('dm');
+        if (chatListener) { chatListener(); chatListener = null; }
+        chatMessages = [];
+        chatReady = false;
+        initChat();
+    };
+
+    function renderDmList() {
+        const el = document.getElementById('chat-dm-list');
+        if (!el) return;
+        const myId = window.selectedCadetId || window._chatMyId;
+        const friendCadets = (window.cadets || []).filter(c => myFriends.includes(c.id));
+        el.innerHTML = friendCadets.length === 0
+            ? '<div class="text-[10px] text-slate-400 text-center py-4">No friends yet.<br><button onclick="openFriendsPanel()" class="text-brand-blue underline mt-1">Add friends</button></div>'
+            : friendCadets.map(c => `
+            <button onclick="openDM('${c.id}','${escapeHTML(c.name)}')"
+                class="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700 transition text-left">
+                <div class="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-sm shrink-0">
+                    ${(c.name||'?').charAt(0)}
+                </div>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((c.name||'').split(',')[0])}</div>
+                    <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                </div>
+                <i data-lucide="message-circle" class="w-4 h-4 text-slate-400 ml-auto"></i>
+            </button>`).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // ── Reply system ─────────────────────────────────────────────────
+    window.setReply = function(msgId, text, senderName) {
+        replyTo = { id: msgId, text, senderName };
+        const banner = document.getElementById('chat-reply-banner');
+        const replyText = document.getElementById('chat-reply-text');
+        if (banner) banner.classList.remove('hidden');
+        if (replyText) replyText.textContent = `${senderName}: ${text}`;
+        document.getElementById('chat-input')?.focus();
+    };
+    window.cancelReply = function() {
+        replyTo = null;
+        document.getElementById('chat-reply-banner')?.classList.add('hidden');
+    };
 
     function formatTime(ts) {
         if (!ts) return '';
@@ -12344,6 +12725,11 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     class="text-[11px] bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-full px-2 py-0.5 hover:bg-slate-100 transition font-semibold">${emoji} ${uids.length}</button>`
               ).join('')}</div>` : '';
 
+        const replyBanner = msg.replyTo
+            ? `<div class="mb-1 px-2 py-1 border-l-2 border-brand-blue/50 bg-brand-blue/5 dark:bg-blue-900/20 rounded text-[9px] text-slate-500 dark:text-slate-400 cursor-pointer" onclick="scrollToMsg('${msg.replyTo.id}')">
+                <span class="font-bold text-brand-blue">${escapeHTML(msg.replyTo.senderName||'')}</span>: ${escapeHTML((msg.replyTo.text||'').slice(0,60))}${(msg.replyTo.text||'').length>60?'…':''}
+               </div>` : '';
+
         return `
         <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} gap-0.5 group" data-msg-id="${msg.id}">
             ${!isMe ? `<div class="flex items-center gap-1.5 mb-0.5">
@@ -12351,12 +12737,19 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full ${cfg.color}">${cfg.icon} ${cfg.label}</span>
             </div>` : ''}
             <div class="relative max-w-[85%]">
+                ${replyBanner}
                 ${buildMessageBodyHTML(msg, isMe)}
-                <!-- Reaction picker trigger -->
-                <button onclick="showReactionPicker('${msg.id}', this)"
-                    class="absolute -bottom-2 ${isMe ? 'left-1' : 'right-1'} opacity-0 group-hover:opacity-100 transition bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow-sm hover:scale-110">
-                    😊
-                </button>
+                <!-- Action buttons -->
+                <div class="absolute -bottom-2 ${isMe ? 'left-0' : 'right-0'} opacity-0 group-hover:opacity-100 transition flex gap-0.5">
+                    <button onclick="setReply('${msg.id}','${escapeHTML((msg.text||'').replace(/'/g,"\\'"))}','${escapeHTML((msg.senderName||'').replace(/'/g,"\\'"))}')"
+                        class="bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-full w-5 h-5 text-[9px] flex items-center justify-center shadow-sm hover:scale-110 hover:bg-slate-100">
+                        ↩
+                    </button>
+                    <button onclick="showReactionPicker('${msg.id}', this)"
+                        class="bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-full w-5 h-5 text-[10px] flex items-center justify-center shadow-sm hover:scale-110">
+                        😊
+                    </button>
+                </div>
             </div>
             ${reactionHTML}
             <span class="text-[9px] text-slate-400 mt-0.5">${formatTime(msg.timestamp)}</span>
@@ -12382,16 +12775,12 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     }
 
     async function initChat() {
-        // Wait for db and appId to be available on window (retry every 500ms).
-        // They're set by the main app module right after Firebase finishes
-        // initializing — see window.db / window.appId near the top of the file.
         if (typeof window.db === 'undefined' || !window.db || typeof window.appId === 'undefined') {
             setTimeout(initChat, 500);
             return;
         }
         db = window.db;
         appId = window.appId;
-        // Prevent double-init
         if (chatListener) return;
 
         chatReady = true;
@@ -12401,24 +12790,27 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         const countEl = document.getElementById('chat-online-count');
         if (countEl) countEl.textContent = 'Connecting…';
 
-        // Post system join message
-        const { role, name } = getChatSender();
-        if (role !== 'system') postSystemMessage(`${name} has joined the ship's comms ⚓`);
+        // Only post join message on general room, not on every room switch
+        if (currentChatRoom === 'general') {
+            const { role, name } = getChatSender();
+            if (role !== 'system') postSystemMessage(`${name} has joined the ship's comms ⚓`);
+        }
+
+        // Start listening for friends (only once)
+        if (currentChatRoom === 'general') loadFriendRequests();
 
         try {
-            // Use the already-imported Firestore functions from the top-level import
-            // to avoid the race condition caused by a second dynamic import() call.
             const { collection: _col, onSnapshot: _on, query: _q, orderBy: _ob, limit: _lim } =
                 await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
 
-            const chatRef = _col(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
+            const roomCollection = getRoomCollection(currentChatRoom);
+            const chatRef = _col(db, 'artifacts', appId, 'public', 'data', roomCollection);
             const q = _q(chatRef, _ob('timestamp', 'asc'), _lim(CHAT_MAX_MESSAGES));
 
             chatListener = _on(q, (snap) => {
                 const prev = chatMessages.length;
                 chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                // Update online count from senders active in last 5 min
                 const recentSenders = new Set(
                     chatMessages.filter(m => {
                         const ts = m.timestamp?.toDate ? m.timestamp.toDate() : new Date(m.timestamp || 0);
@@ -12427,11 +12819,10 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 );
                 if (countEl) countEl.textContent = recentSenders.size > 0
                     ? `${recentSenders.size} active in last 5 min`
-                    : 'All hands on deck ⚓';
+                    : currentRoomLabel;
 
                 renderChat();
 
-                // Unread badge
                 if (!chatOpen && chatMessages.length > prev && prev > 0) {
                     chatUnread += chatMessages.length - prev;
                     const badge = document.getElementById('chat-unread-badge');
@@ -12439,12 +12830,11 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     if (chatSoundOn) playChime();
                 }
             }, (err) => {
-                // onSnapshot error callback — show in the status bar
                 console.error('Chat snapshot error:', err);
                 if (countEl) countEl.textContent = '⚠️ Connection error — retrying…';
                 chatListener = null;
                 chatReady = false;
-                setTimeout(initChat, 3000); // retry after 3s
+                setTimeout(initChat, 3000);
             });
 
         } catch (initErr) {
@@ -12460,10 +12850,16 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!chatReady) return;
         try {
             const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
-            await addDoc(chatRef, { text, role: 'system', senderName: 'System', senderId: 'system', timestamp: serverTimestamp(), reactions: {} });
+            const roomCollection = getRoomCollection(currentChatRoom);
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', roomCollection);
+            await addDoc(chatRef, { text, role: 'system', senderName: 'System', senderId: 'system', timestamp: serverTimestamp(), reactions: {}, room: currentChatRoom });
         } catch(e) { console.warn('Chat system msg failed:', e); }
     }
+
+    window.scrollToMsg = function(msgId) {
+        const el = document.querySelector(`[data-msg-id="${msgId}"]`);
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.background='rgba(99,102,241,0.1)'; setTimeout(()=>el.style.background='',1500); }
+    };
 
     function showChatUploadStatus(text) {
         const strip = document.getElementById('chat-upload-status');
@@ -12483,16 +12879,23 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!role || role === 'system') { alert('Please log in first to send messages.'); return false; }
         try {
             const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION);
-            await addDoc(chatRef, {
+            const roomCollection = getRoomCollection(currentChatRoom);
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', roomCollection);
+            const doc = {
                 text: text || '',
                 role,
                 senderName: name,
                 senderId: window._chatMyId,
                 timestamp: serverTimestamp(),
                 reactions: {},
+                room: currentChatRoom,
                 ...extra
-            });
+            };
+            if (replyTo) {
+                doc.replyTo = { id: replyTo.id, text: replyTo.text, senderName: replyTo.senderName };
+                cancelReply();
+            }
+            await addDoc(chatRef, doc);
             return true;
         } catch(e) {
             console.error('Send message failed:', e);
@@ -12515,7 +12918,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!chatReady) return;
         try {
             const { doc, updateDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const msgRef = doc(db, 'artifacts', appId, 'public', 'data', CHAT_COLLECTION, msgId);
+            const roomCollection = getRoomCollection(currentChatRoom);
+            const msgRef = doc(db, 'artifacts', appId, 'public', 'data', roomCollection, msgId);
             const snap = await getDoc(msgRef);
             if (!snap.exists()) return;
             const reactions = snap.data().reactions || {};
@@ -12563,6 +12967,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             const badge = document.getElementById('chat-unread-badge');
             if (badge) badge.classList.add('hidden');
             if (icon) icon.setAttribute('data-lucide', 'x');
+            // Set active tab indicator on first open
+            updateChatTabUI(currentChatRoom.startsWith('dm_') ? 'dm' : currentChatRoom);
             setTimeout(() => {
                 const area = document.getElementById('chat-messages-area');
                 if (area) area.scrollTop = area.scrollHeight;
