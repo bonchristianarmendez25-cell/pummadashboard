@@ -286,10 +286,10 @@
                     <!-- Filled preview (hidden until cadet selected) -->
                     <div id="obs-preview-content" class="hidden flex-col" style="height:100%;">
                         <!-- Portrait -->
-                        <div id="obs-prev-portrait" class="w-full shrink-0" style="height:185px;overflow:hidden;position:relative;">
-                            <div id="obs-prev-img-wrap" class="absolute inset-0 flex items-center justify-center font-black select-none" style="background:#152030;font-size:56px;"></div>
-                            <!-- Gradient overlay -->
-                            <div class="absolute bottom-0 left-0 right-0 pointer-events-none" style="height:80px;background:linear-gradient(to top,#0d1b2a 20%,transparent);"></div>
+                        <div id="obs-prev-portrait" class="w-full shrink-0" style="height:210px;overflow:hidden;position:relative;">
+                            <div id="obs-prev-img-wrap" class="absolute inset-0 flex items-center justify-center font-black select-none" style="background:#0e1925;font-size:56px;"></div>
+                            <!-- Bottom fade into the dark info panel -->
+                            <div class="absolute bottom-0 left-0 right-0 pointer-events-none" style="height:90px;background:linear-gradient(to top,#080e18 15%,rgba(8,14,24,0.6) 60%,transparent 100%);"></div>
                             <!-- Top badges -->
                             <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
                                 <div id="obs-prev-section-badge" class="text-white font-black rounded px-2 py-0.5 shrink-0" style="font-size:9px;background:#3b82f6;"></div>
@@ -7875,8 +7875,8 @@ window.logAdminSettingsActivity = async (action, details) => {
                     <div class="relative w-full obs-photo-wrap" style="padding-top:100%;overflow:hidden;background:${col}14;">
                         ${c.avatar
                             ? `<img src="${c.avatar}" alt=""
-                                class="absolute inset-0 w-full h-full object-cover object-top"
-                                style="opacity:0;transition:opacity .25s;"
+                                class="absolute inset-0 w-full h-full object-cover"
+                                style="opacity:0;transition:opacity .2s ease;object-position:50% 12%;filter:contrast(1.06) saturate(1.05);"
                                 onload="this.style.opacity='1';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='none';"
                                 onerror="this.style.display='none';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='flex';">`
                             : ''}
@@ -7980,9 +7980,18 @@ window.logAdminSettingsActivity = async (action, details) => {
             const wrap = document.getElementById('obs-prev-img-wrap');
             if (wrap) {
                 if (c.avatar) {
-                    wrap.innerHTML = `<img src="${c.avatar}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;">
-                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}30 0%,transparent 50%);pointer-events:none;"></div>`;
-                    wrap.style.background = col + '22';
+                    wrap.innerHTML = `<img src="${c.avatar}" alt=""
+                        style="position:absolute;inset:0;width:100%;height:100%;
+                               object-fit:cover;
+                               object-position:50% 12%;
+                               filter:contrast(1.08) saturate(1.1) brightness(1.02);
+                               image-rendering:auto;
+                               transform:scale(1.02);transform-origin:center 12%;">
+                        <div style="position:absolute;inset:0;
+                                    background:linear-gradient(180deg,${col}25 0%,transparent 40%),
+                                               radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.35) 100%);
+                                    pointer-events:none;"></div>`;
+                    wrap.style.background = col + '18';
                     wrap.style.fontSize = '';
                 } else {
                     wrap.innerHTML = `<span style="color:${col};text-shadow:0 0 40px ${col}88;font-size:56px;font-weight:900;">${init}</span>`;
