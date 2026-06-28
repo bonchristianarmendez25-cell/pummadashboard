@@ -200,7 +200,10 @@
                 <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Switch Cadet
             </button>
             <span class="text-emerald-300 text-[10px] hidden lg:inline italic">Read-only — editing disabled</span>
-            <div class="ml-auto">
+            <div class="ml-auto flex items-center gap-2">
+                <button onclick="changeObserverPassword()" class="flex items-center gap-1.5 bg-emerald-900/60 hover:bg-emerald-900 border border-emerald-600 px-3 py-1.5 rounded-lg text-emerald-200 text-[11px] font-bold transition shadow-sm active:scale-95">
+                    <i data-lucide="key" class="w-3.5 h-3.5"></i> Change Password
+                </button>
                 <button onclick="observerBackToAdmin()" class="flex items-center gap-1.5 bg-white text-emerald-800 hover:bg-emerald-50 px-3 py-1.5 rounded-lg font-black text-xs transition shadow-sm active:scale-95">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Back to Admin View
                 </button>
@@ -211,11 +214,11 @@
     <!-- ══════════════════════════════════════════════════════════
          DOTA 2-STYLE CADET PICKER MODAL
     ═══════════════════════════════════════════════════════════════ -->
-    <div id="obs-picker-overlay" class="fixed inset-0 z-[200] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);">
-        <div class="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-700" style="background:linear-gradient(160deg,#0f1923 0%,#1a2636 100%);">
+    <div id="obs-picker-overlay" class="fixed inset-0 z-[200] hidden items-center justify-center p-2 sm:p-4" style="background:rgba(0,0,0,0.92);backdrop-filter:blur(8px);">
+        <div class="w-full max-w-6xl max-h-[94vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-700/80" style="background:linear-gradient(160deg,#0c1520 0%,#162030 100%);">
 
             <!-- Header -->
-            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/60 shrink-0" style="background:rgba(255,255,255,0.04);">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-700/60 shrink-0" style="background:rgba(255,255,255,0.03);">
                 <div class="flex items-center gap-3">
                     <i data-lucide="eye" class="w-5 h-5 text-emerald-400"></i>
                     <div>
@@ -227,32 +230,96 @@
             </div>
 
             <!-- Filters Row -->
-            <div class="px-5 py-3 border-b border-slate-700/40 shrink-0 flex flex-wrap gap-4 items-center" style="background:rgba(0,0,0,0.2);">
-                <!-- Class filter -->
+            <div class="px-4 py-2.5 border-b border-slate-700/40 shrink-0 flex flex-wrap gap-3 items-center" style="background:rgba(0,0,0,0.25);">
                 <div class="flex items-center gap-2">
                     <span class="text-slate-500 text-[10px] uppercase tracking-widest font-bold shrink-0">Class</span>
                     <div id="obs-class-tabs" class="flex gap-1 flex-wrap"></div>
                 </div>
-                <!-- Section filter -->
                 <div class="flex items-center gap-2">
                     <span class="text-slate-500 text-[10px] uppercase tracking-widest font-bold shrink-0">Section</span>
                     <div id="obs-section-tabs" class="flex gap-1 flex-wrap"></div>
                 </div>
-                <!-- Search -->
-                <div class="ml-auto flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 min-w-[180px]">
+                <div class="ml-auto flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 min-w-[160px]">
                     <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
                     <input id="obs-search" type="text" placeholder="Search cadet…" oninput="observerRenderGrid()" class="bg-transparent text-white text-xs placeholder-slate-600 outline-none w-full font-medium">
                 </div>
             </div>
 
-            <!-- Cadet Count -->
-            <div class="px-5 pt-2 pb-1 shrink-0">
-                <span id="obs-count" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
-            </div>
+            <!-- Body: Grid (left) + Preview Panel (right) -->
+            <div class="flex flex-1 overflow-hidden">
 
-            <!-- Grid -->
-            <div id="obs-picker-grid" class="flex-1 overflow-y-auto px-4 pb-5 pt-2 grid gap-2 content-start"
-                 style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr));"></div>
+                <!-- LEFT — Grid + Pagination -->
+                <div class="flex flex-col flex-1 overflow-hidden border-r border-slate-700/50">
+                    <!-- Count + page info -->
+                    <div class="px-4 pt-2 pb-1 shrink-0 flex items-center justify-between">
+                        <span id="obs-count" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
+                        <span id="obs-page-label" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
+                    </div>
+                    <!-- Grid -->
+                    <div id="obs-picker-grid" class="flex-1 overflow-y-auto px-3 pb-3 pt-1 grid gap-2 content-start"
+                         style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr));"></div>
+                    <!-- Pagination controls -->
+                    <div class="px-4 py-2.5 shrink-0 flex items-center justify-center gap-3 border-t border-slate-700/50" style="background:rgba(0,0,0,0.2);">
+                        <button id="obs-prev-btn" onclick="obsPrevPage()" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide border transition active:scale-95 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> Back
+                        </button>
+                        <div id="obs-page-dots" class="flex gap-1.5 items-center"></div>
+                        <button id="obs-next-btn" onclick="obsNextPage()" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wide border transition active:scale-95 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed">
+                            Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RIGHT — Preview Panel (Dota 2 style) -->
+                <div id="obs-preview-panel" class="w-56 sm:w-64 shrink-0 flex flex-col" style="background:linear-gradient(180deg,#0d1b2a 0%,#0a1422 100%);">
+                    <!-- Empty state -->
+                    <div id="obs-preview-empty" class="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
+                            <i data-lucide="user" class="w-7 h-7 text-slate-600"></i>
+                        </div>
+                        <div class="text-slate-600 text-xs font-bold uppercase tracking-widest leading-snug">Select a cadet<br>to preview</div>
+                    </div>
+                    <!-- Filled preview (hidden until cadet selected) -->
+                    <div id="obs-preview-content" class="hidden flex-1 flex flex-col">
+                        <!-- Portrait -->
+                        <div id="obs-prev-portrait" class="relative w-full shrink-0" style="height:200px;overflow:hidden;">
+                            <div id="obs-prev-img-wrap" class="absolute inset-0 flex items-center justify-center text-6xl font-black select-none" style="background:#152030;"></div>
+                            <!-- Gradient overlay at bottom -->
+                            <div class="absolute bottom-0 left-0 right-0 h-20" style="background:linear-gradient(to top,#0d1b2a,transparent);pointer-events:none;"></div>
+                            <!-- Section ribbon -->
+                            <div id="obs-prev-section-badge" class="absolute top-2 left-2 text-white font-black rounded px-2 py-0.5" style="font-size:9px;background:#3b82f6;"></div>
+                            <!-- Class badge -->
+                            <div id="obs-prev-class-badge" class="absolute top-2 right-2 text-slate-300 font-black rounded px-2 py-0.5" style="font-size:9px;background:rgba(0,0,0,0.6);"></div>
+                        </div>
+                        <!-- Name & details -->
+                        <div class="px-4 pt-2 pb-3 flex-1 flex flex-col gap-2">
+                            <div id="obs-prev-name" class="text-white font-black text-sm leading-tight truncate"></div>
+                            <div id="obs-prev-id" class="text-slate-500 text-[10px] font-mono"></div>
+                            <!-- Grade bar -->
+                            <div class="mt-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">Grade</span>
+                                    <span id="obs-prev-pct" class="font-black text-[11px]"></span>
+                                </div>
+                                <div class="w-full rounded-full overflow-hidden" style="height:5px;background:rgba(255,255,255,0.07);">
+                                    <div id="obs-prev-bar" class="h-full rounded-full transition-all duration-500" style="width:0%;background:#4ade80;"></div>
+                                </div>
+                            </div>
+                            <!-- Stats pills -->
+                            <div id="obs-prev-stats" class="flex flex-wrap gap-1 mt-1"></div>
+                            <!-- Spacer -->
+                            <div class="flex-1"></div>
+                            <!-- Confirm button (Lock In) -->
+                            <button id="obs-confirm-btn" onclick="observerConfirmView()"
+                                class="w-full py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition active:scale-95 flex items-center justify-center gap-2"
+                                style="background:linear-gradient(90deg,#059669,#10b981);box-shadow:0 0 18px rgba(16,185,129,0.35);color:white;">
+                                <i data-lucide="log-in" class="w-4 h-4"></i> View Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end body flex -->
         </div>
     </div>
 
@@ -7580,13 +7647,17 @@ window.logAdminSettingsActivity = async (action, details) => {
         // OBSERVER DUAL-VIEW SYSTEM — Dota 2-style cadet picker
         // ══════════════════════════════════════════════════════════════
 
-        window._obsPicker = { classFilter: null, sectionFilter: 'ALL' };
+        window._obsPicker = { classFilter: null, sectionFilter: 'ALL', page: 0, previewId: null };
 
         // Open the picker modal
         window.observerOpenPicker = () => {
             if (!window.isObserverAccount) return;
             const overlay = document.getElementById('obs-picker-overlay');
             if (!overlay) return;
+
+            // Init pagination & preview state
+            window._obsPicker.page = 0;
+            window._obsPicker.previewId = null;
 
             // Build class filter chips from available cadets
             const cadets = (window.cadets || []).filter(c => !c.isObserver);
@@ -7608,6 +7679,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             observerBuildSectionTabs();
             observerRenderGrid();
+            observerClearPreview();
 
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
@@ -7624,6 +7696,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.obsSetClass = (n) => {
             window._obsPicker.classFilter = (window._obsPicker.classFilter === n) ? null : n;
             window._obsPicker.sectionFilter = 'ALL';
+            window._obsPicker.page = 0;
             // Re-render class chips to reflect selection
             document.querySelectorAll('.obs-cls-btn').forEach(btn => {
                 const active = Number(btn.dataset.cls) === window._obsPicker.classFilter;
@@ -7638,6 +7711,7 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.obsSetSection = (sec) => {
             window._obsPicker.sectionFilter = sec;
+            window._obsPicker.page = 0;
             document.querySelectorAll('.obs-sec-btn').forEach(btn => {
                 const active = btn.dataset.sec === sec;
                 btn.className = btn.className.replace(/(bg-blue-500|border-blue-400|text-white|bg-slate-800|border-slate-700|text-slate-400|hover:bg-slate-700|hover:text-white)/g, '').trim();
@@ -7666,15 +7740,47 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.observerRenderGrid = () => {
             const q = (document.getElementById('obs-search')?.value || '').toLowerCase().trim();
-            const cadets = (window.cadets || [])
+            const allCadets = (window.cadets || [])
                 .filter(c => !c.isObserver
                     && (window._obsPicker.classFilter === null || Number(c.classNum) === window._obsPicker.classFilter)
                     && (window._obsPicker.sectionFilter === 'ALL' || (c.section||'').toUpperCase() === window._obsPicker.sectionFilter)
                     && (!q || c.name.toLowerCase().includes(q) || (c.studentId||'').toLowerCase().includes(q)))
                 .sort((a, b) => a.name.localeCompare(b.name));
 
+            const PAGE_SIZE = 24;
+            const totalPages = Math.max(1, Math.ceil(allCadets.length / PAGE_SIZE));
+            window._obsPicker.page = Math.min(window._obsPicker.page || 0, totalPages - 1);
+            const page = window._obsPicker.page;
+            const cadets = allCadets.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+            window._obsAllFilteredCadets = allCadets; // store for nav
+
             const countEl = document.getElementById('obs-count');
-            if (countEl) countEl.textContent = `${cadets.length} cadet${cadets.length !== 1 ? 's' : ''}`;
+            if (countEl) countEl.textContent = `${allCadets.length} cadet${allCadets.length !== 1 ? 's' : ''}`;
+
+            const pageLbl = document.getElementById('obs-page-label');
+            if (pageLbl) pageLbl.textContent = totalPages > 1 ? `Page ${page + 1} / ${totalPages}` : '';
+
+            // Update prev/next buttons
+            const prevBtn = document.getElementById('obs-prev-btn');
+            const nextBtn = document.getElementById('obs-next-btn');
+            if (prevBtn) prevBtn.disabled = page === 0;
+            if (nextBtn) nextBtn.disabled = page >= totalPages - 1;
+
+            // Page dots
+            const dotsEl = document.getElementById('obs-page-dots');
+            if (dotsEl) {
+                const maxDots = 7;
+                if (totalPages <= 1) { dotsEl.innerHTML = ''; }
+                else {
+                    let dots = [];
+                    for (let i = 0; i < Math.min(totalPages, maxDots); i++) {
+                        const pg = totalPages <= maxDots ? i : Math.round(i * (totalPages - 1) / (maxDots - 1));
+                        const active = pg === page;
+                        dots.push(`<button onclick="obsGoPage(${pg})" class="rounded-full transition-all duration-200 ${active ? 'bg-emerald-400 w-3 h-3' : 'bg-slate-700 hover:bg-slate-500 w-2 h-2'}"></button>`);
+                    }
+                    dotsEl.innerHTML = dots.join('');
+                }
+            }
 
             const grid = document.getElementById('obs-picker-grid');
             if (!grid) return;
@@ -7682,12 +7788,13 @@ window.logAdminSettingsActivity = async (action, details) => {
             // Kill any existing IntersectionObserver
             if (window._obsImgObserver) { window._obsImgObserver.disconnect(); window._obsImgObserver = null; }
 
-            if (!cadets.length) {
+            if (!allCadets.length) {
                 grid.innerHTML = `<div style="grid-column:1/-1;" class="flex flex-col items-center justify-center py-20 text-slate-600">
                     <div class="text-5xl mb-4 opacity-20">👤</div>
                     <div class="text-sm font-bold text-slate-500">No cadets found</div>
                     <div class="text-xs mt-1 text-slate-600">Try adjusting your filters</div>
                 </div>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
 
@@ -7695,19 +7802,18 @@ window.logAdminSettingsActivity = async (action, details) => {
                               ECHO:'#06b6d4', FOXTROT:'#10b981', IRREGULAR:'#94a3b8' };
             const sfx = n => ({ 1:'st',2:'nd',3:'rd' }[n] || 'th');
 
-            // ── Build card HTML — photos use data-src (NOT src) to avoid decoding 200 base64 blobs at once ──
             grid.innerHTML = cadets.map(c => {
                 const pct  = parseFloat(c.specificGradePercent || 0);
                 const sec  = (c.section || '').toUpperCase();
                 const col  = SEC_COL[sec] || '#64748b';
-                const sel  = c.id === window.selectedCadetId && window.observerViewMode === 'cadet';
+                const sel  = c.id === (window._obsPicker.previewId || (window.selectedCadetId && window.observerViewMode === 'cadet' ? window.selectedCadetId : null));
                 const init = (c.name || '??').replace(/,.*/, '').trim().slice(0, 2).toUpperCase();
                 const last = (c.name || '').replace(/,.*/, '').trim();
                 const gcol = pct >= 90 ? '#4ade80' : pct >= 75 ? '#facc15' : pct >= 60 ? '#fb923c' : pct ? '#f87171' : '#475569';
                 const cls  = c.classNum ? `${c.classNum}${sfx(Number(c.classNum))}` : '';
 
                 return `<button
-                    onclick="observerSelectCadet('${c.id}')"
+                    onclick="observerPreviewCadet('${c.id}')"
                     class="obs-cadet-card group relative flex flex-col overflow-hidden rounded-lg cursor-pointer select-none
                         transition-all duration-150 active:scale-95
                         ${sel ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_22px_rgba(52,211,153,0.55)]'
@@ -7715,34 +7821,29 @@ window.logAdminSettingsActivity = async (action, details) => {
                     style="background:linear-gradient(175deg,#152030,#0d1623);"
                     title="${c.name}">
 
-                    <!-- ── Photo / initials area (square) ── -->
+                    <!-- Photo / initials area (square) -->
                     <div class="relative w-full obs-photo-wrap" style="padding-top:100%;overflow:hidden;background:${col}14;">
                         ${c.photo
                             ? `<img data-src="${c.photo}" alt=""
                                 class="obs-lazy-img absolute inset-0 w-full h-full object-cover object-top opacity-0 transition-opacity duration-300"
                                 onerror="this.remove();this.closest&&this.closest('.obs-photo-wrap')&&this.closest('.obs-photo-wrap').querySelector('.obs-initials-fb')&&(this.closest('.obs-photo-wrap').querySelector('.obs-initials-fb').style.display='flex')">`
                             : ''}
-                        <!-- Initials fallback — shown immediately; hidden once real photo loads -->
                         <div class="obs-initials-fb absolute inset-0 items-center justify-center text-2xl font-black select-none pointer-events-none"
                              style="display:${c.photo ? 'none' : 'flex'};color:${col};background:${col}1a;">
                             ${init}
                         </div>
-                        <!-- Grade bar (bottom of photo) -->
                         <div class="absolute bottom-0 left-0 right-0" style="height:3px;background:${gcol};opacity:0.85;"></div>
-                        <!-- Section ribbon (top-left) -->
                         <div class="absolute top-1 left-1 text-white font-black leading-none rounded"
                              style="font-size:7px;padding:2px 4px;background:${col}dd;">${sec||'?'}</div>
-                        <!-- Class badge (top-right) -->
                         ${cls ? `<div class="absolute top-1 right-1 font-black leading-none rounded text-slate-300"
                                      style="font-size:7px;padding:2px 4px;background:rgba(0,0,0,0.55);">${cls}</div>` : ''}
-                        <!-- Selected checkmark -->
                         ${sel ? `<div class="absolute inset-0 flex items-center justify-center"
                                      style="background:rgba(52,211,153,0.18);">
                                      <div style="color:#4ade80;font-size:26px;filter:drop-shadow(0 0 6px #4ade80);">✓</div>
                                  </div>` : ''}
                     </div>
 
-                    <!-- ── Info strip ── -->
+                    <!-- Info strip -->
                     <div class="w-full px-1.5 pt-1 pb-1.5 flex-1 flex flex-col justify-center"
                          style="border-left:2.5px solid ${col}55;">
                         <div class="text-white font-bold leading-tight truncate" style="font-size:9px;">${last}</div>
@@ -7754,8 +7855,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 </button>`;
             }).join('');
 
-            // ── IntersectionObserver: decode base64 photos only when the card scrolls into view ──
-            // This is the fix for blank-card / freeze bugs with 200+ images.
+            // IntersectionObserver: decode base64 photos only when the card scrolls into view
             if ('IntersectionObserver' in window) {
                 window._obsImgObserver = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
@@ -7775,7 +7875,6 @@ window.logAdminSettingsActivity = async (action, details) => {
 
                 grid.querySelectorAll('img.obs-lazy-img').forEach(img => window._obsImgObserver.observe(img));
             } else {
-                // Fallback for old browsers: load all directly
                 grid.querySelectorAll('img.obs-lazy-img').forEach(img => {
                     img.src = img.dataset.src;
                     img.style.opacity = '1';
@@ -7783,6 +7882,117 @@ window.logAdminSettingsActivity = async (action, details) => {
                     if (fb) fb.style.display = 'none';
                 });
             }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Pagination helpers
+        window.obsNextPage = () => {
+            const allCadets = window._obsAllFilteredCadets || [];
+            const totalPages = Math.max(1, Math.ceil(allCadets.length / 24));
+            if (window._obsPicker.page < totalPages - 1) {
+                window._obsPicker.page++;
+                observerRenderGrid();
+                document.getElementById('obs-picker-grid')?.scrollTo(0, 0);
+            }
+        };
+        window.obsPrevPage = () => {
+            if (window._obsPicker.page > 0) {
+                window._obsPicker.page--;
+                observerRenderGrid();
+                document.getElementById('obs-picker-grid')?.scrollTo(0, 0);
+            }
+        };
+        window.obsGoPage = (pg) => {
+            window._obsPicker.page = pg;
+            observerRenderGrid();
+            document.getElementById('obs-picker-grid')?.scrollTo(0, 0);
+        };
+
+        // Clear the right preview panel
+        window.observerClearPreview = () => {
+            window._obsPicker.previewId = null;
+            const empty = document.getElementById('obs-preview-empty');
+            const content = document.getElementById('obs-preview-content');
+            if (empty) { empty.classList.remove('hidden'); empty.classList.add('flex'); }
+            if (content) { content.classList.add('hidden'); content.classList.remove('flex'); }
+        };
+
+        // Show preview for a cadet (Dota 2 lock-in style)
+        window.observerPreviewCadet = (cadetId) => {
+            const c = (window.cadets || []).find(x => x.id === cadetId);
+            if (!c) return;
+
+            window._obsPicker.previewId = cadetId;
+            // Re-render grid to show new selection highlight
+            observerRenderGrid();
+
+            const SEC_COL = { ALPHA:'#3b82f6', BRAVO:'#ef4444', CHARLIE:'#f59e0b', DELTA:'#8b5cf6',
+                              ECHO:'#06b6d4', FOXTROT:'#10b981', IRREGULAR:'#94a3b8' };
+            const sfx = n => ({ 1:'st',2:'nd',3:'rd' }[n] || 'th');
+
+            const pct   = parseFloat(c.specificGradePercent || 0);
+            const sec   = (c.section || '').toUpperCase();
+            const col   = SEC_COL[sec] || '#64748b';
+            const gcol  = pct >= 90 ? '#4ade80' : pct >= 75 ? '#facc15' : pct >= 60 ? '#fb923c' : pct ? '#f87171' : '#475569';
+            const init  = (c.name || '??').replace(/,.*/, '').trim().slice(0, 2).toUpperCase();
+            const cls   = c.classNum ? `${c.classNum}${sfx(Number(c.classNum))} Class` : '';
+
+            // Show the content panel
+            const empty   = document.getElementById('obs-preview-empty');
+            const content = document.getElementById('obs-preview-content');
+            if (empty) { empty.classList.add('hidden'); empty.classList.remove('flex'); }
+            if (content) { content.classList.remove('hidden'); content.classList.add('flex'); }
+
+            // Portrait
+            const wrap = document.getElementById('obs-prev-img-wrap');
+            if (wrap) {
+                if (c.photo) {
+                    wrap.innerHTML = `<img src="${c.photo}" alt="" class="w-full h-full object-cover object-top" style="position:absolute;inset:0;">`;
+                    wrap.style.background = col + '22';
+                } else {
+                    wrap.innerHTML = `<span style="color:${col};text-shadow:0 0 30px ${col}66;">${init}</span>`;
+                    wrap.style.background = `linear-gradient(135deg,${col}22,${col}0a)`;
+                }
+            }
+
+            // Badges
+            const sBadge = document.getElementById('obs-prev-section-badge');
+            if (sBadge) { sBadge.textContent = sec || '?'; sBadge.style.background = col; }
+            const cBadge = document.getElementById('obs-prev-class-badge');
+            if (cBadge) cBadge.textContent = cls;
+
+            // Name & ID
+            const nameEl = document.getElementById('obs-prev-name');
+            if (nameEl) nameEl.textContent = c.name || '—';
+            const idEl = document.getElementById('obs-prev-id');
+            if (idEl) idEl.textContent = c.studentId || '';
+
+            // Grade bar
+            const pctEl = document.getElementById('obs-prev-pct');
+            if (pctEl) { pctEl.textContent = pct ? pct.toFixed(1) + '%' : '—'; pctEl.style.color = gcol; }
+            const barEl = document.getElementById('obs-prev-bar');
+            if (barEl) { barEl.style.width = (pct || 0) + '%'; barEl.style.background = gcol; }
+
+            // Stats pills
+            const statsEl = document.getElementById('obs-prev-stats');
+            if (statsEl) {
+                const pills = [];
+                if (sec) pills.push(`<span class="px-2 py-0.5 rounded text-white font-black" style="font-size:8px;background:${col}dd;">${sec}</span>`);
+                if (cls) pills.push(`<span class="px-2 py-0.5 rounded text-slate-300 font-bold" style="font-size:8px;background:rgba(255,255,255,0.08);">${cls}</span>`);
+                const gradeLabel = pct >= 90 ? 'Excellent' : pct >= 75 ? 'Satisfactory' : pct >= 60 ? 'Developing' : pct ? 'Needs Work' : 'No Data';
+                pills.push(`<span class="px-2 py-0.5 rounded font-black" style="font-size:8px;color:${gcol};background:${gcol}22;">${gradeLabel}</span>`);
+                statsEl.innerHTML = pills.join('');
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Confirm and actually load a cadet's profile (the "Lock In" / "View Profile" step)
+        window.observerConfirmView = () => {
+            const cadetId = window._obsPicker.previewId || window.selectedCadetId;
+            if (!cadetId) return;
+            window.observerSelectCadet(cadetId);
         };
 
         // Called when a cadet card is clicked in the picker
@@ -7850,6 +8060,33 @@ window.logAdminSettingsActivity = async (action, details) => {
 
             window.recalculateMetrics();
             if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // ── Observer: change their own login password ──────────────────────────
+        window.changeObserverPassword = async () => {
+            if (!window.isObserverAccount) return;
+            // Find the observer's cadet record
+            const me = (window.cadets || []).find(c => c.isObserver && c.name === window.currentObserverName);
+            if (!me) { alert("Error: Unable to locate your account. Please re-login."); return; }
+
+            const currentPwd = me.password || me.studentId || `PUMMA-0${me.classNum}-${me.id.substring(me.id.length - 4)}`;
+
+            const enteredOld = await customPrompt("Enter your CURRENT password:", "Current Password");
+            if (enteredOld === null) return;
+            if (enteredOld.trim() !== currentPwd) { alert("Incorrect current password."); return; }
+
+            const newPwd = await customPrompt("Enter your NEW password:", "New Password");
+            if (!newPwd || !newPwd.trim()) { alert("Password cannot be empty."); return; }
+            const confirmPwd = await customPrompt("Confirm your NEW password:", "Confirm Password");
+            if (newPwd.trim() !== confirmPwd?.trim()) { alert("Passwords do not match."); return; }
+
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', me.id), { password: newPwd.trim() });
+                me.password = newPwd.trim();
+                alert("✅ Password successfully changed!\n\nYour new password is now active.");
+            } catch(e) {
+                alert("Failed to update password. Please check your connection and try again.");
+            }
         };
 
         window.changeAdminPin = async () => {
