@@ -246,17 +246,17 @@
             </div>
 
             <!-- Body: Grid (left) + Preview Panel (right) -->
-            <div class="flex flex-1 overflow-hidden">
+            <div class="flex flex-1 overflow-hidden min-h-0">
 
                 <!-- LEFT — Grid + Pagination -->
-                <div class="flex flex-col flex-1 overflow-hidden border-r border-slate-700/50">
+                <div class="flex flex-col flex-1 overflow-hidden min-h-0 border-r border-slate-700/50">
                     <!-- Count + page info -->
                     <div class="px-4 pt-2 pb-1 shrink-0 flex items-center justify-between">
                         <span id="obs-count" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
                         <span id="obs-page-label" class="text-slate-600 text-[10px] uppercase tracking-widest font-bold"></span>
                     </div>
                     <!-- Grid -->
-                    <div id="obs-picker-grid" class="flex-1 overflow-y-auto px-3 pb-3 pt-1 grid gap-2 content-start"
+                    <div id="obs-picker-grid" class="flex-1 overflow-y-auto min-h-0 px-3 pb-3 pt-1 grid gap-2 content-start"
                          style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr));"></div>
                     <!-- Pagination controls -->
                     <div class="px-4 py-2.5 shrink-0 flex items-center justify-center gap-3 border-t border-slate-700/50" style="background:rgba(0,0,0,0.2);">
@@ -270,7 +270,6 @@
                     </div>
                 </div>
 
-                <!-- RIGHT — Preview Panel (Dota 2 style) -->
                 <!-- RIGHT — Preview Panel (Dota 2 style) -->
                 <div id="obs-preview-panel" class="w-64 sm:w-72 shrink-0 flex flex-col" style="background:linear-gradient(180deg,#0d1b2a 0%,#0a1422 100%);">
                     <!-- Empty state -->
@@ -7862,9 +7861,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                     <!-- Photo / initials area (square) -->
                     <div class="relative w-full obs-photo-wrap" style="padding-top:100%;overflow:hidden;background:${col}14;">
                         ${c.photo
-                            ? `<img data-src="${c.photo}" alt=""
-                                class="obs-lazy-img absolute inset-0 w-full h-full object-cover object-top opacity-0 transition-opacity duration-300"
-                                onerror="this.remove();this.closest&&this.closest('.obs-photo-wrap')&&this.closest('.obs-photo-wrap').querySelector('.obs-initials-fb')&&(this.closest('.obs-photo-wrap').querySelector('.obs-initials-fb').style.display='flex')">`
+                            ? `<img src="${c.photo}" alt=""
+                                class="absolute inset-0 w-full h-full object-cover object-top"
+                                style="object-position:top center;"
+                                onload="this.style.opacity='1';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='none';"
+                                onerror="this.style.display='none';const fb=this.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');if(fb)fb.style.display='flex';">`
                             : ''}
                         <div class="obs-initials-fb absolute inset-0 items-center justify-center text-2xl font-black select-none pointer-events-none"
                              style="display:${c.photo ? 'none' : 'flex'};color:${col};background:${col}1a;">
@@ -7893,33 +7894,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                 </button>`;
             }).join('');
 
-            // IntersectionObserver: decode base64 photos only when the card scrolls into view
-            if ('IntersectionObserver' in window) {
-                window._obsImgObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (!entry.isIntersecting) return;
-                        const img = entry.target;
-                        const src = img.dataset.src;
-                        if (!src) return;
-                        img.src = src;
-                        img.onload = () => {
-                            img.style.opacity = '1';
-                            const fb = img.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');
-                            if (fb) fb.style.display = 'none';
-                        };
-                        window._obsImgObserver.unobserve(img);
-                    });
-                }, { root: grid, rootMargin: '200px 0px', threshold: 0 });
-
-                grid.querySelectorAll('img.obs-lazy-img').forEach(img => window._obsImgObserver.observe(img));
-            } else {
-                grid.querySelectorAll('img.obs-lazy-img').forEach(img => {
-                    img.src = img.dataset.src;
-                    img.style.opacity = '1';
-                    const fb = img.closest('.obs-photo-wrap')?.querySelector('.obs-initials-fb');
-                    if (fb) fb.style.display = 'none';
-                });
-            }
+            // Images load directly via src attribute — no lazy loading needed with 24 cards/page
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         };
