@@ -271,7 +271,8 @@
                 </div>
 
                 <!-- RIGHT — Preview Panel (Dota 2 style) -->
-                <div id="obs-preview-panel" class="w-56 sm:w-64 shrink-0 flex flex-col" style="background:linear-gradient(180deg,#0d1b2a 0%,#0a1422 100%);">
+                <!-- RIGHT — Preview Panel (Dota 2 style) -->
+                <div id="obs-preview-panel" class="w-64 sm:w-72 shrink-0 flex flex-col" style="background:linear-gradient(180deg,#0d1b2a 0%,#0a1422 100%);">
                     <!-- Empty state -->
                     <div id="obs-preview-empty" class="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
                         <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
@@ -280,40 +281,77 @@
                         <div class="text-slate-600 text-xs font-bold uppercase tracking-widest leading-snug">Select a cadet<br>to preview</div>
                     </div>
                     <!-- Filled preview (hidden until cadet selected) -->
-                    <div id="obs-preview-content" class="hidden flex-1 flex flex-col">
+                    <div id="obs-preview-content" class="hidden flex-col" style="height:100%;">
                         <!-- Portrait -->
-                        <div id="obs-prev-portrait" class="relative w-full shrink-0" style="height:200px;overflow:hidden;">
-                            <div id="obs-prev-img-wrap" class="absolute inset-0 flex items-center justify-center text-6xl font-black select-none" style="background:#152030;"></div>
-                            <!-- Gradient overlay at bottom -->
-                            <div class="absolute bottom-0 left-0 right-0 h-20" style="background:linear-gradient(to top,#0d1b2a,transparent);pointer-events:none;"></div>
-                            <!-- Section ribbon -->
-                            <div id="obs-prev-section-badge" class="absolute top-2 left-2 text-white font-black rounded px-2 py-0.5" style="font-size:9px;background:#3b82f6;"></div>
-                            <!-- Class badge -->
-                            <div id="obs-prev-class-badge" class="absolute top-2 right-2 text-slate-300 font-black rounded px-2 py-0.5" style="font-size:9px;background:rgba(0,0,0,0.6);"></div>
-                        </div>
-                        <!-- Name & details -->
-                        <div class="px-4 pt-2 pb-3 flex-1 flex flex-col gap-2">
-                            <div id="obs-prev-name" class="text-white font-black text-sm leading-tight truncate"></div>
-                            <div id="obs-prev-id" class="text-slate-500 text-[10px] font-mono"></div>
-                            <!-- Grade bar -->
-                            <div class="mt-1">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">Grade</span>
-                                    <span id="obs-prev-pct" class="font-black text-[11px]"></span>
-                                </div>
-                                <div class="w-full rounded-full overflow-hidden" style="height:5px;background:rgba(255,255,255,0.07);">
-                                    <div id="obs-prev-bar" class="h-full rounded-full transition-all duration-500" style="width:0%;background:#4ade80;"></div>
+                        <div id="obs-prev-portrait" class="w-full shrink-0" style="height:185px;overflow:hidden;position:relative;">
+                            <div id="obs-prev-img-wrap" class="absolute inset-0 flex items-center justify-center font-black select-none" style="background:#152030;font-size:56px;"></div>
+                            <!-- Gradient overlay -->
+                            <div class="absolute bottom-0 left-0 right-0 pointer-events-none" style="height:80px;background:linear-gradient(to top,#0d1b2a 20%,transparent);"></div>
+                            <!-- Top badges -->
+                            <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+                                <div id="obs-prev-section-badge" class="text-white font-black rounded px-2 py-0.5 shrink-0" style="font-size:9px;background:#3b82f6;"></div>
+                                <div class="flex flex-col items-end gap-0.5">
+                                    <div id="obs-prev-class-badge" class="text-slate-300 font-black rounded px-2 py-0.5" style="font-size:9px;background:rgba(0,0,0,0.65);"></div>
                                 </div>
                             </div>
-                            <!-- Stats pills -->
-                            <div id="obs-prev-stats" class="flex flex-wrap gap-1 mt-1"></div>
-                            <!-- Spacer -->
-                            <div class="flex-1"></div>
-                            <!-- Confirm button (Lock In) -->
+                            <!-- Special badges at bottom of portrait -->
+                            <div id="obs-prev-special-badges" class="absolute bottom-2 left-2 flex gap-1 flex-wrap"></div>
+                        </div>
+
+                        <!-- Scrollable details area -->
+                        <div class="flex-1 overflow-y-auto px-3 pt-2.5 pb-3 flex flex-col gap-2" style="-webkit-overflow-scrolling:touch;">
+                            <!-- Name & ID -->
+                            <div class="border-b border-white/5 pb-2">
+                                <div id="obs-prev-name" class="text-white font-black text-sm leading-tight"></div>
+                                <div id="obs-prev-id" class="text-slate-500 text-[10px] font-mono mt-0.5"></div>
+                            </div>
+
+                            <!-- Grade + GWA side-by-side mini cards -->
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <div class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5" style="background:rgba(255,255,255,0.05);">
+                                    <span class="text-slate-500 text-[8px] uppercase tracking-widest font-bold">Spec. Grade</span>
+                                    <span id="obs-prev-pct" class="font-black text-[15px] leading-none"></span>
+                                    <div class="w-full rounded-full overflow-hidden mt-1" style="height:3px;background:rgba(255,255,255,0.07);">
+                                        <div id="obs-prev-bar" class="h-full rounded-full transition-all duration-500" style="width:0%;background:#4ade80;"></div>
+                                    </div>
+                                </div>
+                                <div class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5" style="background:rgba(255,255,255,0.05);">
+                                    <span class="text-slate-500 text-[8px] uppercase tracking-widest font-bold">Mean GWA</span>
+                                    <span id="obs-prev-gwa" class="font-black text-[15px] leading-none text-violet-300">—</span>
+                                    <span id="obs-prev-gwa-label" class="text-[8px] mt-1 font-bold text-slate-600"></span>
+                                </div>
+                            </div>
+
+                            <!-- Grade standing pill -->
+                            <div id="obs-prev-grade-pill" class="rounded-lg px-2.5 py-1.5 flex items-center justify-between" style="background:rgba(255,255,255,0.04);">
+                                <span class="text-slate-500 text-[8px] uppercase tracking-widest font-bold">Standing</span>
+                                <span id="obs-prev-grade-label" class="font-black text-[10px] px-2 py-0.5 rounded"></span>
+                            </div>
+
+                            <!-- Merits balance card -->
+                            <div class="rounded-lg px-2.5 py-2" style="background:rgba(255,255,255,0.05);">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-slate-500 text-[8px] uppercase tracking-widest font-bold">Cumulative Merits</span>
+                                    <span id="obs-prev-merits-val" class="font-black text-sm"></span>
+                                </div>
+                                <div class="text-[8px] font-mono text-slate-500 flex gap-2 flex-wrap" id="obs-prev-merits-sem"></div>
+                                <div id="obs-prev-merit-warning" class="hidden mt-1.5 text-[8px] font-bold text-red-400 flex items-center gap-1">
+                                    <i data-lucide="alert-triangle" class="w-3 h-3 shrink-0"></i>
+                                    <span id="obs-prev-merit-penalty-txt"></span>
+                                </div>
+                            </div>
+
+                            <!-- CS Breakdown mini bars -->
+                            <div class="rounded-lg px-2.5 py-2" style="background:rgba(255,255,255,0.05);">
+                                <div class="text-slate-500 text-[8px] uppercase tracking-widest font-bold mb-2">Class Standing Components</div>
+                                <div class="space-y-1.5" id="obs-prev-cs-bars"><!-- filled by JS --></div>
+                            </div>
+
+                            <!-- Confirm / Lock-In button -->
                             <button id="obs-confirm-btn" onclick="observerConfirmView()"
-                                class="w-full py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition active:scale-95 flex items-center justify-center gap-2"
+                                class="w-full py-2.5 rounded-lg font-black text-xs uppercase tracking-widest transition active:scale-95 flex items-center justify-center gap-2 shrink-0"
                                 style="background:linear-gradient(90deg,#059669,#10b981);box-shadow:0 0 18px rgba(16,185,129,0.35);color:white;">
-                                <i data-lucide="log-in" class="w-4 h-4"></i> View Profile
+                                <i data-lucide="log-in" class="w-4 h-4"></i> View Full Profile
                             </button>
                         </div>
                     </div>
@@ -7918,25 +7956,29 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (content) { content.classList.add('hidden'); content.classList.remove('flex'); }
         };
 
-        // Show preview for a cadet (Dota 2 lock-in style)
+        // Show preview for a cadet (Dota 2 lock-in style) — rich stats card
         window.observerPreviewCadet = (cadetId) => {
             const c = (window.cadets || []).find(x => x.id === cadetId);
             if (!c) return;
 
             window._obsPicker.previewId = cadetId;
-            // Re-render grid to show new selection highlight
-            observerRenderGrid();
+            observerRenderGrid(); // re-render grid to update selection highlight
 
             const SEC_COL = { ALPHA:'#3b82f6', BRAVO:'#ef4444', CHARLIE:'#f59e0b', DELTA:'#8b5cf6',
                               ECHO:'#06b6d4', FOXTROT:'#10b981', IRREGULAR:'#94a3b8' };
             const sfx = n => ({ 1:'st',2:'nd',3:'rd' }[n] || 'th');
 
-            const pct   = parseFloat(c.specificGradePercent || 0);
-            const sec   = (c.section || '').toUpperCase();
-            const col   = SEC_COL[sec] || '#64748b';
-            const gcol  = pct >= 90 ? '#4ade80' : pct >= 75 ? '#facc15' : pct >= 60 ? '#fb923c' : pct ? '#f87171' : '#475569';
-            const init  = (c.name || '??').replace(/,.*/, '').trim().slice(0, 2).toUpperCase();
-            const cls   = c.classNum ? `${c.classNum}${sfx(Number(c.classNum))} Class` : '';
+            const pct    = parseFloat(c.specificGradePercent || 0);
+            const sec    = (c.section || '').toUpperCase();
+            const col    = SEC_COL[sec] || '#64748b';
+            const gcol   = pct >= 90 ? '#4ade80' : pct >= 75 ? '#facc15' : pct >= 60 ? '#fb923c' : pct ? '#f87171' : '#475569';
+            const init   = (c.name || '??').replace(/,.*/, '').trim().slice(0, 2).toUpperCase();
+            const cls    = c.classNum ? `${c.classNum}${sfx(Number(c.classNum))} Class` : '';
+            const merits = (parseInt(c.meritsSem1)||0) + (parseInt(c.meritsSem2)||0) + (parseInt(c.meritsSem3)||0);
+            const gwa    = parseFloat(c.gwa) || 0;
+            const gradeLabel = pct >= 96 ? 'Outstanding' : pct >= 90 ? 'Excellent' : pct >= 85 ? 'Very Satisfactory' : pct >= 75 ? 'Satisfactory' : pct >= 60 ? 'Developing' : pct ? 'Needs Work' : 'No Data';
+            const glcol  = pct >= 96 ? '#4ade80' : pct >= 90 ? '#34d399' : pct >= 85 ? '#facc15' : pct >= 75 ? '#fbbf24' : pct >= 60 ? '#fb923c' : '#f87171';
+            const gwaLabel = gwa >= 4.51 ? 'Outstanding' : gwa >= 3.51 ? 'Excellent' : gwa >= 3.01 ? 'Satisfactory' : gwa > 0 ? 'Developing' : '';
 
             // Show the content panel
             const empty   = document.getElementById('obs-preview-empty');
@@ -7944,23 +7986,33 @@ window.logAdminSettingsActivity = async (action, details) => {
             if (empty) { empty.classList.add('hidden'); empty.classList.remove('flex'); }
             if (content) { content.classList.remove('hidden'); content.classList.add('flex'); }
 
-            // Portrait
+            // ── Portrait: real photo if available, otherwise styled initials ──
             const wrap = document.getElementById('obs-prev-img-wrap');
             if (wrap) {
                 if (c.photo) {
-                    wrap.innerHTML = `<img src="${c.photo}" alt="" class="w-full h-full object-cover object-top" style="position:absolute;inset:0;">`;
+                    wrap.innerHTML = `<img src="${c.photo}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;">`;
                     wrap.style.background = col + '22';
+                    wrap.style.fontSize = '';
                 } else {
-                    wrap.innerHTML = `<span style="color:${col};text-shadow:0 0 30px ${col}66;">${init}</span>`;
-                    wrap.style.background = `linear-gradient(135deg,${col}22,${col}0a)`;
+                    wrap.innerHTML = `<span style="color:${col};text-shadow:0 0 40px ${col}88;font-size:56px;font-weight:900;">${init}</span>`;
+                    wrap.style.background = `linear-gradient(145deg,${col}22 0%,${col}08 100%)`;
                 }
             }
 
-            // Badges
+            // Section + class badges
             const sBadge = document.getElementById('obs-prev-section-badge');
             if (sBadge) { sBadge.textContent = sec || '?'; sBadge.style.background = col; }
             const cBadge = document.getElementById('obs-prev-class-badge');
             if (cBadge) cBadge.textContent = cls;
+
+            // Special status badges (Officer, Star Cadet)
+            const spBadges = document.getElementById('obs-prev-special-badges');
+            if (spBadges) {
+                const b = [];
+                if (c.officer)    b.push(`<span style="font-size:8px;background:rgba(59,130,246,0.85);color:white;padding:2px 6px;border-radius:4px;font-weight:900;">⭐ OFFICER</span>`);
+                if (c.starCadet)  b.push(`<span style="font-size:8px;background:rgba(234,179,8,0.85);color:#1a1a00;padding:2px 6px;border-radius:4px;font-weight:900;">★ STAR</span>`);
+                spBadges.innerHTML = b.join('');
+            }
 
             // Name & ID
             const nameEl = document.getElementById('obs-prev-name');
@@ -7968,21 +8020,76 @@ window.logAdminSettingsActivity = async (action, details) => {
             const idEl = document.getElementById('obs-prev-id');
             if (idEl) idEl.textContent = c.studentId || '';
 
-            // Grade bar
+            // Specific Grade
             const pctEl = document.getElementById('obs-prev-pct');
             if (pctEl) { pctEl.textContent = pct ? pct.toFixed(1) + '%' : '—'; pctEl.style.color = gcol; }
             const barEl = document.getElementById('obs-prev-bar');
             if (barEl) { barEl.style.width = (pct || 0) + '%'; barEl.style.background = gcol; }
 
-            // Stats pills
-            const statsEl = document.getElementById('obs-prev-stats');
-            if (statsEl) {
-                const pills = [];
-                if (sec) pills.push(`<span class="px-2 py-0.5 rounded text-white font-black" style="font-size:8px;background:${col}dd;">${sec}</span>`);
-                if (cls) pills.push(`<span class="px-2 py-0.5 rounded text-slate-300 font-bold" style="font-size:8px;background:rgba(255,255,255,0.08);">${cls}</span>`);
-                const gradeLabel = pct >= 90 ? 'Excellent' : pct >= 75 ? 'Satisfactory' : pct >= 60 ? 'Developing' : pct ? 'Needs Work' : 'No Data';
-                pills.push(`<span class="px-2 py-0.5 rounded font-black" style="font-size:8px;color:${gcol};background:${gcol}22;">${gradeLabel}</span>`);
-                statsEl.innerHTML = pills.join('');
+            // Mean GWA
+            const gwaEl = document.getElementById('obs-prev-gwa');
+            if (gwaEl) { gwaEl.textContent = gwa ? gwa.toFixed(2) : '—'; }
+            const gwaLblEl = document.getElementById('obs-prev-gwa-label');
+            if (gwaLblEl) { gwaLblEl.textContent = gwaLabel; gwaLblEl.style.color = gwa >= 3.51 ? '#a78bfa' : gwa > 0 ? '#94a3b8' : '#475569'; }
+
+            // Grade standing pill
+            const gLabelEl = document.getElementById('obs-prev-grade-label');
+            if (gLabelEl) { gLabelEl.textContent = gradeLabel; gLabelEl.style.color = glcol; gLabelEl.style.background = glcol + '22'; }
+
+            // ── Merits balance ──
+            const meritsVal = document.getElementById('obs-prev-merits-val');
+            const mColor    = merits > 0 ? '#4ade80' : merits < 0 ? '#f87171' : '#94a3b8';
+            if (meritsVal) { meritsVal.textContent = (merits > 0 ? '+' : '') + merits; meritsVal.style.color = mColor; }
+
+            // Per-semester breakdown
+            const semEl = document.getElementById('obs-prev-merits-sem');
+            if (semEl) {
+                const semsHtml = [
+                    c.meritsSem1 != null ? `S1: ${c.meritsSem1 > 0 ? '+' : ''}${c.meritsSem1}` : null,
+                    c.meritsSem2 != null ? `S2: ${c.meritsSem2 > 0 ? '+' : ''}${c.meritsSem2}` : null,
+                    c.meritsSem3 != null ? `S3: ${c.meritsSem3 > 0 ? '+' : ''}${c.meritsSem3}` : null,
+                ].filter(Boolean);
+                semEl.textContent = semsHtml.join(' · ');
+            }
+
+            // Merit penalty warning
+            const mWarn = document.getElementById('obs-prev-merit-warning');
+            const mPenTxt = document.getElementById('obs-prev-merit-penalty-txt');
+            if (mWarn && mPenTxt) {
+                if (merits < 0) {
+                    const penalty = (Math.abs(merits) / 100 * 3).toFixed(1);
+                    mPenTxt.textContent = `-${penalty}% grade penalty (${merits} merits)`;
+                    mWarn.classList.remove('hidden');
+                    mWarn.classList.add('flex');
+                } else {
+                    mWarn.classList.add('hidden');
+                    mWarn.classList.remove('flex');
+                }
+            }
+
+            // ── CS Breakdown mini bars ──
+            const csBarsEl = document.getElementById('obs-prev-cs-bars');
+            if (csBarsEl) {
+                const csItems = [
+                    { label: 'Technical',   val: parseFloat(c.technicalCS)  || 0, max: 5, weight: 15, color: '#38bdf8' },
+                    { label: 'Leadership',  val: parseFloat(c.leadershipCS) || 0, max: 5, weight: 25, color: '#818cf8' },
+                    { label: 'Patriotism',  val: parseFloat(c.patriotismCS) || 0, max: 5, weight: 25, color: '#fb7185' },
+                    { label: 'Soft Skills', val: parseFloat(c.softCS)       || 0, max: 5, weight: 25, color: '#34d399' },
+                    { label: 'Academic',    val: parseFloat(c.academicCS)   || 0, max: 5, weight: 10, color: '#fbbf24' },
+                ];
+                csBarsEl.innerHTML = csItems.map(item => {
+                    const pctBar = item.max > 0 ? Math.max(0, Math.min(100, (item.val / item.max) * 100)) : 0;
+                    const displayVal = item.val ? item.val.toFixed(1) : '—';
+                    return `<div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span style="font-size:8px;color:#64748b;font-weight:700;">${item.label} <span style="color:#334155;">(${item.weight}%)</span></span>
+                            <span style="font-size:9px;color:${item.color};font-weight:900;">${displayVal}</span>
+                        </div>
+                        <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
+                            <div style="height:100%;width:${pctBar}%;background:${item.color};border-radius:99px;transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>`;
+                }).join('');
             }
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
