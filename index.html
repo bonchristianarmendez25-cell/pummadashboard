@@ -1040,6 +1040,7 @@
                 <div><label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase">Username</label><input type="text" id="admin-login-user" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-sm text-brand-black dark:text-white focus:outline-none focus:border-brand-blue"></div>
                 <div><label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase">Personal PIN</label><input type="password" id="admin-login-pin" class="w-full bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-sm text-brand-black dark:text-white focus:outline-none focus:border-brand-blue" onkeypress="if(event.key === 'Enter') submitAdminLogin()"></div>
                 <button onclick="submitAdminLogin()" class="w-full bg-brand-blue hover:bg-blue-800 text-white font-bold py-2.5 rounded shadow transition mt-2 flex items-center justify-center gap-2"><i data-lucide="log-in" class="w-4 h-4"></i> Login</button>
+                <p id="admin-login-error" class="hidden text-xs text-red-500 text-center mt-1 font-semibold"></p>
             </div>
         </div>
     </div>
@@ -6025,6 +6026,84 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 if (cadetBtn) cadetBtn.disabled = false;
             }
             if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // ── LOGIN FUNCTIONS ─────────────────────────────────────────────────
+        function hideAuthOverlay() {
+            const ov = document.getElementById('auth-overlay');
+            if (ov) { ov.classList.add('hidden'); ov.classList.remove('flex'); }
+        }
+
+        // Opens the admin/instructor PIN modal
+        window.openAdminLoginModal = () => {
+            const m = document.getElementById('admin-login-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            setTimeout(() => {
+                const u = document.getElementById('admin-login-user');
+                if (u) u.focus();
+            }, 100);
+        };
+
+        // Validates the admin PIN and enters admin mode
+        window.submitAdminLogin = () => {
+            const username = (document.getElementById('admin-login-user')?.value || '').trim();
+            const pin      = (document.getElementById('admin-login-pin')?.value || '').trim();
+            const errEl    = document.getElementById('admin-login-error');
+
+            const instructors = (window.appSettings?.instructors) || [{ username: 'admin', name: 'Master Admin', pin: window.appSettings?.adminPin || '1234' }];
+            const match = instructors.find(i =>
+                (i.username || 'admin').toLowerCase() === username.toLowerCase() && i.pin === pin
+            );
+
+            if (match) {
+                window.currentUserRole = 'admin';
+                window.currentInstructorName = match.name || match.username;
+                const m = document.getElementById('admin-login-modal');
+                if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+                hideAuthOverlay();
+                if (errEl) errEl.classList.add('hidden');
+                // Clear inputs
+                const u = document.getElementById('admin-login-user');
+                const p = document.getElementById('admin-login-pin');
+                if (u) u.value = '';
+                if (p) p.value = '';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } else {
+                if (errEl) {
+                    errEl.textContent = 'Incorrect username or PIN. Please try again.';
+                    errEl.classList.remove('hidden');
+                } else {
+                    alert('Incorrect username or PIN.');
+                }
+                const p = document.getElementById('admin-login-pin');
+                if (p) { p.value = ''; p.focus(); }
+            }
+        };
+
+        // Closes the admin modal without logging in
+        window.closeAdminLoginModal = () => {
+            const m = document.getElementById('admin-login-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            const errEl = document.getElementById('admin-login-error');
+            if (errEl) errEl.classList.add('hidden');
+        };
+
+        // Cadet View Mode — no PIN required, read-only access
+        window.loginAsCadet = (evt) => {
+            if (evt) evt.preventDefault();
+            window.currentUserRole = 'cadet';
+            window.currentInstructorName = null;
+            hideAuthOverlay();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        // Admin PIN recovery hint
+        window.recoverAdminPin = () => {
+            if (window.pummaDialog) {
+                window.pummaDialog({ title: 'PIN Recovery', message: 'Default PIN is <b>1234</b>.<br>If you changed it and forgot it, please contact the system administrator to reset the settings database.', type: 'info' });
+            } else {
+                alert('Default PIN is 1234. Contact your administrator if you changed it.');
+            }
         };
 
         async function startApp() {
