@@ -503,18 +503,22 @@
 
                         <div class="mt-5 border-t border-brand-creamBorder dark:border-slate-700 pt-4">
                             <label class="block text-xs font-semibold text-brand-blue dark:text-blue-300 mb-2 flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5"></i> Exam Deck Manager</label>
-                            
-                            <div class="flex gap-2 mb-3">
-                                <select id="manage-deck-subject" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none flex-1 min-w-0 truncate"></select>
-                                <button onclick="addExamSubject()" class="shrink-0 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded hover:bg-emerald-100 transition shadow-sm" title="Add Subject"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                                <button onclick="renameExamSubject()" class="shrink-0 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 px-2.5 py-1.5 rounded hover:bg-sky-100 transition shadow-sm" title="Rename Subject"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                <button onclick="deleteExamSubject()" class="shrink-0 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 px-2.5 py-1.5 rounded hover:bg-rose-100 transition shadow-sm" title="Delete Subject"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+                                <select id="manage-deck-reviewer" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none truncate">
+                                    <option value="reviewer1">Reviewer 1</option>
+                                    <option value="reviewer2">Reviewer 2</option>
+                                    <option value="reviewer3">Reviewer 3</option>
+                                </select>
+                                <select id="manage-deck-function" onchange="cmsFunctionChanged()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none truncate"></select>
+                                <select id="manage-deck-competency" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none truncate"></select>
                             </div>
+                            <p id="manage-deck-progress-badge" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mb-3">0 / 0 items entered (permit target)</p>
 
                             <div class="bg-brand-creamBg dark:bg-slate-900 p-3 rounded border border-brand-creamBorder dark:border-slate-700 mb-3 space-y-2">
                                 <textarea id="new-q-text" placeholder="Type the Question here..." class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-xs text-brand-black dark:text-white focus:outline-none" rows="2"></textarea>
                                 <textarea id="new-a-text" placeholder="Type the Answer here..." class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded px-3 py-2 text-xs text-brand-black dark:text-white focus:outline-none" rows="2"></textarea>
-                                <button onclick="addQuestionToDeck()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-[10px] font-bold w-full transition shadow-sm">Add Question to Selected Subject</button>
+                                <button onclick="addQuestionToDeck()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-[10px] font-bold w-full transition shadow-sm">Add Question to Selected Competency</button>
                             </div>
 
                             <div class="max-h-48 overflow-y-auto space-y-2 pr-1" id="manage-deck-list"></div>
@@ -2565,20 +2569,34 @@
             <div class="flex-1 bg-brand-creamBg dark:bg-slate-950 p-6 flex flex-col items-center overflow-y-auto">
                 
                 <div id="exam-prep-setup" class="w-full max-w-4xl mt-4">
+                    <button id="exam-setup-back" onclick="examPrepBack()" class="hidden mb-4 text-xs font-bold text-slate-500 hover:text-brand-blue dark:hover:text-white flex items-center gap-1 transition"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back</button>
                     <div class="text-center mb-8">
                         <i data-lucide="layers" class="w-16 h-16 mx-auto mb-4 text-indigo-500/50"></i>
-                        <h2 class="text-xl font-bold text-brand-blue dark:text-white uppercase tracking-wider">Select Review Subject</h2>
-                        <p class="text-xs text-slate-500 mt-2">Practice core concepts for board exams and structural watchkeeping duties</p>
+                        <h2 id="exam-setup-title" class="text-xl font-bold text-brand-blue dark:text-white uppercase tracking-wider">Select Review Set</h2>
+                        <p id="exam-setup-desc" class="text-xs text-slate-500 mt-2">Choose a review set to begin practicing</p>
                     </div>
-                    
+
+                    <div id="exam-study-all-wrap" class="w-full"></div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full" id="exam-deck-list">
                         </div>
                 </div>
 
                 <div id="exam-prep-active" class="hidden w-full max-w-2xl h-full flex-col justify-between">
-                    <div class="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 shrink-0">
-                        <span id="exam-deck-title">Deck Name</span>
-                        <span id="exam-card-counter" class="bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded">Card 1 / 10</span>
+                    <div class="shrink-0 mb-4">
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-widest">
+                            <div>
+                                <div id="exam-deck-title">Deck Name</div>
+                                <div id="exam-deck-subtitle" class="text-[10px] font-semibold text-indigo-500 normal-case tracking-normal mt-0.5">Today's Set</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="exam-shuffle-toggle" onclick="toggleExamShuffle()" class="p-2 rounded-lg border border-brand-creamBorder dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30" title="Toggle shuffle"><i data-lucide="shuffle" class="w-3.5 h-3.5"></i></button>
+                                <span id="exam-card-counter" class="bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded normal-case">Card 1 / 10</span>
+                            </div>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mt-2.5 overflow-hidden">
+                            <div id="exam-progress-bar-fill" class="h-full bg-indigo-600 rounded-full transition-all duration-300" style="width: 10%"></div>
+                        </div>
                     </div>
                     
                     <div class="flex-1 w-full min-h-[300px] relative perspective-1000">
@@ -4587,141 +4605,7 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.customConfirm = (msg) => window.showSysDialog('confirm', 'CONFIRMATION REQUIRED', msg);
         window.customPrompt = (msg, defaultText) => window.showSysDialog('prompt', 'INPUT REQUIRED', msg, defaultText);
 
-        // --- FULLY DYNAMIC PUMMA REVIEW DECK & CMS ---
-        window.examTitles = {
-            ror: { title: "Rules of the Road (COLREGs)", desc: "Nav Lights, Day Shapes & Steering Rules" },
-            iala: { title: "IALA Buoyage System", desc: "Region A & B, Marks, Topmarks" },
-            navigation: { title: "Terrestrial & Celestial Navigation", desc: "Lines of position, gyro errors, corrections" },
-            seamanship: { title: "Seamanship & Cargo Handling", desc: "Marlinespike command, stability, stowage safely" }
-        };
-
-        window.examDatabase = {
-            ror: [{ q: "What day shape is exhibited by a Vessel Aground?", a: "Three black balls in a vertical line." }, { q: "What is the arc of visibility of a Masthead Light?", a: "225 degrees." }],
-            iala: [{ q: "In IALA Region A, what is the color of a Port Hand Mark?", a: "Red." }],
-            navigation: [{ q: "What causes Gyro Error on a commercial vessel?", a: "The combined effects of the gyroscope's mechanical imperfections, speed error, and latitude change deviations." }],
-            seamanship: [{ q: "What standard method is used to determine structural draft indicators?", a: "Reading vertical metric or imperial markings permanently welded onto the hull exterior." }]
-        };
-
-        window.currentExamDeck = [];
-        window.currentCardIndex = 0;
-
-        window.renderSubjectDropdown = () => {
-            if(!window.appSettings.examTitles || Object.keys(window.appSettings.examTitles).length === 0) window.appSettings.examTitles = JSON.parse(JSON.stringify(window.examTitles));
-            if(!window.appSettings.examDatabase) window.appSettings.examDatabase = JSON.parse(JSON.stringify(window.examDatabase));
-            
-            const sel = document.getElementById('manage-deck-subject');
-            if(!sel) return;
-            const curVal = sel.value;
-            sel.innerHTML = Object.keys(window.appSettings.examTitles).map(k => `<option value="${k}">${window.appSettings.examTitles[k].title}</option>`).join('');
-            if(window.appSettings.examTitles[curVal]) sel.value = curVal;
-        };
-
-        window.renderDeckManager = () => {
-            window.renderSubjectDropdown();
-            const subject = document.getElementById('manage-deck-subject').value;
-            const container = document.getElementById('manage-deck-list');
-            if(!subject) { if(container) container.innerHTML = ''; return; }
-            
-            const deck = window.appSettings.examDatabase[subject] || [];
-            if (deck.length === 0) {
-                if(container) container.innerHTML = '<p class="text-[10px] text-slate-500 text-center italic py-4 border border-dashed border-slate-300 dark:border-slate-700 rounded">No questions in this deck yet.</p>';
-                return;
-            }
-            if(container) {
-                container.innerHTML = deck.map((item, index) => `
-                    <div class="bg-white dark:bg-slate-800 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 flex justify-between gap-3 items-start relative group shadow-sm">
-                        <div class="flex-1 min-w-0"><p class="text-[10px] font-bold text-brand-blue dark:text-blue-300 whitespace-pre-wrap">Q: ${item.q}</p><p class="text-[9px] text-slate-500 whitespace-pre-wrap mt-1">A: ${item.a}</p></div>
-                        <button onclick="deleteQuestionFromDeck('${subject}', ${index})" class="text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 p-1.5 rounded transition shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                `).join('');
-            }
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        window.addExamSubject = async () => {
-            const title = await window.customPrompt("Enter the NEW subject title:", "e.g., General Seamanship");
-            if(!title) return;
-            const desc = await window.customPrompt("Enter a short description:", "e.g., Core terminology and basics");
-            
-            const id = 'subj_' + Date.now();
-            window.appSettings.examTitles[id] = { title: title.trim(), desc: desc ? desc.trim() : "Review questions" };
-            window.appSettings.examDatabase[id] = [];
-            
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Added', `Created new review deck: ${title}`);
-            window.renderSubjectDropdown();
-            document.getElementById('manage-deck-subject').value = id;
-            window.renderDeckManager(); 
-        };
-
-        window.renameExamSubject = async () => {
-            const id = document.getElementById('manage-deck-subject').value;
-            if(!id) return;
-            const currentTitle = window.appSettings.examTitles[id].title;
-            const newTitle = await window.customPrompt("Rename subject:", currentTitle);
-            if(!newTitle || newTitle.trim() === currentTitle) return;
-            const newDesc = await window.customPrompt("Update description:", window.appSettings.examTitles[id].desc);
-            
-            window.appSettings.examTitles[id].title = newTitle.trim();
-            if(newDesc) window.appSettings.examTitles[id].desc = newDesc.trim();
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Renamed', `Renamed deck to ${newTitle.trim()}`);
-            window.renderDeckManager();
-        };
-
-        window.deleteExamSubject = async () => {
-            const id = document.getElementById('manage-deck-subject').value;
-            if(!id) return;
-            if(Object.keys(window.appSettings.examTitles).length <= 1) return window.customAlert("You must have at least one subject deck.");
-            const currentTitle = window.appSettings.examTitles[id].title;
-            const confirmed = await window.customConfirm(`Are you sure you want to delete the ENTIRE "${currentTitle}" deck? This deletes all its questions.`);
-            if(!confirmed) return;
-
-            delete window.appSettings.examTitles[id];
-            delete window.appSettings.examDatabase[id];
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Deleted', `Deleted deck: ${currentTitle}`);
-            window.renderDeckManager();
-        };
-
-        window.addQuestionToDeck = () => {
-            const subject = document.getElementById('manage-deck-subject').value;
-            const qBox = document.getElementById('new-q-text');
-            const aBox = document.getElementById('new-a-text');
-            if (!qBox.value.trim() || !aBox.value.trim()) return window.customAlert("Both Question and Answer fields must be filled out!");
-
-            if (!window.appSettings.examDatabase[subject]) window.appSettings.examDatabase[subject] = [];
-            window.appSettings.examDatabase[subject].push({ q: qBox.value.trim(), a: aBox.value.trim() });
-            qBox.value = ''; aBox.value = '';
-            window.renderDeckManager();
-        };
-
-        window.deleteQuestionFromDeck = async (subject, index) => {
-            const confirmed = await window.customConfirm("Delete this question permanently?");
-            if(confirmed) {
-                window.appSettings.examDatabase[subject].splice(index, 1);
-                window.renderDeckManager();
-            }
-        };
-
-        window.saveExamDatabase = async () => {
-            if (!window.appSettings.examDatabase) return;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...';
-            if (window.lucide) window.lucide.createIcons();
-
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examDatabase: window.appSettings.examDatabase });
-                if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
-                window.examDatabase = JSON.parse(JSON.stringify(window.appSettings.examDatabase));
-                window.customAlert("Database successfully saved! All cadets will now see the updated questions.");
-            } catch (error) { window.customAlert("Error saving database: " + error.message); }
-            btn.innerHTML = originalText;
-            if (window.lucide) window.lucide.createIcons();
-        };
+        // --- PUMMA REVIEW DECK & CMS: full engine consolidated further below (search "PUMMA REVIEW DECK ENGINE — CANONICAL") ---
         
         // --- COLREGS DIGITAL LIBRARY ENGINE ---
         // --- FULL IMO COLREGS DIGITAL LIBRARY ENGINE (2018 CONSOLIDATED) ---
@@ -7727,94 +7611,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
         };
 
-        window.openExamPrepModal = () => {
-            const m = document.getElementById('exam-prep-modal');
-            if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            
-            const listEl = document.getElementById('exam-deck-list');
-            let activeTitles = window.appSettings.examTitles;
-            
-            // Failsafe: If cloud returns empty, load the defaults immediately
-            if (!activeTitles || Object.keys(activeTitles).length === 0) {
-                activeTitles = window.examTitles;
-            }
-
-            const colors = ['indigo', 'emerald', 'amber', 'rose', 'sky', 'purple'];
-            
-            if (listEl) {
-                listEl.innerHTML = Object.keys(activeTitles).map((k, i) => {
-                    const c = colors[i % colors.length];
-                    return `
-                        <button onclick="startExamDeck('${k}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 hover:border-${c}-500 p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
-                            <div class="bg-${c}-100 dark:bg-${c}-900/50 p-3 rounded-lg text-${c}-600 dark:text-${c}-400 group-hover:scale-110 transition"><i data-lucide="book" class="w-6 h-6"></i></div>
-                            <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${activeTitles[k].title}</h4><p class="text-[11px] text-slate-500">${activeTitles[k].desc}</p></div>
-                        </button>
-                    `;
-                }).join('');
-            }
-            if (window.lucide) window.lucide.createIcons();
-            
-            document.getElementById('exam-prep-setup').classList.remove('hidden');
-            const active = document.getElementById('exam-prep-active');
-            active.classList.add('hidden'); active.classList.remove('flex');
-        };
-
-        window.closeExamPrepModal = () => {
-            const m = document.getElementById('exam-prep-modal');
-            if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
-        };
-
-        window.startExamDeck = (deckId) => {
-            const activeDatabase = window.appSettings.examDatabase || window.examDatabase;
-            let activeTitles = window.appSettings.examTitles;
-            if (!activeTitles || Object.keys(activeTitles).length === 0) activeTitles = window.examTitles;
-            
-            if (!activeDatabase[deckId] || activeDatabase[deckId].length === 0) {
-                window.customAlert("There are no questions in this deck yet. Please ask your Instructor to add some.");
-                return;
-            }
-
-            window.currentExamDeck = [...activeDatabase[deckId]].sort(() => Math.random() - 0.5); 
-            window.currentCardIndex = 0;
-            document.getElementById('exam-deck-title').innerText = activeTitles[deckId] ? activeTitles[deckId].title : 'Review Deck';
-            
-            document.getElementById('exam-prep-setup').classList.add('hidden');
-            const active = document.getElementById('exam-prep-active');
-            active.classList.remove('hidden'); active.classList.add('flex');
-            window.renderExamCard();
-        };
-
-        window.renderExamCard = () => {
-            const card = window.currentExamDeck[window.currentCardIndex];
-            document.getElementById('exam-card-counter').innerText = `Card ${window.currentCardIndex + 1} of ${window.currentExamDeck.length}`;
-            document.getElementById('exam-q-text').innerText = card.q;
-            document.getElementById('exam-a-text').innerText = card.a;
-            
-            const front = document.getElementById('exam-card-front');
-            const back = document.getElementById('exam-card-back');
-            front.classList.remove('hidden'); front.classList.add('flex');
-            back.classList.add('hidden'); back.classList.remove('flex');
-        };
-
-        window.toggleCardFlip = () => {
-            const front = document.getElementById('exam-card-front');
-            const back = document.getElementById('exam-card-back');
-            if(front.classList.contains('hidden')) { front.classList.remove('hidden'); front.classList.add('flex'); back.classList.add('hidden'); back.classList.remove('flex'); } 
-            else { front.classList.add('hidden'); front.classList.remove('flex'); back.classList.remove('hidden'); back.classList.add('flex'); }
-        };
-
-        window.nextExamCard = (dir) => {
-            window.currentCardIndex += dir;
-            if(window.currentCardIndex < 0) window.currentCardIndex = window.currentExamDeck.length - 1;
-            if(window.currentCardIndex >= window.currentExamDeck.length) window.currentCardIndex = 0;
-            window.renderExamCard();
-        };
-
-        window.endExamDeck = () => {
-            document.getElementById('exam-prep-setup').classList.remove('hidden');
-            const active = document.getElementById('exam-prep-active');
-            active.classList.add('hidden'); active.classList.remove('flex');
-        };
+        // --- Cadet-facing exam prep UI functions consolidated further below (search "PUMMA REVIEW DECK ENGINE — CANONICAL") ---
 
         window.handleSignOut = async () => {
             const now = new Date().toLocaleString();
@@ -11036,177 +10833,98 @@ window.logAdminSettingsActivity = async (action, details) => {
         window.customConfirm = (msg) => window.showSysDialog('confirm', 'CONFIRMATION REQUIRED', msg);
         window.customPrompt = (msg, defaultText) => window.showSysDialog('prompt', 'INPUT REQUIRED', msg, defaultText);
 
-        // --- FULLY DYNAMIC PUMMA REVIEW DECK & CMS ---
-        window.examTitles = {
-            ror: { title: "Rules of the Road (COLREGs)", desc: "Nav Lights, Day Shapes & Steering Rules" },
-            iala: { title: "IALA Buoyage System", desc: "Region A & B, Marks, Topmarks" },
-            navigation: { title: "Terrestrial & Celestial Navigation", desc: "Lines of position, gyro errors, corrections" },
-            seamanship: { title: "Seamanship & Cargo Handling", desc: "Marlinespike command, stability, stowage safely" }
+        // ============================================================================
+        // === PUMMA REVIEW DECK ENGINE — CANONICAL (Reviewer > Function > Competency) ===
+        // ============================================================================
+
+        // Fixed taxonomy — Function/Competency structure with official item counts.
+        // ("NO OF ITEMS" per competency, used to size each daily rotating set.)
+        window.pummaCompetencyMeta = {
+            c1:  { code: 'C1',  title: 'Plan and Conduct a Passage and Determine Position', items: 20, func: 'f1' },
+            c2:  { code: 'C2',  title: 'Maintain a Safe Navigational Watch', items: 20, func: 'f1' },
+            c3:  { code: 'C3',  title: 'Use of Radar and ARPA for the Safety of Navigation', items: 5,  func: 'f1' },
+            c4:  { code: 'C4',  title: 'Use of ECDIS to Maintain Safety of Navigation', items: 5,  func: 'f1' },
+            c5:  { code: 'C5',  title: 'Respond to Emergencies', items: 10, func: 'f1' },
+            c6:  { code: 'C6',  title: 'Respond to a Distress Signal at Sea', items: 5,  func: 'f1' },
+            c7:  { code: 'C7',  title: 'Use the IMO SMCP and Use English', items: 5,  func: 'f1' },
+            c8:  { code: 'C8',  title: 'Transmit and Receive Information by Visual Signaling', items: 10, func: 'f1' },
+            c9:  { code: 'C9',  title: 'Manoeuvre the Ship', items: 10, func: 'f1' },
+            c10: { code: 'C10', title: 'Monitor the Loading, Stowage, Securing and Care During the Voyage and the Unloading of Cargoes', items: 30, func: 'f2' },
+            c11: { code: 'C11', title: 'Inspect and Report Defects and Damage to Cargo Spaces, Hatch Covers and Ballast Tanks', items: 20, func: 'f2' },
+            c12: { code: 'C12', title: 'Ensure Compliance with Pollution-Prevention Requirements', items: 10, func: 'f3' },
+            c13: { code: 'C13', title: 'Maintain Seaworthiness of the Ship', items: 20, func: 'f3' },
+            c14: { code: 'C14', title: 'Prevent, Control and Fight Fires on Board', items: 5,  func: 'f3' },
+            c15: { code: 'C15', title: 'Operate Life-Saving Appliances', items: 5,  func: 'f3' },
+            c16: { code: 'C16', title: 'Apply Medical First Aid on Board Ship', items: 5,  func: 'f3' },
+            c17: { code: 'C17', title: 'Monitor Compliance with Legislative Requirements', items: 10, func: 'f3' }
+        };
+        window.pummaFunctions = {
+            f1: { code: 'F1', title: 'Navigation at the Operational Level', competencies: ['c1','c2','c3','c4','c5','c6','c7','c8','c9'] },
+            f2: { code: 'F2', title: 'Cargo Handling and Stowage at the Operational Level', competencies: ['c10','c11'] },
+            f3: { code: 'F3', title: 'Controlling Operation of the Ship and Care for Persons on Board at the Operational Level', competencies: ['c12','c13','c14','c15','c16','c17'] }
+        };
+        window.pummaReviewers = { reviewer1: { title: 'Reviewer 1' }, reviewer2: { title: 'Reviewer 2' }, reviewer3: { title: 'Reviewer 3' } };
+
+        window.buildEmptyExamDatabase = () => {
+            const dbase = {};
+            Object.keys(window.pummaReviewers).forEach(rid => {
+                dbase[rid] = {};
+                Object.keys(window.pummaCompetencyMeta).forEach(cid => { dbase[rid][cid] = []; });
+            });
+            return dbase;
+        };
+        window.ensureExamDatabase = () => {
+            if (!window.appSettings.examDatabase) window.appSettings.examDatabase = window.buildEmptyExamDatabase();
+            Object.keys(window.pummaReviewers).forEach(rid => {
+                if (!window.appSettings.examDatabase[rid]) window.appSettings.examDatabase[rid] = {};
+                Object.keys(window.pummaCompetencyMeta).forEach(cid => {
+                    if (!window.appSettings.examDatabase[rid][cid]) window.appSettings.examDatabase[rid][cid] = [];
+                });
+            });
+            return window.appSettings.examDatabase;
         };
 
-        window.examDatabase = {
-            ror: [{ q: "What day shape is exhibited by a Vessel Aground?", a: "Three black balls in a vertical line." }, { q: "What is the arc of visibility of a Masthead Light?", a: "225 degrees." }],
-            iala: [{ q: "In IALA Region A, what is the color of a Port Hand Mark?", a: "Red." }],
-            navigation: [{ q: "What causes Gyro Error on a commercial vessel?", a: "The combined effects of the gyroscope's mechanical imperfections, speed error, and latitude change deviations." }],
-            seamanship: [{ q: "What standard method is used to determine structural draft indicators?", a: "Reading vertical metric or imperial markings permanently welded onto the hull exterior." }]
+        // --- Deterministic seeded shuffle (so daily rotation is identical for every cadet, no per-user storage needed) ---
+        window._pummaHashSeed = (str) => { let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return h >>> 0; }; };
+        window._pummaMulberry32 = (seed) => { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+        window._pummaSeededShuffleIndices = (n, seedStr) => {
+            const seedFn = window._pummaHashSeed(seedStr); const rand = window._pummaMulberry32(seedFn());
+            const arr = Array.from({ length: n }, (_, i) => i);
+            for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+            return arr;
+        };
+        window._pummaDaysSinceEpoch = () => Math.floor(Date.now() / 86400000);
+
+        // Today's rotating set for one competency — same for every cadet, cycles through the WHOLE pool over several days.
+        window.getDailyCompetencySet = (reviewerId, competencyId) => {
+            const pool = (window.ensureExamDatabase()[reviewerId] || {})[competencyId] || [];
+            const meta = window.pummaCompetencyMeta[competencyId];
+            if (pool.length === 0) return [];
+            const targetSize = Math.min(meta.items, pool.length);
+            if (pool.length <= targetSize) return pool.map((c, i) => ({ ...c, _idx: i }));
+            const order = window._pummaSeededShuffleIndices(pool.length, reviewerId + '|' + competencyId);
+            const totalChunks = Math.ceil(pool.length / targetSize);
+            const chunkIndex = window._pummaDaysSinceEpoch() % totalChunks;
+            const chunkIdxs = order.slice(chunkIndex * targetSize, chunkIndex * targetSize + targetSize);
+            return chunkIdxs.map(i => ({ ...pool[i], _idx: i }));
+        };
+        window.getFullCompetencyPool = (reviewerId, competencyId) => {
+            const pool = (window.ensureExamDatabase()[reviewerId] || {})[competencyId] || [];
+            return pool.map((c, i) => ({ ...c, _idx: i }));
         };
 
+        // --- Navigation state for the cadet-facing modal ---
+        window.examNav = { level: 'reviewers', reviewerId: null, functionId: null };
         window.currentExamDeck = [];
         window.currentCardIndex = 0;
+        window.currentDeckLabel = { title: '', sub: '' };
+        window.examShuffleOn = true;
 
-        window.renderSubjectDropdown = () => {
-            if(!window.appSettings.examTitles || Object.keys(window.appSettings.examTitles).length === 0) window.appSettings.examTitles = JSON.parse(JSON.stringify(window.examTitles));
-            if(!window.appSettings.examDatabase) window.appSettings.examDatabase = JSON.parse(JSON.stringify(window.examDatabase));
-            
-            const sel = document.getElementById('manage-deck-subject');
-            if(!sel) return;
-            const curVal = sel.value;
-            sel.innerHTML = Object.keys(window.appSettings.examTitles).map(k => `<option value="${k}">${window.appSettings.examTitles[k].title}</option>`).join('');
-            if(window.appSettings.examTitles[curVal]) sel.value = curVal;
-        };
-
-        window.renderDeckManager = () => {
-            window.renderSubjectDropdown();
-            const subject = document.getElementById('manage-deck-subject').value;
-            const container = document.getElementById('manage-deck-list');
-            if(!subject) { if(container) container.innerHTML = ''; return; }
-            
-            const deck = window.appSettings.examDatabase[subject] || [];
-            if (deck.length === 0) {
-                if(container) container.innerHTML = '<p class="text-[10px] text-slate-500 text-center italic py-4 border border-dashed border-slate-300 dark:border-slate-700 rounded">No questions in this deck yet.</p>';
-                return;
-            }
-            if(container) {
-                container.innerHTML = deck.map((item, index) => `
-                    <div class="bg-white dark:bg-slate-800 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 flex justify-between gap-3 items-start relative group shadow-sm">
-                        <div class="flex-1 min-w-0"><p class="text-[10px] font-bold text-brand-blue dark:text-blue-300 whitespace-pre-wrap">Q: ${item.q}</p><p class="text-[9px] text-slate-500 whitespace-pre-wrap mt-1">A: ${item.a}</p></div>
-                        <button onclick="deleteQuestionFromDeck('${subject}', ${index})" class="text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 p-1.5 rounded transition shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </div>
-                `).join('');
-            }
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        window.addExamSubject = async () => {
-            const title = await window.customPrompt("Enter the NEW subject title:", "e.g., General Seamanship");
-            if(!title) return;
-            const desc = await window.customPrompt("Enter a short description:", "e.g., Core terminology and basics");
-            
-            const id = 'subj_' + Date.now();
-            window.appSettings.examTitles[id] = { title: title.trim(), desc: desc ? desc.trim() : "Review questions" };
-            window.appSettings.examDatabase[id] = [];
-            
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Added', `Created new review deck: ${title}`);
-            window.renderSubjectDropdown();
-            document.getElementById('manage-deck-subject').value = id;
-            window.renderDeckManager(); 
-        };
-
-        window.renameExamSubject = async () => {
-            const id = document.getElementById('manage-deck-subject').value;
-            if(!id) return;
-            const currentTitle = window.appSettings.examTitles[id].title;
-            const newTitle = await window.customPrompt("Rename subject:", currentTitle);
-            if(!newTitle || newTitle.trim() === currentTitle) return;
-            const newDesc = await window.customPrompt("Update description:", window.appSettings.examTitles[id].desc);
-            
-            window.appSettings.examTitles[id].title = newTitle.trim();
-            if(newDesc) window.appSettings.examTitles[id].desc = newDesc.trim();
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Renamed', `Renamed deck to ${newTitle.trim()}`);
-            window.renderDeckManager();
-        };
-
-        window.deleteExamSubject = async () => {
-            const id = document.getElementById('manage-deck-subject').value;
-            if(!id) return;
-            if(Object.keys(window.appSettings.examTitles).length <= 1) return window.customAlert("You must have at least one subject deck.");
-            const currentTitle = window.appSettings.examTitles[id].title;
-            const confirmed = await window.customConfirm(`Are you sure you want to delete the ENTIRE "${currentTitle}" deck? This deletes all its questions.`);
-            if(!confirmed) return;
-
-            delete window.appSettings.examTitles[id];
-            delete window.appSettings.examDatabase[id];
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examTitles: window.appSettings.examTitles, examDatabase: window.appSettings.examDatabase });
-            if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Subject Deleted', `Deleted deck: ${currentTitle}`);
-            window.renderDeckManager();
-        };
-
-        window.addQuestionToDeck = () => {
-            const subject = document.getElementById('manage-deck-subject').value;
-            const qBox = document.getElementById('new-q-text');
-            const aBox = document.getElementById('new-a-text');
-            if (!qBox.value.trim() || !aBox.value.trim()) return window.customAlert("Both Question and Answer fields must be filled out!");
-
-            if (!window.appSettings.examDatabase[subject]) window.appSettings.examDatabase[subject] = [];
-            window.appSettings.examDatabase[subject].push({ q: qBox.value.trim(), a: aBox.value.trim() });
-            qBox.value = ''; aBox.value = '';
-            window.renderDeckManager();
-        };
-
-        window.deleteQuestionFromDeck = async (subject, index) => {
-            const confirmed = await window.customConfirm("Delete this question permanently?");
-            if(confirmed) {
-                window.appSettings.examDatabase[subject].splice(index, 1);
-                window.renderDeckManager();
-            }
-        };
-
-        window.saveExamDatabase = async () => {
-            if (!window.appSettings.examDatabase) return;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...';
-            if (window.lucide) window.lucide.createIcons();
-
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examDatabase: window.appSettings.examDatabase });
-                if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
-                window.examDatabase = JSON.parse(JSON.stringify(window.appSettings.examDatabase));
-                window.customAlert("Database successfully saved! All cadets will now see the updated questions.");
-            } catch (error) { window.customAlert("Error saving database: " + error.message); }
-            btn.innerHTML = originalText;
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        // --- CADET UI LOGIC ---
         window.openExamPrepModal = () => {
             const m = document.getElementById('exam-prep-modal');
-            if(m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            
-            const listEl = document.getElementById('exam-deck-list');
-            let activeTitles = window.appSettings.examTitles;
-            
-            // Failsafe: If cloud returns empty, load the defaults immediately
-            if (!activeTitles || Object.keys(activeTitles).length === 0) {
-                activeTitles = window.examTitles;
-            }
-
-            // TAILWIND COMPILER FIX: Hardcode the strings so Tailwind does not strip the colors!
-            const styleClasses = [
-                { border: 'hover:border-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/50', text: 'text-indigo-600 dark:text-indigo-400' },
-                { border: 'hover:border-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-600 dark:text-emerald-400' },
-                { border: 'hover:border-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-600 dark:text-amber-400' },
-                { border: 'hover:border-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/50', text: 'text-rose-600 dark:text-rose-400' },
-                { border: 'hover:border-sky-500', bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-600 dark:text-sky-400' }
-            ];
-            
-            if (listEl) {
-                listEl.innerHTML = Object.keys(activeTitles).map((k, i) => {
-                    const style = styleClasses[i % styleClasses.length];
-                    return `
-                        <button onclick="startExamDeck('${k}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 ${style.border} p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
-                            <div class="${style.bg} p-3 rounded-lg ${style.text} group-hover:scale-110 transition"><i data-lucide="book" class="w-6 h-6"></i></div>
-                            <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${activeTitles[k].title}</h4><p class="text-[11px] text-slate-500">${activeTitles[k].desc}</p></div>
-                        </button>
-                    `;
-                }).join('');
-            }
-            if (window.lucide) window.lucide.createIcons();
-            
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window.examNav = { level: 'reviewers', reviewerId: null, functionId: null };
+            window.renderExamPrepSetup();
             document.getElementById('exam-prep-setup').classList.remove('hidden');
             const active = document.getElementById('exam-prep-active');
             active.classList.add('hidden'); active.classList.remove('flex');
@@ -11214,35 +10932,149 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.closeExamPrepModal = () => {
             const m = document.getElementById('exam-prep-modal');
-            if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
         };
 
-        window.startExamDeck = (deckId) => {
-            const activeDatabase = window.appSettings.examDatabase || window.examDatabase;
-            let activeTitles = window.appSettings.examTitles;
-            if (!activeTitles || Object.keys(activeTitles).length === 0) activeTitles = window.examTitles;
-            
-            if (!activeDatabase[deckId] || activeDatabase[deckId].length === 0) {
-                window.customAlert("There are no questions in this deck yet. Please ask your Instructor to add some.");
-                return;
-            }
+        window.examPrepBack = () => {
+            if (window.examNav.level === 'competencies') { window.examNav.level = 'functions'; window.examNav.functionId = null; }
+            else if (window.examNav.level === 'functions') { window.examNav.level = 'reviewers'; window.examNav.reviewerId = null; }
+            window.renderExamPrepSetup();
+        };
 
-            window.currentExamDeck = [...activeDatabase[deckId]].sort(() => Math.random() - 0.5); 
+        window.examPrepGoReviewer = (reviewerId) => { window.examNav = { level: 'functions', reviewerId, functionId: null }; window.renderExamPrepSetup(); };
+        window.examPrepGoFunction = (functionId) => { window.examNav.level = 'competencies'; window.examNav.functionId = functionId; window.renderExamPrepSetup(); };
+
+        window.renderExamPrepSetup = () => {
+            const titleEl = document.getElementById('exam-setup-title');
+            const descEl = document.getElementById('exam-setup-desc');
+            const backBtn = document.getElementById('exam-setup-back');
+            const listEl = document.getElementById('exam-deck-list');
+            const studyAllWrap = document.getElementById('exam-study-all-wrap');
+            window.ensureExamDatabase();
+            const styleClasses = [
+                { border: 'hover:border-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                { border: 'hover:border-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                { border: 'hover:border-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-600 dark:text-amber-400' },
+                { border: 'hover:border-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/50', text: 'text-rose-600 dark:text-rose-400' },
+                { border: 'hover:border-sky-500', bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-600 dark:text-sky-400' }
+            ];
+
+            if (studyAllWrap) studyAllWrap.innerHTML = '';
+
+            if (window.examNav.level === 'reviewers') {
+                if (backBtn) backBtn.classList.add('hidden');
+                if (titleEl) titleEl.innerText = 'Select Review Set';
+                if (descEl) descEl.innerText = 'Choose a review set to begin practicing';
+                if (listEl) {
+                    listEl.innerHTML = Object.keys(window.pummaReviewers).map((rid, i) => {
+                        const style = styleClasses[i % styleClasses.length];
+                        return `
+                        <button onclick="examPrepGoReviewer('${rid}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 ${style.border} p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
+                            <div class="${style.bg} p-3 rounded-lg ${style.text} group-hover:scale-110 transition"><i data-lucide="layers" class="w-6 h-6"></i></div>
+                            <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${window.pummaReviewers[rid].title}</h4><p class="text-[11px] text-slate-500">3 Functions · 17 Competencies</p></div>
+                        </button>`;
+                    }).join('');
+                }
+            } else if (window.examNav.level === 'functions') {
+                if (backBtn) backBtn.classList.remove('hidden');
+                if (titleEl) titleEl.innerText = window.pummaReviewers[window.examNav.reviewerId].title;
+                if (descEl) descEl.innerText = 'Choose a Function to review';
+                if (listEl) {
+                    listEl.innerHTML = Object.keys(window.pummaFunctions).map((fid, i) => {
+                        const style = styleClasses[i % styleClasses.length];
+                        const f = window.pummaFunctions[fid];
+                        return `
+                        <button onclick="examPrepGoFunction('${fid}')" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 ${style.border} p-4 rounded-xl shadow-sm hover:shadow-md transition text-left flex items-center gap-4 group">
+                            <div class="${style.bg} p-3 rounded-lg ${style.text} group-hover:scale-110 transition"><i data-lucide="book-open-check" class="w-6 h-6"></i></div>
+                            <div><h4 class="font-bold text-brand-black dark:text-white text-sm">${f.code} — ${f.title}</h4><p class="text-[11px] text-slate-500">${f.competencies.length} Competencies (${f.competencies[0].toUpperCase()}–${f.competencies[f.competencies.length-1].toUpperCase()})</p></div>
+                        </button>`;
+                    }).join('');
+                }
+            } else if (window.examNav.level === 'competencies') {
+                const fid = window.examNav.functionId; const f = window.pummaFunctions[fid];
+                if (backBtn) backBtn.classList.remove('hidden');
+                if (titleEl) titleEl.innerText = `${f.code} — ${f.title}`;
+                if (descEl) descEl.innerText = window.pummaReviewers[window.examNav.reviewerId].title;
+                if (studyAllWrap) {
+                    studyAllWrap.innerHTML = `
+                        <button onclick="startFunctionStudyAll('${window.examNav.reviewerId}','${fid}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wide mb-4">
+                            <i data-lucide="shuffle" class="w-4 h-4"></i> Study All — ${f.code} (All Competencies Combined)
+                        </button>`;
+                }
+                if (listEl) {
+                    listEl.innerHTML = f.competencies.map((cid, i) => {
+                        const style = styleClasses[i % styleClasses.length];
+                        const meta = window.pummaCompetencyMeta[cid];
+                        const pool = window.getFullCompetencyPool(window.examNav.reviewerId, cid);
+                        const disabled = pool.length === 0;
+                        return `
+                        <div class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl shadow-sm p-4 flex flex-col gap-3 ${disabled ? 'opacity-60' : ''}">
+                            <div class="flex items-center gap-3">
+                                <div class="${style.bg} p-2.5 rounded-lg ${style.text} shrink-0"><i data-lucide="book" class="w-5 h-5"></i></div>
+                                <div class="min-w-0"><h4 class="font-bold text-brand-black dark:text-white text-xs">${meta.code} — ${meta.title}</h4><p class="text-[10px] text-slate-500">${pool.length} question${pool.length===1?'':'s'} in bank · ${meta.items} items/day</p></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button ${disabled ? 'disabled' : ''} onclick="startExamDeck('${window.examNav.reviewerId}','${cid}','daily')" class="flex-1 ${style.bg} ${style.text} font-bold text-[10px] uppercase tracking-wide py-2 rounded-lg hover:opacity-80 transition disabled:cursor-not-allowed">Today's Set</button>
+                                <button ${disabled ? 'disabled' : ''} onclick="startExamDeck('${window.examNav.reviewerId}','${cid}','full')" class="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-wide py-2 rounded-lg hover:opacity-80 transition disabled:cursor-not-allowed">Full Bank</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.startExamDeck = (reviewerId, competencyId, mode) => {
+            const meta = window.pummaCompetencyMeta[competencyId];
+            let deck = mode === 'daily' ? window.getDailyCompetencySet(reviewerId, competencyId) : window.getFullCompetencyPool(reviewerId, competencyId);
+            if (!deck || deck.length === 0) { window.customAlert("There are no questions in this competency yet. Please ask your Instructor to add some."); return; }
+            window.examShuffleOn = true;
+            window.currentExamDeck = [...deck].sort(() => Math.random() - 0.5);
             window.currentCardIndex = 0;
-            document.getElementById('exam-deck-title').innerText = activeTitles[deckId] ? activeTitles[deckId].title : 'Review Deck';
-            
+            window.currentDeckLabel = { title: `${meta.code} — ${meta.title}`, sub: mode === 'daily' ? "Today's Set" : 'Full Bank' };
+            window.enterExamDeckView();
+        };
+
+        window.startFunctionStudyAll = (reviewerId, functionId) => {
+            const f = window.pummaFunctions[functionId];
+            let combined = [];
+            f.competencies.forEach(cid => { combined = combined.concat(window.getFullCompetencyPool(reviewerId, cid).map(c => ({ ...c, _comp: window.pummaCompetencyMeta[cid].code }))); });
+            if (combined.length === 0) { window.customAlert("There are no questions in this Function yet. Please ask your Instructor to add some."); return; }
+            window.examShuffleOn = true;
+            window.currentExamDeck = [...combined].sort(() => Math.random() - 0.5);
+            window.currentCardIndex = 0;
+            window.currentDeckLabel = { title: `${f.code} — ${f.title}`, sub: 'Study All' };
+            window.enterExamDeckView();
+        };
+
+        window.enterExamDeckView = () => {
             document.getElementById('exam-prep-setup').classList.add('hidden');
             const active = document.getElementById('exam-prep-active');
             active.classList.remove('hidden'); active.classList.add('flex');
+            const shuffleBtn = document.getElementById('exam-shuffle-toggle');
+            if (shuffleBtn) shuffleBtn.classList.toggle('text-indigo-600', window.examShuffleOn);
             window.renderExamCard();
+        };
+
+        window.toggleExamShuffle = () => {
+            window.examShuffleOn = !window.examShuffleOn;
+            const shuffleBtn = document.getElementById('exam-shuffle-toggle');
+            if (shuffleBtn) { shuffleBtn.classList.toggle('text-indigo-600', window.examShuffleOn); shuffleBtn.classList.toggle('bg-indigo-50', window.examShuffleOn); shuffleBtn.classList.toggle('dark:bg-indigo-900/30', window.examShuffleOn); }
+            if (window.examShuffleOn) { window.currentExamDeck = [...window.currentExamDeck].sort(() => Math.random() - 0.5); window.currentCardIndex = 0; window.renderExamCard(); }
         };
 
         window.renderExamCard = () => {
             const card = window.currentExamDeck[window.currentCardIndex];
-            document.getElementById('exam-card-counter').innerText = `Card ${window.currentCardIndex + 1} of ${window.currentExamDeck.length}`;
+            const total = window.currentExamDeck.length;
+            document.getElementById('exam-deck-title').innerText = window.currentDeckLabel.title;
+            const counterSub = document.getElementById('exam-deck-subtitle');
+            if (counterSub) counterSub.innerText = window.currentDeckLabel.sub + (card._comp ? ` · ${card._comp}` : '');
+            document.getElementById('exam-card-counter').innerText = `Card ${window.currentCardIndex + 1} / ${total}`;
+            const bar = document.getElementById('exam-progress-bar-fill');
+            if (bar) bar.style.width = `${((window.currentCardIndex + 1) / total) * 100}%`;
             document.getElementById('exam-q-text').innerText = card.q;
             document.getElementById('exam-a-text').innerText = card.a;
-            
+
             const front = document.getElementById('exam-card-front');
             const back = document.getElementById('exam-card-back');
             front.classList.remove('hidden'); front.classList.add('flex');
@@ -11264,9 +11096,95 @@ window.logAdminSettingsActivity = async (action, details) => {
         };
 
         window.endExamDeck = () => {
+            window.renderExamPrepSetup();
             document.getElementById('exam-prep-setup').classList.remove('hidden');
             const active = document.getElementById('exam-prep-active');
             active.classList.add('hidden'); active.classList.remove('flex');
+        };
+
+        // --- ADMIN CMS: hierarchical question manager (Reviewer > Function > Competency) ---
+        window.renderCmsFunctionOptions = () => {
+            const sel = document.getElementById('manage-deck-function');
+            if (!sel) return;
+            const curVal = sel.value;
+            sel.innerHTML = Object.keys(window.pummaFunctions).map(fid => `<option value="${fid}">${window.pummaFunctions[fid].code} — ${window.pummaFunctions[fid].title}</option>`).join('');
+            if (Object.keys(window.pummaFunctions).includes(curVal)) sel.value = curVal;
+        };
+        window.renderCmsCompetencyOptions = () => {
+            const funcSel = document.getElementById('manage-deck-function');
+            const compSel = document.getElementById('manage-deck-competency');
+            if (!funcSel || !compSel) return;
+            const fid = funcSel.value || Object.keys(window.pummaFunctions)[0];
+            const curVal = compSel.value;
+            compSel.innerHTML = window.pummaFunctions[fid].competencies.map(cid => `<option value="${cid}">${window.pummaCompetencyMeta[cid].code} — ${window.pummaCompetencyMeta[cid].title}</option>`).join('');
+            if (window.pummaFunctions[fid].competencies.includes(curVal)) compSel.value = curVal;
+        };
+        window.cmsFunctionChanged = () => { window.renderCmsCompetencyOptions(); window.renderDeckManager(); };
+
+        window.renderDeckManager = () => {
+            window.ensureExamDatabase();
+            window.renderCmsFunctionOptions();
+            window.renderCmsCompetencyOptions();
+            const reviewerId = document.getElementById('manage-deck-reviewer').value;
+            const competencyId = document.getElementById('manage-deck-competency').value;
+            const container = document.getElementById('manage-deck-list');
+            const badge = document.getElementById('manage-deck-progress-badge');
+            if (!reviewerId || !competencyId) { if (container) container.innerHTML = ''; return; }
+
+            const deck = window.appSettings.examDatabase[reviewerId][competencyId] || [];
+            const meta = window.pummaCompetencyMeta[competencyId];
+            if (badge) badge.innerText = `${deck.length} / ${meta.items} items entered (permit target)`;
+
+            if (deck.length === 0) {
+                if (container) container.innerHTML = '<p class="text-[10px] text-slate-500 text-center italic py-4 border border-dashed border-slate-300 dark:border-slate-700 rounded">No questions in this competency yet.</p>';
+                return;
+            }
+            if (container) {
+                container.innerHTML = deck.map((item, index) => `
+                    <div class="bg-white dark:bg-slate-800 p-2.5 rounded border border-brand-creamBorder dark:border-slate-700 flex justify-between gap-3 items-start relative group shadow-sm">
+                        <div class="flex-1 min-w-0"><p class="text-[10px] font-bold text-brand-blue dark:text-blue-300 whitespace-pre-wrap">Q: ${item.q}</p><p class="text-[9px] text-slate-500 whitespace-pre-wrap mt-1">A: ${item.a}</p></div>
+                        <button onclick="deleteQuestionFromDeck('${reviewerId}', '${competencyId}', ${index})" class="text-rose-500 hover:text-rose-700 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 p-1.5 rounded transition shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                `).join('');
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.addQuestionToDeck = () => {
+            const reviewerId = document.getElementById('manage-deck-reviewer').value;
+            const competencyId = document.getElementById('manage-deck-competency').value;
+            const qBox = document.getElementById('new-q-text');
+            const aBox = document.getElementById('new-a-text');
+            if (!qBox.value.trim() || !aBox.value.trim()) return window.customAlert("Both Question and Answer fields must be filled out!");
+
+            window.ensureExamDatabase();
+            window.appSettings.examDatabase[reviewerId][competencyId].push({ q: qBox.value.trim(), a: aBox.value.trim() });
+            qBox.value = ''; aBox.value = '';
+            window.renderDeckManager();
+        };
+
+        window.deleteQuestionFromDeck = async (reviewerId, competencyId, index) => {
+            const confirmed = await window.customConfirm("Delete this question permanently?");
+            if(confirmed) {
+                window.appSettings.examDatabase[reviewerId][competencyId].splice(index, 1);
+                window.renderDeckManager();
+            }
+        };
+
+        window.saveExamDatabase = async () => {
+            if (!window.appSettings.examDatabase) return;
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...';
+            if (window.lucide) window.lucide.createIcons();
+
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examDatabase: window.appSettings.examDatabase });
+                if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
+                window.customAlert("Database successfully saved! All cadets will now see the updated questions.");
+            } catch (error) { window.customAlert("Error saving database: " + error.message); }
+            btn.innerHTML = originalText;
+            if (window.lucide) window.lucide.createIcons();
         };
 
         window.renderDutyCalendar = () => {
