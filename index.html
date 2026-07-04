@@ -504,6 +504,8 @@
                         <div class="mt-5 border-t border-brand-creamBorder dark:border-slate-700 pt-4">
                             <label class="block text-xs font-semibold text-brand-blue dark:text-blue-300 mb-2 flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5"></i> Exam Deck Manager</label>
 
+                            <button onclick="loadStarterContentReviewer1()" class="w-full mb-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 px-3 py-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-2 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"><i data-lucide="download-cloud" class="w-4 h-4"></i> Load Starter Content into Reviewer 1 (fills empty competencies only)</button>
+
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                                 <select id="manage-deck-reviewer" onchange="renderDeckManager()" class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded px-2 py-2 text-xs font-bold text-brand-black dark:text-white focus:outline-none truncate">
                                     <option value="reviewer1">Reviewer 1</option>
@@ -10978,7 +10980,6 @@ window.logAdminSettingsActivity = async (action, details) => {
             return dbase;
         };
         window.ensureExamDatabase = () => {
-            const isFirstEverLoad = !window.appSettings.examDatabase;
             if (!window.appSettings.examDatabase) window.appSettings.examDatabase = window.buildEmptyExamDatabase();
             Object.keys(window.pummaReviewers).forEach(rid => {
                 if (!window.appSettings.examDatabase[rid]) window.appSettings.examDatabase[rid] = {};
@@ -10986,16 +10987,28 @@ window.logAdminSettingsActivity = async (action, details) => {
                     if (!window.appSettings.examDatabase[rid][cid]) window.appSettings.examDatabase[rid][cid] = [];
                 });
             });
-            // Starter content: only auto-loaded the very first time (before anything has ever been saved to the cloud).
-            // Once an admin hits "Save Database to Cloud" once, this never runs again — edits/deletions are respected from then on.
-            if (isFirstEverLoad && window.pummaSeedReviewer1) {
-                Object.keys(window.pummaSeedReviewer1).forEach(cid => {
-                    if (window.appSettings.examDatabase.reviewer1[cid] && window.appSettings.examDatabase.reviewer1[cid].length === 0) {
-                        window.appSettings.examDatabase.reviewer1[cid] = window.pummaSeedReviewer1[cid].map(item => item.distractors ? { q: item.q, a: item.a, distractors: item.distractors } : { q: item.q, a: item.a });
-                    }
-                });
-            }
             return window.appSettings.examDatabase;
+        };
+
+        // Explicit, admin-triggered starter content loader (does NOT depend on guessing Firestore's prior state).
+        // Only fills competencies that are currently EMPTY in Reviewer 1 — never overwrites existing/edited content.
+        window.loadStarterContentReviewer1 = async () => {
+            if (!window.pummaSeedReviewer1) { window.customAlert("No starter content bundle found in this build."); return; }
+            window.ensureExamDatabase();
+            const confirmed = await window.customConfirm("Load starter content into Reviewer 1? This only fills competencies that are currently EMPTY — anything you've already added stays untouched. You'll still need to hit 'Save Database to Cloud' afterward to make it permanent.");
+            if (!confirmed) return;
+            let filled = 0, skipped = 0;
+            Object.keys(window.pummaSeedReviewer1).forEach(cid => {
+                const current = window.appSettings.examDatabase.reviewer1[cid];
+                if (current && current.length === 0) {
+                    window.appSettings.examDatabase.reviewer1[cid] = window.pummaSeedReviewer1[cid].map(item => item.distractors ? { q: item.q, a: item.a, distractors: item.distractors } : { q: item.q, a: item.a });
+                    filled++;
+                } else {
+                    skipped++;
+                }
+            });
+            window.renderDeckManager();
+            window.customAlert(`Loaded starter content into ${filled} competenc${filled === 1 ? 'y' : 'ies'}. ${skipped > 0 ? `${skipped} competenc${skipped === 1 ? 'y was' : 'ies were'} already populated and left alone. ` : ''}Now click "Save Database to Cloud" to make this permanent.`);
         };
 
         // --- Deterministic seeded shuffle (so daily rotation is identical for every cadet, no per-user storage needed) ---
