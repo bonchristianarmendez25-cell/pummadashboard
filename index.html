@@ -11661,23 +11661,43 @@ window.logAdminSettingsActivity = async (action, details) => {
                 sub.innerText = autoSubmitted ? 'Time expired — exam auto-submitted. Each Competency is passed or failed independently.' : 'Each Competency is passed or failed independently.';
 
                 const tableEl = document.getElementById('mock-result-table');
-                if (rows.length === 0) {
-                    tableEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-500 font-bold">No scored items found (rows.length was 0). This exam session's data was likely incomplete — please try New Mock Exam.</td></tr>`;
-                } else {
-                    tableEl.innerHTML = rows.map(r => `
-                        <tr class="border-t border-brand-creamBorder dark:border-slate-700">
-                            <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
-                            <td class="p-2.5 text-center">${r.items}</td>
-                            <td class="p-2.5 text-center">${r.correct}</td>
-                            <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
-                            <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
-                            <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                        </tr>`).join('');
+                // Table rendering gets its own try/catch. Previously, if anything in here
+                // threw, execution jumped to the outer catch — which never hid the results
+                // screen, so you'd see a fully-rendered headline/icon sitting above a
+                // permanently empty table with no visible indication anything went wrong.
+                try {
+                    if (!tableEl) {
+                        throw new Error('#mock-result-table element not found in the DOM.');
+                    }
+                    if (rows.length === 0) {
+                        tableEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-500 font-bold">No scored items found (rows.length was 0). This exam session's data was likely incomplete — please try New Mock Exam.</td></tr>`;
+                    } else {
+                        tableEl.innerHTML = rows.map(r => `
+                            <tr class="border-t border-brand-creamBorder dark:border-slate-700">
+                                <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
+                                <td class="p-2.5 text-center">${r.items}</td>
+                                <td class="p-2.5 text-center">${r.correct}</td>
+                                <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
+                                <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
+                                <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+                            </tr>`).join('');
+                    }
+                } catch (tableErr) {
+                    // Surface the real error directly in the table instead of leaving it
+                    // blank with no clue as to why.
+                    console.error('Mock exam results table failed to render:', tableErr);
+                    if (tableEl) {
+                        tableEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-500 font-bold">Results table failed to render: ${(tableErr && tableErr.message) ? tableErr.message : 'unknown error'}. Please check the browser console and try New Mock Exam.</td></tr>`;
+                    }
                 }
 
                 if (window.lucide) window.lucide.createIcons();
             } catch (err) {
                 console.error('submitMockExam failed:', err);
+                // Make sure we never leave the results screen half-rendered (headline set,
+                // table empty) — always fall back cleanly to the builder screen.
+                const resultsElOnErr = document.getElementById('mock-exam-results');
+                if (resultsElOnErr) resultsElOnErr.classList.add('hidden');
                 document.getElementById('mock-exam-active').classList.add('hidden');
                 document.getElementById('mock-exam-active').classList.remove('flex');
                 document.getElementById('mock-exam-builder').classList.remove('hidden');
