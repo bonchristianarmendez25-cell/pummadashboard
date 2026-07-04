@@ -10983,15 +10983,18 @@ window.logAdminSettingsActivity = async (action, details) => {
             });
             return dbase;
         };
+        window.examDatabaseCache = null; // populated by the dedicated 'examQuestions' Firestore collection listener (see onAuthStateChanged below) — this is what actually avoids the 1MB single-document limit.
+
         window.ensureExamDatabase = () => {
-            if (!window.appSettings.examDatabase) window.appSettings.examDatabase = window.buildEmptyExamDatabase();
+            if (!window.examDatabaseCache) window.examDatabaseCache = window.buildEmptyExamDatabase();
             Object.keys(window.pummaReviewers).forEach(rid => {
-                if (!window.appSettings.examDatabase[rid]) window.appSettings.examDatabase[rid] = {};
+                if (!window.examDatabaseCache[rid]) window.examDatabaseCache[rid] = {};
                 Object.keys(window.pummaCompetencyMeta).forEach(cid => {
-                    if (!window.appSettings.examDatabase[rid][cid]) window.appSettings.examDatabase[rid][cid] = [];
+                    if (!window.examDatabaseCache[rid][cid]) window.examDatabaseCache[rid][cid] = [];
                 });
             });
-            return window.appSettings.examDatabase;
+            window.appSettings.examDatabase = window.examDatabaseCache; // keep both pointing at the same object
+            return window.examDatabaseCache;
         };
 
         // Explicit, admin-triggered starter content loader (does NOT depend on guessing Firestore's prior state).
@@ -11705,14 +11708,22 @@ window.logAdminSettingsActivity = async (action, details) => {
         };
 
         window.saveExamDatabase = async () => {
-            if (!window.appSettings.examDatabase) return;
+            window.ensureExamDatabase();
             const btn = event.currentTarget;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...';
             if (window.lucide) window.lucide.createIcons();
 
             try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { examDatabase: window.appSettings.examDatabase });
+                const batch = writeBatch(db);
+                Object.keys(window.pummaReviewers).forEach(rid => {
+                    Object.keys(window.pummaCompetencyMeta).forEach(cid => {
+                        const items = window.examDatabaseCache[rid][cid] || [];
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'examQuestions', `${rid}_${cid}`);
+                        batch.set(ref, { items, reviewerId: rid, competencyId: cid });
+                    });
+                });
+                await batch.commit();
                 if(window.logAdminSettingsActivity) window.logAdminSettingsActivity('Flashcards Saved', 'Updated questions in the cloud database');
                 window.customAlert("Database successfully saved! All cadets will now see the updated questions.");
             } catch (error) { window.customAlert("Error saving database: " + error.message); }
@@ -12619,6 +12630,21 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             if (!user) return;
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             const cadetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'cadets');
+            const examQuestionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'examQuestions');
+
+            onSnapshot(examQuestionsRef, (qSnap) => {
+                const fresh = window.buildEmptyExamDatabase();
+                qSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const rid = data.reviewerId, cid = data.competencyId;
+                    if (fresh[rid] && fresh[rid][cid] !== undefined) fresh[rid][cid] = data.items || [];
+                });
+                window.examDatabaseCache = fresh;
+                if (window.appSettings) window.appSettings.examDatabase = fresh;
+                window.examQuestionsLoaded = true;
+                if (document.getElementById('manage-deck-reviewer')) window.renderDeckManager();
+                if (document.getElementById('exam-deck-list') && document.getElementById('exam-prep-modal') && !document.getElementById('exam-prep-modal').classList.contains('hidden')) window.renderExamPrepSetup();
+            }, (err) => { console.warn('Exam questions listener error:', err); });
 
             let settingsEverExisted = false;
             let _settingsInitLock = false; // prevents double-init on slow connections
@@ -12626,6 +12652,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
                 if (snap.exists()) {
                     settingsEverExisted = true;
                     window.appSettings = snap.data();
+                    window.appSettings.examDatabase = window.examDatabaseCache || window.buildEmptyExamDatabase(); // exam content now lives in its own collection, not this document — reattach so nothing gets wiped
                     const remoteData = snap.data();
                     window.appSettings.checklistProfiles = window.appSettings.checklistProfiles || defaultChecklistProfiles;
                     if (!window.appSettings.instructors || window.appSettings.instructors.length === 0) {
