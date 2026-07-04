@@ -13415,7 +13415,27 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     <!-- ═══════════════════════════════════════════════════════════
          PUMMA SHIP CHAT — Floating Global Messenger
          ═══════════════════════════════════════════════════════════ -->
-    <div id="pumma-chat-root" class="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-2 no-print">
+    <div id="pumma-widgets-root" class="fixed bottom-5 right-5 z-[999] flex flex-row items-end gap-3 no-print">
+
+        <!-- Active Roster Panel (who's online + last active) -->
+        <div id="pumma-roster-panel"
+            class="hidden flex-col w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
+            style="height:600px; max-height:90vh;">
+            <div class="bg-brand-blue text-white px-4 py-2.5 flex items-center justify-between shrink-0">
+                <div class="min-w-0">
+                    <p class="font-bold text-sm leading-tight truncate">Active Board</p>
+                    <p class="text-[10px] opacity-70" id="roster-online-count">Loading…</p>
+                </div>
+                <button onclick="toggleRosterPanel()" class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="roster-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-slate-700">
+                <div class="text-center text-[10px] text-slate-400 py-6">Loading roster…</div>
+            </div>
+        </div>
+
+    <div id="pumma-chat-root" class="flex flex-col items-end gap-2">
 
         <!-- Unread badge + bubble button -->
         <button id="chat-toggle-btn" onclick="togglePummaChat()"
@@ -13431,6 +13451,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             class="hidden flex-col w-80 sm:w-[26rem] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
             style="height:600px; max-height:90vh;">
 
+
             <!-- Header -->
             <div class="bg-brand-blue text-white px-4 py-2.5 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2 min-w-0">
@@ -13441,6 +13462,10 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="toggleRosterPanel()" id="chat-roster-btn" title="Who's active"
+                        class="relative opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20">
+                        <i data-lucide="radio" class="w-4 h-4"></i>
+                    </button>
                     <button onclick="openFriendsPanel()" id="chat-friends-btn" title="Friends & DMs"
                         class="relative opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20">
                         <i data-lucide="users" class="w-4 h-4"></i>
@@ -13576,6 +13601,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
 
@@ -13951,6 +13977,132 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     function escapeHTML(str) {
         return (str || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     }
+
+    // ── Presence heartbeat & Active Roster board ─────────────────────
+    // Cadets/observers (accounts stored in the 'cadets' collection) get a
+    // lastSeen timestamp refreshed periodically while their tab is open,
+    // so everyone else can tell who's active right now. When someone is
+    // NOT currently active, we fall back to their most recent accessLogs
+    // entry (recorded on login/logout) to show "last seen" history.
+    const PRESENCE_INTERVAL_MS = 45000;      // how often we write our own heartbeat
+    const PRESENCE_ONLINE_WINDOW_MS = 2 * 60 * 1000; // "online" if seen within this window
+
+    async function updateMyPresence() {
+        if (!window.db || !window.appId) return;
+        if (window.currentUserRole !== 'cadet' || !window.selectedCadetId) return;
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        try {
+            const { doc: _doc, updateDoc: _upd, serverTimestamp: _ts } =
+                await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            await _upd(_doc(window.db, 'artifacts', window.appId, 'public', 'data', 'cadets', window.selectedCadetId), { lastSeen: _ts() });
+        } catch (e) { /* non-critical, ignore */ }
+    }
+    setInterval(updateMyPresence, PRESENCE_INTERVAL_MS);
+    setTimeout(updateMyPresence, 3000);
+    if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') updateMyPresence();
+        });
+    }
+    window.updateMyPresence = updateMyPresence;
+
+    function formatRelativeTime(input) {
+        if (!input) return null;
+        const d = input.toDate ? input.toDate() : new Date(input);
+        const diffMs = Date.now() - d.getTime();
+        if (diffMs < 0 || isNaN(diffMs)) return null;
+        const diffSec = Math.floor(diffMs / 1000);
+        if (diffSec < 60) return 'Just now';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr}h ago`;
+        const diffDay = Math.floor(diffHr / 24);
+        if (diffDay === 1) return '1 day ago';
+        if (diffDay < 7) return `${diffDay} days ago`;
+        return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    function renderRosterPanel() {
+        const list = document.getElementById('roster-list');
+        if (!list) return;
+        const roster = window.cadets || [];
+        if (roster.length === 0) {
+            list.innerHTML = `<div class="text-center text-[10px] text-slate-400 py-6">No cadets found.</div>`;
+            const countEl0 = document.getElementById('roster-online-count');
+            if (countEl0) countEl0.textContent = '0 online now';
+            return;
+        }
+
+        const now = Date.now();
+        const enriched = roster.map(c => {
+            const lastSeenDate = c.lastSeen ? (c.lastSeen.toDate ? c.lastSeen.toDate() : new Date(c.lastSeen)) : null;
+            const lastSeenTime = lastSeenDate ? lastSeenDate.getTime() : null;
+            const lastLoginStr = (c.accessLogs && c.accessLogs.length) ? c.accessLogs[0].date : null;
+            const lastLoginTime = lastLoginStr ? new Date(lastLoginStr).getTime() : null;
+            const isOnline = lastSeenTime !== null && (now - lastSeenTime) < PRESENCE_ONLINE_WINDOW_MS;
+            const sortTime = lastSeenTime || lastLoginTime || 0;
+            return { c, lastSeenTime, lastLoginTime, isOnline, sortTime };
+        });
+
+        enriched.sort((a, b) => {
+            if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+            return b.sortTime - a.sortTime;
+        });
+
+        const onlineCount = enriched.filter(e => e.isOnline).length;
+        const countEl = document.getElementById('roster-online-count');
+        if (countEl) countEl.textContent = `${onlineCount} online now`;
+
+        list.innerHTML = enriched.map(({ c, lastSeenTime, lastLoginTime, isOnline }) => {
+            let label;
+            if (isOnline) {
+                label = 'Active now';
+            } else if (lastSeenTime) {
+                label = formatRelativeTime(lastSeenTime) || 'Offline';
+            } else if (lastLoginTime) {
+                label = `Last seen ${formatRelativeTime(lastLoginTime) || ''}`.trim();
+            } else {
+                label = 'No activity yet';
+            }
+            const dotColor = isOnline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600';
+            const initial = escapeHTML((c.name || '?').trim().charAt(0).toUpperCase() || '?');
+            const tag = c.isObserver ? ' <span class="text-[8px] text-emerald-500 font-bold">(Observer)</span>' : '';
+            return `
+            <div class="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                <span class="relative shrink-0">
+                    <span class="w-8 h-8 rounded-full bg-brand-blue/10 dark:bg-blue-900/40 flex items-center justify-center text-[11px] font-bold text-brand-blue dark:text-blue-300">${initial}</span>
+                    <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-800 ${dotColor}"></span>
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[11px] font-semibold text-brand-black dark:text-white truncate">${escapeHTML(c.name || 'Unknown')}${tag}</p>
+                    <p class="text-[9px] ${isOnline ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400'}">${label}</p>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    window.toggleRosterPanel = function() {
+        const panel = document.getElementById('pumma-roster-panel');
+        if (!panel) return;
+        const isHidden = panel.classList.contains('hidden');
+        if (isHidden) {
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            renderRosterPanel();
+            if (!window._rosterRefreshInterval) {
+                window._rosterRefreshInterval = setInterval(renderRosterPanel, 15000);
+            }
+        } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('flex');
+            if (window._rosterRefreshInterval) {
+                clearInterval(window._rosterRefreshInterval);
+                window._rosterRefreshInterval = null;
+            }
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
 
     function buildMessageBodyHTML(msg, isMe) {
         const bubbleBase = isMe
