@@ -2313,19 +2313,24 @@
             if (!c) { if(window.customAlert) window.customAlert('Please select a cadet first.'); return; }
             const term = document.getElementById('conv-term').value;
             const computed = window._convComputeGrades(c);
-            const studentNo = c.studentId || c.id;
+            // Use the unique Firestore doc id as key (same logic as converterAutoAddAll)
+            const recordKey = c.id || c.studentId || c.name;
+            const studentNo = c.studentId || c.id || '—';
             const name = (c.name||'').toUpperCase();
 
-            if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',fg:''}, MIDTERM:{cs:'',pt:'',fg:''}, SEMI:{cs:'',pt:'',fg:''}, FINAL:{cs:'',pt:'',fg:''} }; }
+            if (!convRecords[recordKey]) {
+                convRowCount++;
+                convRecords[recordKey] = { rowNum: convRowCount, name, studentNo, PRELIM:{cs:'',pt:'',t:'',fg:''}, MIDTERM:{cs:'',pt:'',t:'',fg:''}, SEMI:{cs:'',pt:'',t:'',fg:''}, FINAL:{cs:'',pt:'',t:'',fg:''} };
+            }
             
             const tg = computed.termGrades;
             if (term === 'ALL') {
-                convRecords[studentNo].PRELIM  = tg.PRELIM;
-                convRecords[studentNo].MIDTERM = tg.MIDTERM;
-                convRecords[studentNo].SEMI    = tg.SEMI;
-                convRecords[studentNo].FINAL   = tg.FINAL;
+                convRecords[recordKey].PRELIM  = tg.PRELIM;
+                convRecords[recordKey].MIDTERM = tg.MIDTERM;
+                convRecords[recordKey].SEMI    = tg.SEMI;
+                convRecords[recordKey].FINAL   = tg.FINAL;
             } else {
-                convRecords[studentNo][term] = tg[term];
+                convRecords[recordKey][term] = tg[term];
             }
             
             converterRenderTable();
@@ -2340,29 +2345,67 @@
             const allCadets = (window.cadets||[]);
             if (!allCadets.length) { if(window.customAlert) window.customAlert('No cadets loaded yet.'); return; }
 
-            const loadClassEl = document.getElementById('conv-load-class');
+            const loadClassEl   = document.getElementById('conv-load-class');
             const loadSectionEl = document.getElementById('conv-load-section');
-            const loadClass = loadClassEl ? loadClassEl.value : 'ALL';
-            const loadSection = (loadSectionEl ? loadSectionEl.value : 'ALL').toUpperCase();
-            const cadets = allCadets.filter(c =>
-                (loadClass === 'ALL' || String(c.classNum) === String(loadClass)) &&
-                (loadSection === 'ALL' || (c.section || '').toUpperCase() === loadSection)
-            );
+            const loadClass     = loadClassEl   ? loadClassEl.value   : 'ALL';
+            const loadSection   = (loadSectionEl ? loadSectionEl.value : 'ALL').toUpperCase();
+
+            // ── Filter: exclude observers, match class/section ──────────────
+            const cadets = allCadets
+                .filter(c =>
+                    !c.isObserver &&
+                    (loadClass   === 'ALL' || parseInt(c.classNum) === parseInt(loadClass)) &&
+                    (loadSection === 'ALL' || (c.section || '').toUpperCase() === loadSection)
+                )
+                // Sort alphabetically so row numbers match the printed grading sheet
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
             if (!cadets.length) { if(window.customAlert) window.customAlert('No cadets match the selected Class/Section filter.'); return; }
 
+            let added = 0, skipped = 0;
             cadets.forEach(c => {
-                const computed = window._convComputeGrades(c);
-                const studentNo = c.studentId || c.id;
-                const name = (c.name||'').toUpperCase();
-                if (!convRecords[studentNo]) { convRowCount++; convRecords[studentNo] = { rowNum: convRowCount, name, PRELIM:{cs:'',pt:'',t:'',fg:''}, MIDTERM:{cs:'',pt:'',t:'',fg:''}, SEMI:{cs:'',pt:'',t:'',fg:''}, FINAL:{cs:'',pt:'',t:'',fg:''} }; }
+                // ── Use the Firestore document id as the UNIQUE key ─────────
+                // studentId alone is unreliable: some cadets may have blank/
+                // duplicate IDs. The Firestore doc id (c.id) is always unique.
+                // We still display studentId in the table; we just don't use it
+                // as the record key.
+                const recordKey = c.id || c.studentId || c.name;
+                if (!recordKey) { skipped++; return; }
+
+                const name      = (c.name || '').toUpperCase();
+                const studentNo = c.studentId || c.id || '—';
+
+                let computed;
+                try {
+                    computed = window._convComputeGrades(c);
+                } catch (e) {
+                    console.warn('_convComputeGrades failed for', name, e);
+                    skipped++;
+                    return; // skip this cadet, continue the rest
+                }
+
+                if (!convRecords[recordKey]) {
+                    convRowCount++;
+                    convRecords[recordKey] = {
+                        rowNum: convRowCount,
+                        name,
+                        studentNo,   // stored for display only
+                        PRELIM:  { cs:'', pt:'', t:'', fg:'' },
+                        MIDTERM: { cs:'', pt:'', t:'', fg:'' },
+                        SEMI:    { cs:'', pt:'', t:'', fg:'' },
+                        FINAL:   { cs:'', pt:'', t:'', fg:'' }
+                    };
+                }
                 const tg = computed.termGrades;
-                convRecords[studentNo].PRELIM  = tg.PRELIM;
-                convRecords[studentNo].MIDTERM = tg.MIDTERM;
-                convRecords[studentNo].SEMI    = tg.SEMI;
-                convRecords[studentNo].FINAL   = tg.FINAL;
+                convRecords[recordKey].PRELIM  = tg.PRELIM;
+                convRecords[recordKey].MIDTERM = tg.MIDTERM;
+                convRecords[recordKey].SEMI    = tg.SEMI;
+                convRecords[recordKey].FINAL   = tg.FINAL;
+                added++;
             });
+
             converterRenderTable();
+            if (skipped > 0) console.warn(`converterAutoAddAll: ${skipped} cadet(s) skipped due to errors or missing IDs.`);
         };
 
         window.converterRenderTable = () => {
@@ -2370,14 +2413,18 @@
             const emptyRow = document.getElementById('conv-empty-row'); if(emptyRow) emptyRow.remove();
             tbody.innerHTML = '';
             const tc = { PRELIM:'blue', MIDTERM:'violet', SEMI:'amber', FINAL:'emerald' };
-            for (const [id, data] of Object.entries(convRecords)) {
+            // Sort entries by rowNum so display order is always alphabetical
+            const sorted = Object.entries(convRecords).sort((a, b) => a[1].rowNum - b[1].rowNum);
+            for (const [key, data] of sorted) {
                 const allFgs = ['PRELIM','MIDTERM','SEMI','FINAL'].map(t => parseFloat(data[t].fg)).filter(v => !isNaN(v) && v>0);
                 const sg = allFgs.length>0 ? (allFgs.reduce((a,b)=>a+b,0)/allFgs.length).toFixed(1) : '';
                 const rem = sg!=='' ? (parseFloat(sg)>=75?'<span class="text-emerald-600 dark:text-emerald-400 font-black">P</span>':'<span class="text-red-600 font-black">F</span>') : '';
                 const td = (v,t,bold=false) => `<td class="p-1.5 border-r border-slate-200 dark:border-slate-700 ${bold?'bg-'+tc[t]+'-50 dark:bg-'+tc[t]+'-900/20 text-'+tc[t]+'-800 dark:text-'+tc[t]+'-300 font-black':''}">${v||'<span class="text-slate-300">-</span>'}</td>`;
+                // Use stored studentNo for display (not the internal key which may be the doc id)
+                const displayId = data.studentNo || key;
                 tbody.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                     <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 text-slate-500 text-[10px]">${data.rowNum}</td>
-                    <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 text-left font-bold text-[#003366] dark:text-blue-300 text-[11px] min-w-[130px]">${data.name}<div class="text-[9px] text-slate-400 font-normal">${id}</div></td>
+                    <td class="p-1.5 border-r border-slate-200 dark:border-slate-700 text-left font-bold text-[#003366] dark:text-blue-300 text-[11px] min-w-[130px]">${data.name}<div class="text-[9px] text-slate-400 font-normal">${displayId}</div></td>
                     ${td(data.PRELIM.cs,'PRELIM')}${td(data.PRELIM.pt,'PRELIM')}${td(data.PRELIM.t,'PRELIM')}${td(data.PRELIM.fg,'PRELIM',true)}
                     ${td(data.MIDTERM.cs,'MIDTERM')}${td(data.MIDTERM.pt,'MIDTERM')}${td(data.MIDTERM.t,'MIDTERM')}${td(data.MIDTERM.fg,'MIDTERM',true)}
                     ${td(data.SEMI.cs,'SEMI')}${td(data.SEMI.pt,'SEMI')}${td(data.SEMI.t,'SEMI')}${td(data.SEMI.fg,'SEMI',true)}
@@ -2413,7 +2460,8 @@
                 ['','','CS','PT','T','FG','CS','PT','T','FG','CS','PT','T','FG','CS','PT','T','FG','','']
             ];
             let rn=1;
-            for(const [id,data] of Object.entries(convRecords)) {
+            const sortedForExport = Object.entries(convRecords).sort((a,b) => a[1].rowNum - b[1].rowNum);
+            for(const [key,data] of sortedForExport) {
                 const allFgs=['PRELIM','MIDTERM','SEMI','FINAL'].map(t=>parseFloat(data[t].fg)).filter(v=>!isNaN(v)&&v>0);
                 const sg=allFgs.length>0?(allFgs.reduce((a,b)=>a+b,0)/allFgs.length).toFixed(1):'';
                 const rem=sg!==''?(parseFloat(sg)>=75?'P':'F'):'';
