@@ -2646,6 +2646,22 @@
                             <p class="text-xs text-slate-500 mt-2">Pick a Review Set, then check the Competencies you want included. Timer runs at 1 minute per item — official OIC-NW theoretical exam pacing.</p>
                         </div>
 
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4 mb-6 text-left">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i data-lucide="info" class="w-4 h-4 text-indigo-600 dark:text-indigo-300"></i>
+                                <span class="text-xs font-bold uppercase tracking-wide text-indigo-900 dark:text-indigo-200">How this Mock Exam works</span>
+                            </div>
+                            <ol class="text-[11px] text-indigo-900/90 dark:text-indigo-200/90 space-y-1.5 list-decimal list-inside leading-relaxed">
+                                <li>Choose a <b>Review Set</b> and tick the <b>Competencies</b> you want to be examined on — each ticked Competency adds its own item bank to the exam.</li>
+                                <li>The exam clock runs at <b>1 minute per item</b> for the whole exam and starts the moment you press <b>Start Mock Exam</b>. There is no pause.</li>
+                                <li>Use <b>Prev / Next</b> to move between items, or jump directly to any item using the numbered <b>Item Map</b> on the right.</li>
+                                <li>Use <b>Flag</b> to mark an item you want to revisit before submitting — flagged items turn amber on the Item Map.</li>
+                                <li>You may submit any time with <b>Submit Exam</b>, or the exam auto-submits when the timer hits zero.</li>
+                                <li>Scoring is done <b>per Competency</b> — each one is passed or failed independently against its own passing percentage, shown on the results screen.</li>
+                                <li>After submitting, use <b>Review Answers</b> to go back through every item and see the correct answer (green) versus your answer (red if wrong). Use <b>Back to Results</b> to return to the score screen, or <b>New Mock Exam</b> to start over.</li>
+                            </ol>
+                        </div>
+
                         <div class="mb-4">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Review Set</label>
                             <select id="mock-exam-reviewer" onchange="renderMockExamBuilder()" class="w-full bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm font-bold text-brand-black dark:text-white focus:outline-none">
@@ -2678,6 +2694,7 @@
                             <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Mock Theoretical Exam <span id="mock-exam-active-reviewer" class="text-indigo-500"></span></div>
                             <div id="mock-exam-timer" class="font-mono font-black text-lg text-brand-blue dark:text-white bg-slate-100 dark:bg-slate-900 px-4 py-1.5 rounded-lg flex items-center gap-2"><i data-lucide="timer" class="w-4 h-4 text-rose-500"></i> 00:00</div>
                             <button onclick="confirmSubmitMockExam()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide shrink-0">Submit Exam</button>
+                            <button onclick="backToMockResults()" id="mock-back-results-btn" class="hidden bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide shrink-0 flex items-center gap-1.5"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Results</button>
                         </div>
 
                         <div class="flex-1 w-full flex flex-col md:flex-row gap-4 overflow-hidden">
@@ -11364,6 +11381,12 @@ window.logAdminSettingsActivity = async (action, details) => {
             const active = document.getElementById('mock-exam-active');
             active.classList.remove('hidden'); active.classList.add('flex');
             document.getElementById('mock-exam-active-reviewer').innerText = `— ${window.pummaReviewers[reviewerId].title}`;
+            const submitBtnEl = document.querySelector('#mock-exam-active button[onclick="confirmSubmitMockExam()"]');
+            if (submitBtnEl) submitBtnEl.classList.remove('hidden');
+            document.getElementById('mock-flag-btn').classList.remove('hidden');
+            const backResultsBtnEl = document.getElementById('mock-back-results-btn');
+            if (backResultsBtnEl) backResultsBtnEl.classList.add('hidden');
+            document.getElementById('mock-exam-timer').innerHTML = '<i data-lucide="timer" class="w-4 h-4 text-rose-500"></i> 00:00';
 
             window.renderMockItemMap();
             window.renderMockQuestion();
@@ -11466,49 +11489,66 @@ window.logAdminSettingsActivity = async (action, details) => {
             window.stopMockExamTimer();
             const st = window.mockExamState;
 
-            // Group by competency for per-competency scoring (matches Examination Permit format).
-            const byComp = {};
-            st.items.forEach((item, i) => {
-                if (!byComp[item.competencyId]) byComp[item.competencyId] = { items: 0, correct: 0 };
-                byComp[item.competencyId].items++;
-                if (st.answers[i] === item.correctIndex) byComp[item.competencyId].correct++;
-            });
+            try {
+                if (!st || !Array.isArray(st.items) || st.items.length === 0) {
+                    throw new Error('No exam data found to score. The exam session may have been lost — please start a new Mock Exam.');
+                }
 
-            let overallPass = true;
-            const rows = Object.keys(byComp).map(cid => {
-                const meta = window.pummaCompetencyMeta[cid];
-                const { items, correct } = byComp[cid];
-                const scorePct = Math.round((correct / items) * 100);
-                const passed = scorePct >= parseInt(meta.passing || 70);
-                if (!passed) overallPass = false;
-                return { cid, meta, items, correct, scorePct, passed };
-            }).sort((a, b) => a.cid.localeCompare(b.cid, undefined, { numeric: true }));
+                // Group by competency for per-competency scoring (matches Examination Permit format).
+                const byComp = {};
+                st.items.forEach((item, i) => {
+                    if (!byComp[item.competencyId]) byComp[item.competencyId] = { items: 0, correct: 0 };
+                    byComp[item.competencyId].items++;
+                    if (st.answers[i] === item.correctIndex) byComp[item.competencyId].correct++;
+                });
 
-            document.getElementById('mock-exam-active').classList.add('hidden');
-            document.getElementById('mock-exam-active').classList.remove('flex');
-            const resultsEl = document.getElementById('mock-exam-results');
-            resultsEl.classList.remove('hidden');
+                let overallPass = true;
+                const rows = Object.keys(byComp).map(cid => {
+                    const meta = (window.pummaCompetencyMeta && window.pummaCompetencyMeta[cid]) || { code: cid, title: 'Unknown Competency', passing: 70 };
+                    const { items, correct } = byComp[cid];
+                    const scorePct = items > 0 ? Math.round((correct / items) * 100) : 0;
+                    const passed = scorePct >= parseInt(meta.passing || 70);
+                    if (!passed) overallPass = false;
+                    return { cid, meta, items, correct, scorePct, passed };
+                }).sort((a, b) => a.cid.localeCompare(b.cid, undefined, { numeric: true }));
 
-            const headline = document.getElementById('mock-result-headline');
-            const icon = document.getElementById('mock-result-icon');
-            const sub = document.getElementById('mock-result-sub');
-            headline.innerText = overallPass ? 'PASSED' : 'DID NOT PASS';
-            headline.className = `text-2xl font-black uppercase tracking-wider ${overallPass ? 'text-emerald-600' : 'text-rose-600'}`;
-            icon.setAttribute('data-lucide', overallPass ? 'award' : 'alert-triangle');
-            icon.className = `w-16 h-16 mx-auto mb-4 ${overallPass ? 'text-emerald-500' : 'text-rose-500'}`;
-            sub.innerText = autoSubmitted ? 'Time expired — exam auto-submitted. Each Competency is passed or failed independently.' : 'Each Competency is passed or failed independently.';
+                document.getElementById('mock-exam-active').classList.add('hidden');
+                document.getElementById('mock-exam-active').classList.remove('flex');
+                const resultsEl = document.getElementById('mock-exam-results');
+                resultsEl.classList.remove('hidden');
 
-            document.getElementById('mock-result-table').innerHTML = rows.map(r => `
-                <tr class="border-t border-brand-creamBorder dark:border-slate-700">
-                    <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
-                    <td class="p-2.5 text-center">${r.items}</td>
-                    <td class="p-2.5 text-center">${r.correct}</td>
-                    <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
-                    <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
-                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                </tr>`).join('');
+                const headline = document.getElementById('mock-result-headline');
+                const icon = document.getElementById('mock-result-icon');
+                const sub = document.getElementById('mock-result-sub');
+                headline.innerText = overallPass ? 'PASSED' : 'DID NOT PASS';
+                headline.className = `text-2xl font-black uppercase tracking-wider ${overallPass ? 'text-emerald-600' : 'text-rose-600'}`;
+                icon.setAttribute('data-lucide', overallPass ? 'award' : 'alert-triangle');
+                icon.className = `w-16 h-16 mx-auto mb-4 ${overallPass ? 'text-emerald-500' : 'text-rose-500'}`;
+                sub.innerText = autoSubmitted ? 'Time expired — exam auto-submitted. Each Competency is passed or failed independently.' : 'Each Competency is passed or failed independently.';
 
-            if (window.lucide) window.lucide.createIcons();
+                document.getElementById('mock-result-table').innerHTML = rows.map(r => `
+                    <tr class="border-t border-brand-creamBorder dark:border-slate-700">
+                        <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
+                        <td class="p-2.5 text-center">${r.items}</td>
+                        <td class="p-2.5 text-center">${r.correct}</td>
+                        <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
+                        <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
+                        <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+                    </tr>`).join('');
+
+                if (window.lucide) window.lucide.createIcons();
+            } catch (err) {
+                console.error('submitMockExam failed:', err);
+                document.getElementById('mock-exam-active').classList.add('hidden');
+                document.getElementById('mock-exam-active').classList.remove('flex');
+                document.getElementById('mock-exam-builder').classList.remove('hidden');
+                window.renderMockExamBuilder();
+                if (window.customAlert) {
+                    window.customAlert('Your Mock Exam could not be scored (' + (err && err.message ? err.message : 'unknown error') + '). Please try again.');
+                } else {
+                    alert('Your Mock Exam could not be scored. Please try again.');
+                }
+            }
         };
 
         window.reviewMockExamAnswers = () => {
@@ -11518,10 +11558,22 @@ window.logAdminSettingsActivity = async (action, details) => {
             document.getElementById('mock-exam-timer').innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Review Mode';
             document.querySelector('#mock-exam-active button[onclick="confirmSubmitMockExam()"]').classList.add('hidden');
             document.getElementById('mock-flag-btn').classList.add('hidden');
+            const backBtn = document.getElementById('mock-back-results-btn');
+            if (backBtn) backBtn.classList.remove('hidden');
             window.mockReviewMode = true;
             window.mockExamState.currentIndex = 0;
             window.renderMockReviewQuestion();
             if (window.lucide) window.lucide.createIcons();
+        };
+
+        // Return to the results/score screen from Review Mode WITHOUT losing the
+        // exam state (previously there was no way back except "New Mock Exam",
+        // which wiped the results entirely — this restores that missing step).
+        window.backToMockResults = () => {
+            const active = document.getElementById('mock-exam-active');
+            active.classList.add('hidden'); active.classList.remove('flex');
+            const resultsEl = document.getElementById('mock-exam-results');
+            if (resultsEl) resultsEl.classList.remove('hidden');
         };
 
         window.renderMockReviewQuestion = () => {
@@ -11556,6 +11608,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             const btn = document.querySelector('#mock-exam-active button[onclick="confirmSubmitMockExam()"]');
             if (btn) btn.classList.remove('hidden');
             document.getElementById('mock-flag-btn').classList.remove('hidden');
+            const backBtn = document.getElementById('mock-back-results-btn');
+            if (backBtn) backBtn.classList.add('hidden');
             document.getElementById('mock-exam-builder').classList.remove('hidden');
             window.renderMockExamBuilder();
         };
