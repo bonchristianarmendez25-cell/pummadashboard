@@ -11657,7 +11657,12 @@ window.logAdminSettingsActivity = async (action, details) => {
                 headline.innerText = overallPass ? 'PASSED' : 'DID NOT PASS';
                 headline.className = `text-2xl font-black uppercase tracking-wider ${overallPass ? 'text-emerald-600' : 'text-rose-600'}`;
                 icon.setAttribute('data-lucide', overallPass ? 'award' : 'alert-triangle');
-                icon.className = `w-16 h-16 mx-auto mb-4 ${overallPass ? 'text-emerald-500' : 'text-rose-500'}`;
+                // Use setAttribute instead of `icon.className =` — after the first mock exam,
+                // lucide.createIcons() replaces this <i> element with a real inline <svg>, and
+                // SVG elements expose `className` as a read-only SVGAnimatedString, so a plain
+                // assignment throws ("Cannot set property className of #<SVGElement> which has
+                // only a getter") on every run after the first. setAttribute works on both.
+                icon.setAttribute('class', `w-16 h-16 mx-auto mb-4 ${overallPass ? 'text-emerald-500' : 'text-rose-500'}`);
                 sub.innerText = autoSubmitted ? 'Time expired — exam auto-submitted. Each Competency is passed or failed independently.' : 'Each Competency is passed or failed independently.';
 
                 const tableEl = document.getElementById('mock-result-table');
