@@ -13939,7 +13939,13 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     function formatTime(ts) {
         if (!ts) return '';
         const d = ts.toDate ? ts.toDate() : new Date(ts);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (isToday) return timeStr;
+        // Not from today — show the date too so old messages aren't mistaken for recent ones
+        const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        return `${dateStr}, ${timeStr}`;
     }
 
     function escapeHTML(str) {
@@ -14066,11 +14072,17 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
             const roomCollection = getRoomCollection(currentChatRoom);
             const chatRef = _col(db, 'artifacts', appId, 'public', 'data', roomCollection);
-            const q = _q(chatRef, _ob('timestamp', 'asc'), _lim(CHAT_MAX_MESSAGES));
+            // Order DESCENDING + limit so we always grab the most recent N messages,
+            // then reverse for display. (Ascending+limit was capping the room at the
+            // oldest N messages ever sent, so new messages never appeared once a room
+            // passed CHAT_MAX_MESSAGES total.)
+            const q = _q(chatRef, _ob('timestamp', 'desc'), _lim(CHAT_MAX_MESSAGES));
 
             chatListener = _on(q, (snap) => {
                 const prev = chatMessages.length;
-                chatMessages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                chatMessages = snap.docs
+                    .map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }))
+                    .reverse();
 
                 const recentSenders = new Set(
                     chatMessages.filter(m => {
