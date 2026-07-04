@@ -11421,7 +11421,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             items = items.sort(() => Math.random() - 0.5);
 
             const totalSeconds = items.length * 60; // 1 minute per item — official OIC-NW theoretical exam pacing
-            window.mockExamState = { reviewerId, items, answers: new Array(items.length).fill(null), flags: new Array(items.length).fill(false), currentIndex: 0, totalSeconds, secondsLeft: totalSeconds };
+            window.mockExamState = { reviewerId, items, answers: new Array(items.length).fill(null), flags: new Array(items.length).fill(false), currentIndex: 0, totalSeconds, secondsLeft: totalSeconds, phase: 'main', maxVisited: 0, reviewQueue: null, reviewPos: 0 };
             window.mockReviewMode = false;
 
             document.getElementById('mock-exam-builder').classList.add('hidden');
@@ -11467,7 +11467,10 @@ window.logAdminSettingsActivity = async (action, details) => {
             const item = st.items[st.currentIndex];
             const meta = window.pummaCompetencyMeta[item.competencyId];
             document.getElementById('mock-q-competency-badge').innerText = meta.code;
-            document.getElementById('mock-q-counter').innerText = `Item ${st.currentIndex + 1} / ${st.items.length}`;
+            const counterLabel = st.phase === 'reviewFlags'
+                ? `Flagged Item ${st.reviewPos + 1} / ${st.reviewQueue.length}`
+                : `Item ${st.currentIndex + 1} / ${st.items.length}`;
+            document.getElementById('mock-q-counter').innerText = counterLabel;
             document.getElementById('mock-q-text').innerText = item.q;
 
             const letters = ['A', 'B', 'C', 'D'];
@@ -11482,6 +11485,8 @@ window.logAdminSettingsActivity = async (action, details) => {
             }).join('');
 
             const flagBtn = document.getElementById('mock-flag-btn');
+            // Can't flag while resolving the flagged-items pass — must answer instead.
+            flagBtn.classList.toggle('hidden', st.phase === 'reviewFlags');
             flagBtn.classList.toggle('bg-amber-100', st.flags[st.currentIndex]);
             flagBtn.classList.toggle('dark:bg-amber-900/40', st.flags[st.currentIndex]);
 
@@ -11502,15 +11507,94 @@ window.logAdminSettingsActivity = async (action, details) => {
 
         window.mockReviewMode = false;
 
+        // Sequential navigation: item 1 -> 2 -> 3 ... in order. The taker must
+        // answer an item OR flag it before "Next" is allowed to move forward.
+        // After the last item, any flagged items are revisited (in order) and
+        // must each be answered before the exam can be submitted.
         window.mockExamNav = (dir) => {
             const st = window.mockExamState;
-            st.currentIndex = (st.currentIndex + dir + st.items.length) % st.items.length;
-            window.mockReviewMode ? window.renderMockReviewQuestion() : window.renderMockQuestion();
+
+            if (window.mockReviewMode) {
+                // Read-only review of a completed exam — free navigation is fine here.
+                st.currentIndex = (st.currentIndex + dir + st.items.length) % st.items.length;
+                window.renderMockReviewQuestion();
+                return;
+            }
+
+            if (dir === -1) {
+                if (st.phase === 'reviewFlags') {
+                    if (st.reviewPos > 0) { st.reviewPos--; st.currentIndex = st.reviewQueue[st.reviewPos]; window.renderMockQuestion(); }
+                } else if (st.currentIndex > 0) {
+                    st.currentIndex--;
+                    window.renderMockQuestion();
+                }
+                return;
+            }
+
+            // dir === 1 ("Next")
+            const answered = st.answers[st.currentIndex] !== null;
+            const flagged = st.flags[st.currentIndex];
+
+            if (st.phase === 'reviewFlags') {
+                if (!answered) {
+                    if (window.customAlert) window.customAlert('Please answer this flagged item before continuing.');
+                    return;
+                }
+                st.flags[st.currentIndex] = false;
+                if (st.reviewPos < st.reviewQueue.length - 1) {
+                    st.reviewPos++;
+                    st.currentIndex = st.reviewQueue[st.reviewPos];
+                    window.renderMockQuestion();
+                } else {
+                    (async () => {
+                        const doSubmit = await window.customConfirm('All flagged items have been answered. Submit your Mock Exam now?');
+                        if (doSubmit) window.submitMockExam(false); else window.renderMockQuestion();
+                    })();
+                }
+                return;
+            }
+
+            // Main pass — must answer or flag before moving on.
+            if (!answered && !flagged) {
+                if (window.customAlert) window.customAlert("Please answer this item, or flag it to come back to later, before moving to the next one.");
+                return;
+            }
+
+            if (st.currentIndex < st.items.length - 1) {
+                st.currentIndex++;
+                if (st.currentIndex > st.maxVisited) st.maxVisited = st.currentIndex;
+                window.renderMockQuestion();
+            } else {
+                const flaggedIdx = st.items.map((_, i) => i).filter(i => st.flags[i]);
+                if (flaggedIdx.length > 0) {
+                    st.phase = 'reviewFlags';
+                    st.reviewQueue = flaggedIdx;
+                    st.reviewPos = 0;
+                    st.currentIndex = flaggedIdx[0];
+                    if (window.customAlert) window.customAlert(`You have ${flaggedIdx.length} flagged item(s) to review before submitting.`);
+                    window.renderMockQuestion();
+                } else {
+                    (async () => {
+                        const doSubmit = await window.customConfirm("You've reached the last item. Submit your Mock Exam now?");
+                        if (doSubmit) window.submitMockExam(false);
+                    })();
+                }
+            }
         };
 
         window.mockExamJumpTo = (i) => {
-            window.mockExamState.currentIndex = i;
-            window.mockReviewMode ? window.renderMockReviewQuestion() : window.renderMockQuestion();
+            const st = window.mockExamState;
+            if (window.mockReviewMode) { st.currentIndex = i; window.renderMockReviewQuestion(); return; }
+            if (st.phase === 'reviewFlags') {
+                const pos = st.reviewQueue.indexOf(i);
+                if (pos === -1) return; // Can't jump outside the flagged-review queue.
+                st.reviewPos = pos; st.currentIndex = i;
+                window.renderMockQuestion();
+                return;
+            }
+            // In the main pass, only items already reached can be revisited —
+            // this is what enforces answering 1 -> 2 -> 3 in order.
+            if (i <= st.maxVisited) { st.currentIndex = i; window.renderMockQuestion(); }
         };
 
         window.renderMockItemMap = () => {
@@ -11520,8 +11604,10 @@ window.logAdminSettingsActivity = async (action, details) => {
                 let cls = 'bg-slate-200 dark:bg-slate-700 text-slate-500';
                 if (st.flags[i]) cls = 'bg-amber-400 text-white';
                 else if (st.answers[i] !== null) cls = 'bg-indigo-600 text-white';
+                const locked = !window.mockReviewMode && st.phase !== 'reviewFlags' && i > st.maxVisited;
+                if (locked) cls += ' opacity-40 cursor-not-allowed';
                 const ring = i === st.currentIndex ? 'ring-2 ring-offset-1 ring-indigo-500 dark:ring-offset-slate-800' : '';
-                return `<button onclick="mockExamJumpTo(${i})" class="w-8 h-8 rounded text-[10px] font-bold ${cls} ${ring} transition">${i + 1}</button>`;
+                return `<button ${locked ? 'disabled' : ''} onclick="mockExamJumpTo(${i})" class="w-8 h-8 rounded text-[10px] font-bold ${cls} ${ring} transition">${i + 1}</button>`;
             }).join('');
         };
 
@@ -11574,15 +11660,20 @@ window.logAdminSettingsActivity = async (action, details) => {
                 icon.className = `w-16 h-16 mx-auto mb-4 ${overallPass ? 'text-emerald-500' : 'text-rose-500'}`;
                 sub.innerText = autoSubmitted ? 'Time expired — exam auto-submitted. Each Competency is passed or failed independently.' : 'Each Competency is passed or failed independently.';
 
-                document.getElementById('mock-result-table').innerHTML = rows.map(r => `
-                    <tr class="border-t border-brand-creamBorder dark:border-slate-700">
-                        <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
-                        <td class="p-2.5 text-center">${r.items}</td>
-                        <td class="p-2.5 text-center">${r.correct}</td>
-                        <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
-                        <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
-                        <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
-                    </tr>`).join('');
+                const tableEl = document.getElementById('mock-result-table');
+                if (rows.length === 0) {
+                    tableEl.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-500 font-bold">No scored items found (rows.length was 0). This exam session's data was likely incomplete — please try New Mock Exam.</td></tr>`;
+                } else {
+                    tableEl.innerHTML = rows.map(r => `
+                        <tr class="border-t border-brand-creamBorder dark:border-slate-700">
+                            <td class="p-2.5 font-bold text-brand-black dark:text-white">${r.meta.code} — ${r.meta.title}</td>
+                            <td class="p-2.5 text-center">${r.items}</td>
+                            <td class="p-2.5 text-center">${r.correct}</td>
+                            <td class="p-2.5 text-center font-bold">${r.scorePct}%</td>
+                            <td class="p-2.5 text-center text-slate-500">${r.meta.passing || 70}%</td>
+                            <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}">${r.passed ? 'PASS' : 'FAIL'}</span></td>
+                        </tr>`).join('');
+                }
 
                 if (window.lucide) window.lucide.createIcons();
             } catch (err) {
