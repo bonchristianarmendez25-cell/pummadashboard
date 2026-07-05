@@ -542,7 +542,7 @@
                     <div class="p-4 border-b border-brand-creamBorder dark:border-slate-700 flex flex-wrap items-center justify-between gap-4 bg-brand-creamAccent dark:bg-slate-900">
                         <div class="flex flex-wrap items-center gap-3">
                             <h2 class="font-bold text-brand-blue dark:text-white text-base uppercase tracking-wider flex items-center gap-2"><i data-lucide="clipboard-list" class="w-5 h-5 text-brand-green"></i> Class Records</h2>
-                            <select id="filter-class" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-brand-blue dark:text-blue-300 font-bold focus:outline-none focus:border-brand-green"><option value="3" selected>3RD CLASS</option><option value="4">4TH CLASS</option></select>
+                            <select id="filter-class" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-brand-blue dark:text-blue-300 font-bold focus:outline-none focus:border-brand-green"><option value="3" selected>3RD CLASS</option><option value="4">4TH CLASS</option><option value="ALUMNI">🎓 ALUMNI</option></select>
                             <select id="filter-section" class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 text-xs rounded px-2.5 py-1.5 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none focus:border-brand-green"></select>
                             <span class="bg-brand-blue dark:bg-green-700 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase" id="cadet-badge-count">0 cadets</span>
                         </div>
@@ -650,9 +650,11 @@
                             <div class="flex flex-col gap-1 shrink-0 admin-controls hidden">
                                 <button onclick="resetCadetPassword()" class="text-[9px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold transition-all">Reset Pwd</button>
                                 <button onclick="clearCadetEmail()" class="text-[9px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold transition-all">Clear Email</button>
+                                <button id="btn-toggle-alumni" onclick="handleToggleAlumni()" class="text-[9px] bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800 text-amber-700 dark:text-amber-300 px-2 py-1 rounded border border-amber-200 dark:border-amber-800 font-semibold transition-all">Graduate to Alumni</button>
                                 <button onclick="handleDeleteCadet(this)" class="text-[9px] bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800 text-red-600 dark:text-red-400 px-2 py-1 rounded border border-red-200 dark:border-red-800 font-semibold transition-all">Delete</button>
                             </div>
                         </div>
+
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
@@ -3466,9 +3468,11 @@
             if (document.getElementById('eval-nav-group')) { document.getElementById('eval-nav-group').classList.remove('hidden'); document.getElementById('eval-nav-group').classList.add('flex'); }
 
             setTxt('eval-cadet-name', c.name);
-            setTxt('eval-class-display', `${c.classNum === 3 ? '3RD' : '4TH'} CLASS`);
+            setTxt('eval-class-display', c.isAlumni ? `ALUMNI (${c.alumniOriginalClass === 3 ? '3RD' : '4TH'} CLASS)` : `${c.classNum === 3 ? '3RD' : '4TH'} CLASS`);
             setTxt('eval-id-display', c.studentId || `PUMMA-0${c.classNum}-${c.id.substring(c.id.length - 4)}`);
             document.getElementById('eval-avatar-img').src = window.getAvatarSrc(c);
+            const alumniBtn = document.getElementById('btn-toggle-alumni');
+            if (alumniBtn) alumniBtn.textContent = c.isAlumni ? 'Reinstate to Active' : 'Graduate to Alumni';
 
             setVal('eval-input-id', c.studentId || '');
             setVal('eval-input-email', c.email || '');
@@ -3750,6 +3754,50 @@
                 window.cancelEvaluation();
             } catch (e) { alert("Error deleting cadet."); }
         };
+
+        // ── Alumni System ──────────────────────────────────────────────
+        // Graduating cadets are NEVER deleted. Instead we flag them isAlumni
+        // and move their classNum to 0 (the same sentinel already used for
+        // observer accounts), which automatically excludes them from every
+        // existing 3rd/4th Class filter, leaderboard, and merit tool across
+        // the app — without having to touch each of those call sites. Their
+        // original class/section is preserved separately so it can still be
+        // shown and so they can be reinstated later if graduation was made
+        // in error.
+        window.handleToggleAlumni = async () => {
+            if (!window.selectedCadetId) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c) return;
+
+            if (!c.isAlumni) {
+                const confirmed = await customConfirm(`Graduate ${c.name} to ALUMNI status?\n\nThey will be removed from active class rosters, leaderboards, and merit tools, but their full record is kept. They can still log in, chat in the Alumni room, and use free Exam Prep reviewers (e.g. for IOC exams).`);
+                if (!confirmed) return;
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), {
+                        isAlumni: true,
+                        alumniDate: new Date().toISOString(),
+                        alumniOriginalClass: c.classNum,
+                        alumniOriginalSection: c.section,
+                        classNum: 0
+                    });
+                    window.logAuditActivity('Cadet Graduated', `Moved to Alumni status`, c.name);
+                    alert(`✓ ${c.name} is now an Alumni.`);
+                } catch (e) { alert("Error updating alumni status."); }
+            } else {
+                const confirmed = await customConfirm(`Reinstate ${c.name} back to active ${c.alumniOriginalClass === 3 ? '3rd' : '4th'} Class status?`);
+                if (!confirmed) return;
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), {
+                        isAlumni: false,
+                        alumniDate: null,
+                        classNum: c.alumniOriginalClass || 3
+                    });
+                    window.logAuditActivity('Cadet Reinstated', `Restored from Alumni to active status`, c.name);
+                    alert(`✓ ${c.name} has been reinstated.`);
+                } catch (e) { alert("Error updating alumni status."); }
+            }
+        };
+
 
         // --- Shared Storage Upload Helper ---
         // Images used to be saved as base64 strings directly inside each cadet's
@@ -4137,7 +4185,7 @@
 
             document.getElementById('print-avatar').src = window.getAvatarSrc(c);
             setTxt('print-name', c.name);
-            setTxt('print-class', `${c.classNum === 3 ? '3RD' : '4TH'} CLASS`);
+            setTxt('print-class', c.isAlumni ? `ALUMNI (${c.alumniOriginalClass === 3 ? '3RD' : '4TH'} CLASS)` : `${c.classNum === 3 ? '3RD' : '4TH'} CLASS`);
             setTxt('print-section', c.section);
             setTxt('print-id', c.studentId || `PUMMA-0${c.classNum}-${c.id.substring(c.id.length - 4)}`);
             
@@ -10112,11 +10160,17 @@ window.logAdminSettingsActivity = async (action, details) => {
             }
 
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
-            const targetClass = parseInt(getVal('filter-class', 3));
+            const rawClassFilter = getVal('filter-class', 3);
+            const isAlumniView = rawClassFilter === 'ALUMNI';
+            const targetClass = parseInt(rawClassFilter);
             const targetSec = getVal('filter-section', 'ALL').toUpperCase();
             const search = getVal('table-search').toLowerCase();
 
-            const filtered = window.cadets.filter(c => !c.isObserver && (c.academicYear === targetAcadYear || !c.academicYear) && parseInt(c.classNum) === targetClass && (targetSec === "ALL" || c.section.toUpperCase() === targetSec) && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
+            const filtered = window.cadets.filter(c => !c.isObserver
+                && (c.academicYear === targetAcadYear || !c.academicYear)
+                && (isAlumniView ? !!c.isAlumni : (!c.isAlumni && parseInt(c.classNum) === targetClass))
+                && (targetSec === "ALL" || c.section.toUpperCase() === targetSec)
+                && c.name.toLowerCase().includes(search)).sort((a, b) => a.name.localeCompare(b.name));
 
             filtered.forEach(c => {
                 const tr = document.createElement('tr');
@@ -13671,11 +13725,13 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!roomKey || roomKey === 'general') return 'chat';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c?.isAlumni) return 'chat_alumni';
             const cls = c?.classNum || window.appSettings?.class || '1';
             return `chat_class_${cls}`;
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c?.isAlumni) return 'chat_alumni';
             const sec = (c?.section || 'A').toUpperCase().replace(/\s+/g,'_');
             return `chat_section_${sec}`;
         }
@@ -13687,10 +13743,12 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!roomKey || roomKey === 'general') return 'Ship\'s Comms ⚓';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c?.isAlumni) return 'Alumni Wardroom 🎓';
             return `Class ${c?.classNum || '?'} Chat 🎓`;
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c?.isAlumni) return 'Alumni Wardroom 🎓';
             return `Section ${(c?.section || '?').toUpperCase()} Chat 🏴`;
         }
         if (roomKey.startsWith('dm_')) {
@@ -13733,6 +13791,18 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (activeBtn) {
             activeBtn.classList.add('text-white', 'border-white');
             activeBtn.classList.remove('text-white/60', 'border-transparent');
+        }
+        // Alumni don't have an active class/section, so both those tabs
+        // point at one shared Alumni room instead.
+        const me = window.cadets?.find(x => x.id === window.selectedCadetId);
+        const classTab = document.getElementById('chat-tab-class');
+        const sectionTab = document.getElementById('chat-tab-section');
+        if (me?.isAlumni) {
+            if (classTab) classTab.innerHTML = '🎓 Alumni';
+            if (sectionTab) sectionTab.innerHTML = '🎓 Alumni Chat';
+        } else {
+            if (classTab) classTab.innerHTML = '🎓 My Class';
+            if (sectionTab) sectionTab.innerHTML = '🏴 My Section';
         }
     }
 
@@ -14049,7 +14119,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         const sectionSel = document.getElementById('roster-filter-section');
         if (classSel && classSel.dataset.built !== classes.join(',')) {
             classSel.innerHTML = `<option value="all">All Classes</option>` +
-                classes.map(cl => `<option value="${escapeHTML(cl)}">Class ${escapeHTML(cl)}</option>`).join('');
+                classes.map(cl => `<option value="${escapeHTML(cl)}">Class ${escapeHTML(cl)}</option>`).join('') +
+                `<option value="ALUMNI">🎓 Alumni</option>`;
             classSel.dataset.built = classes.join(',');
         }
         if (sectionSel && sectionSel.dataset.built !== sections.join(',')) {
@@ -14062,12 +14133,17 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (!rosterFiltersDefaulted && window.currentUserRole === 'cadet' && window.selectedCadetId) {
             const me = roster.find(c => c.id === window.selectedCadetId);
             if (me) {
-                if (me.classNum) rosterFilterClass = me.classNum.toString().trim();
-                if (me.section) rosterFilterSection = me.section.toString().trim().toUpperCase();
+                if (me.isAlumni) {
+                    rosterFilterClass = 'ALUMNI';
+                    rosterFilterSection = 'all';
+                } else {
+                    if (me.classNum) rosterFilterClass = me.classNum.toString().trim();
+                    if (me.section) rosterFilterSection = me.section.toString().trim().toUpperCase();
+                }
                 rosterFiltersDefaulted = true;
             }
         }
-        if (classSel) classSel.value = classes.includes(rosterFilterClass) ? rosterFilterClass : 'all';
+        if (classSel) classSel.value = (classes.includes(rosterFilterClass) || rosterFilterClass === 'ALUMNI') ? rosterFilterClass : 'all';
         if (sectionSel) sectionSel.value = sections.includes(rosterFilterSection) ? rosterFilterSection : 'all';
         // Keep state in sync with what's actually selectable
         rosterFilterClass = classSel ? classSel.value : 'all';
@@ -14088,7 +14164,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         populateRosterFilters();
 
         const roster = (window.cadets || []).filter(c => {
-            const classOk = rosterFilterClass === 'all' || (c.classNum || '').toString().trim() === rosterFilterClass;
+            const classOk = rosterFilterClass === 'all'
+                || (rosterFilterClass === 'ALUMNI' ? !!c.isAlumni : (!c.isAlumni && (c.classNum || '').toString().trim() === rosterFilterClass));
             const sectionOk = rosterFilterSection === 'all' || (c.section || '').toString().trim().toUpperCase() === rosterFilterSection;
             return classOk && sectionOk;
         });
@@ -14133,7 +14210,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             }
             const dotColor = isOnline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600';
             const initial = escapeHTML((c.name || '?').trim().charAt(0).toUpperCase() || '?');
-            const tag = c.isObserver ? ' <span class="text-[8px] text-emerald-500 font-bold">(Observer)</span>' : '';
+            const tag = c.isObserver ? ' <span class="text-[8px] text-emerald-500 font-bold">(Observer)</span>' : (c.isAlumni ? ' <span class="text-[8px] text-amber-500 font-bold">🎓 (Alumni)</span>' : '');
             return `
             <div class="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                 <span class="relative shrink-0">
