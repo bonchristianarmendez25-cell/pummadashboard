@@ -13419,7 +13419,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
         <!-- Active Roster Panel (who's online + last active) -->
         <div id="pumma-roster-panel"
-            class="hidden flex-col w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
+            class="hidden flex-col w-72 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-brand-creamBorder dark:border-slate-700 overflow-hidden"
             style="height:600px; max-height:90vh;">
             <div class="bg-brand-blue text-white px-4 py-2.5 flex items-center justify-between shrink-0">
                 <div class="min-w-0">
@@ -13429,6 +13429,16 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 <button onclick="toggleRosterPanel()" class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
+            </div>
+            <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shrink-0 bg-slate-50 dark:bg-slate-900/40">
+                <select id="roster-filter-class" onchange="onRosterFilterChange()"
+                    class="flex-1 min-w-0 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-brand-black dark:text-white focus:outline-none focus:border-brand-blue">
+                    <option value="all">All Classes</option>
+                </select>
+                <select id="roster-filter-section" onchange="onRosterFilterChange()"
+                    class="flex-1 min-w-0 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-brand-black dark:text-white focus:outline-none focus:border-brand-blue">
+                    <option value="all">All Sections</option>
+                </select>
             </div>
             <div id="roster-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-slate-700">
                 <div class="text-center text-[10px] text-slate-400 py-6">Loading roster…</div>
@@ -14023,12 +14033,68 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
 
+    // ── Class/Section filters for the Active Roster board ────────────
+    let rosterFilterClass = 'all';
+    let rosterFilterSection = 'all';
+    let rosterFiltersDefaulted = false;
+
+    function populateRosterFilters() {
+        const roster = window.cadets || [];
+        const classes = [...new Set(roster.map(c => (c.classNum || '').toString().trim()).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        const sections = [...new Set(roster.map(c => (c.section || '').toString().trim().toUpperCase()).filter(Boolean))]
+            .sort();
+
+        const classSel = document.getElementById('roster-filter-class');
+        const sectionSel = document.getElementById('roster-filter-section');
+        if (classSel && classSel.dataset.built !== classes.join(',')) {
+            classSel.innerHTML = `<option value="all">All Classes</option>` +
+                classes.map(cl => `<option value="${escapeHTML(cl)}">Class ${escapeHTML(cl)}</option>`).join('');
+            classSel.dataset.built = classes.join(',');
+        }
+        if (sectionSel && sectionSel.dataset.built !== sections.join(',')) {
+            sectionSel.innerHTML = `<option value="all">All Sections</option>` +
+                sections.map(sc => `<option value="${escapeHTML(sc)}">Section ${escapeHTML(sc)}</option>`).join('');
+            sectionSel.dataset.built = sections.join(',');
+        }
+
+        // Default a logged-in cadet's view to their own class & section the first time.
+        if (!rosterFiltersDefaulted && window.currentUserRole === 'cadet' && window.selectedCadetId) {
+            const me = roster.find(c => c.id === window.selectedCadetId);
+            if (me) {
+                if (me.classNum) rosterFilterClass = me.classNum.toString().trim();
+                if (me.section) rosterFilterSection = me.section.toString().trim().toUpperCase();
+                rosterFiltersDefaulted = true;
+            }
+        }
+        if (classSel) classSel.value = classes.includes(rosterFilterClass) ? rosterFilterClass : 'all';
+        if (sectionSel) sectionSel.value = sections.includes(rosterFilterSection) ? rosterFilterSection : 'all';
+        // Keep state in sync with what's actually selectable
+        rosterFilterClass = classSel ? classSel.value : 'all';
+        rosterFilterSection = sectionSel ? sectionSel.value : 'all';
+    }
+
+    window.onRosterFilterChange = function() {
+        const classSel = document.getElementById('roster-filter-class');
+        const sectionSel = document.getElementById('roster-filter-section');
+        rosterFilterClass = classSel ? classSel.value : 'all';
+        rosterFilterSection = sectionSel ? sectionSel.value : 'all';
+        renderRosterPanel();
+    };
+
     function renderRosterPanel() {
         const list = document.getElementById('roster-list');
         if (!list) return;
-        const roster = window.cadets || [];
+        populateRosterFilters();
+
+        const roster = (window.cadets || []).filter(c => {
+            const classOk = rosterFilterClass === 'all' || (c.classNum || '').toString().trim() === rosterFilterClass;
+            const sectionOk = rosterFilterSection === 'all' || (c.section || '').toString().trim().toUpperCase() === rosterFilterSection;
+            return classOk && sectionOk;
+        });
+
         if (roster.length === 0) {
-            list.innerHTML = `<div class="text-center text-[10px] text-slate-400 py-6">No cadets found.</div>`;
+            list.innerHTML = `<div class="text-center text-[10px] text-slate-400 py-6">No cadets in this class/section.</div>`;
             const countEl0 = document.getElementById('roster-online-count');
             if (countEl0) countEl0.textContent = '0 online now';
             return;
