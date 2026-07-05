@@ -3535,8 +3535,9 @@
             setTxt('eval-bonus-rating-add', `+${(totalBonus * PERCENT_TO_RATING_DISPLAY).toFixed(2)}`);
 
             const badge = document.getElementById('eval-bonus-badge');
-            if (totalBonus > 0) {
-                badge.innerText = `+${totalBonus.toFixed(2)}% Total Bonus`;
+            const gradeEffect = parseFloat(c.bonusGradeEffect) || 0;
+            if (gradeEffect > 0) {
+                badge.innerText = `+${gradeEffect.toFixed(2)}% Grade (from ${totalBonus.toFixed(2)}% Bonus)`;
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
@@ -10009,30 +10010,33 @@ window.logAdminSettingsActivity = async (action, details) => {
                     cadet.autoBonus = Math.min(5, (excessMerits / 10) * bonusRate); // capped at 5 PERCENT-equivalent, converted below
                     cadet.bonusPercent = parseFloat(cadet.individualBonus) || 0;
 
-                    // BONUS NOW APPLIES TO THE RATING ITSELF, NOT JUST THE PERCENT GRADE.
-                    // Previously, all bonuses (manual + auto-from-merits + Star Cadet) were
-                    // added AFTER converting rating -> percent, then hard-capped at 98%.
-                    // That meant two cadets with genuinely different ratings (e.g. 4.70 and
-                    // 4.88) could both receive enough bonus to land on the exact same 98.00%
-                    // grade — the bonus layer was erasing real differences between high
-                    // performers instead of just rewarding them. Converting the bonus into
-                    // an equivalent rating-scale nudge and applying it to finalRating BEFORE
-                    // the single rating->percent conversion fixes this at the source: the
-                    // percent grade is now always a transparent, one-step function of the
-                    // final rating, so distinct ratings stay visibly distinct even with
-                    // bonuses applied, and 98% remains a true ceiling reached only by a
-                    // (boosted) rating that actually reaches 5.00 — not an artificial clamp.
-                    // Conversion factor: the top rating band (4.51-5.00, width 0.49) maps to
-                    // the top percent band (96-98%, width 2.00), so 1 percent point of bonus
-                    // ≈ 0.245 rating points. This keeps the bonus's real-world "weight" the
-                    // same as before for cadets near the top of the scale.
-                    const PERCENT_TO_RATING = 0.49 / 2.00;
+                    // BONUS APPLIES TO PT, NOT TO THE RATING/FG DIRECTLY.
+                    // Previously bonuses were converted into a rating-scale nudge and
+                    // applied to finalRating before a single rating->percent conversion.
+                    // That produced a DIFFERENT number than the University Matrix export
+                    // (which blends CS×0.60 + PT×0.40), because the rating scale's bands
+                    // compress/expand unevenly — a cadet already near the top of the
+                    // rating scale could get slammed into the 5.00 ceiling (98%) by a
+                    // bonus that only moved their Matrix FG by 2 points. Two different
+                    // formulas meant two different grades for the same cadet: the
+                    // dashboard said 98%, the Registrar's printed Matrix said 96%.
+                    //
+                    // Fix: the dashboard's Specific Grade % now uses the EXACT SAME
+                    // CS/PT/FG formula as the Matrix — one formula, everywhere, always
+                    // in agreement. finalRating (1-5 scale) is kept as-is for anything
+                    // that still reads it (pass/fail thresholds, leaderboards sorted by
+                    // rating, etc.) — only the percent GRADE is now unified.
+                    const PERCENT_TO_RATING = 0.49 / 2.00; // kept for the rating-scale badge below
                     const totalBonusPercent = cadet.bonusPercent + cadet.autoBonus + (cadet.starCadet ? 2.0 : 0);
                     cadet.totalBonusPercent = totalBonusPercent; // shown in the matrix breakdown
                     const bonusRatingPoints = totalBonusPercent * PERCENT_TO_RATING;
                     cadet.finalRating = Math.min(5.0, cadet.baseRating + bonusRatingPoints);
 
-                    let specificGrade = parseFloat(window.convertRatingToPercentGrade(cadet.finalRating));
+                    // CS: pure class standing, no bonus. PT: GWA + bonus (same as Matrix).
+                    const csForGrade = parseFloat(window.convertRatingToPercentGrade(cadet.baseRating)) || 0;
+                    let ptForGrade = (parseFloat(cadet.gwa) || 0) + totalBonusPercent;
+                    if (ptForGrade > 98) ptForGrade = 98;
+                    let specificGrade = Math.round((csForGrade * 0.60) + (ptForGrade * 0.40));
 
                     // MERIT OVERRIDE PENALTY: negative merits no longer just contribute
                     // a flattened "1" to one of five weighted components — they now
@@ -10052,6 +10056,16 @@ window.logAdminSettingsActivity = async (action, details) => {
                     if (specificGrade > 98) specificGrade = 98;
                     if (specificGrade < 0) specificGrade = 0; // grade is a %, can't go below 0 — but no floor above 0 either
                     cadet.specificGradePercent = specificGrade.toFixed(2);
+
+                    // Accurate "how much did the bonus actually add to THIS grade" figure
+                    // for the bonus badge — computed the same way, minus the bonus, so the
+                    // badge always matches the real point difference instead of just
+                    // echoing the raw bonus percentage (which lands on a different scale).
+                    let ptNoBonus = Math.min(98, parseFloat(cadet.gwa) || 0);
+                    let gradeNoBonus = Math.round((csForGrade * 0.60) + (ptNoBonus * 0.40)) - meritPenalty;
+                    gradeNoBonus = Math.max(0, Math.min(98, gradeNoBonus));
+                    cadet.bonusGradeEffect = Math.max(0, specificGrade - gradeNoBonus);
+
 
                     if (parseInt(cadet.classNum) === targetClass && (targetSec === "ALL" || cadet.section.toUpperCase() === targetSec)) {
                         sectionCadetsCount++;
@@ -10114,8 +10128,8 @@ window.logAdminSettingsActivity = async (action, details) => {
                     const sorted4th = yearFilteredCadets.filter(c => parseInt(c.classNum) === 4).sort((a,b) => parseFloat(b.specificGradePercent) - parseFloat(a.specificGradePercent)).slice(0, 5);
                     
                     const renderList = (sortedList) => sortedList.map((c, i) => {
-                        const bAmt = parseFloat(c.totalBonusPercent) || 0;
-                        const bTag = bAmt > 0 ? `<span title="Includes +${bAmt.toFixed(2)}% bonus" class="text-[7px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 rounded font-bold">🎁+${bAmt.toFixed(1)}%</span>` : '';
+                        const bAmt = parseFloat(c.bonusGradeEffect) || 0;
+                        const bTag = bAmt > 0 ? `<span title="This grade includes +${bAmt.toFixed(2)}% from bonus" class="text-[7px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 rounded font-bold">🎁+${bAmt.toFixed(1)}%</span>` : '';
                         return `
                         <div class="flex items-center gap-3 p-2 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg shadow-sm">
                             <div class="w-6 h-6 flex-shrink-0 flex items-center justify-center font-bold text-xs rounded-full ${i===0 ? 'bg-yellow-400 text-yellow-900' : i===1 ? 'bg-slate-300 text-slate-800' : i===2 ? 'bg-amber-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${i+1}</div>
@@ -10221,9 +10235,10 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if (c.logbookCompletion < 0.5) flags += `<span title="Logbook submission below 50%" class="bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-300 px-1 rounded inline-flex items-center"><i data-lucide="alert-circle" class="w-3 h-3"></i> Logs</span>`;
                 if (c.starCadet) flags += `<span title="Star Cadet Honor" class="text-amber-500 inline-flex items-center"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i></span>`;
 
-                const bonusAmt = parseFloat(c.totalBonusPercent) || 0;
+                const bonusAmt = parseFloat(c.bonusGradeEffect) || 0;
+                const rawBonusAmt = parseFloat(c.totalBonusPercent) || 0;
                 const bonusTag = bonusAmt > 0
-                    ? `<span title="Includes +${bonusAmt.toFixed(2)}% bonus (merits/Star Cadet/manual)" class="ml-1 text-[8px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded font-bold align-middle">🎁+${bonusAmt.toFixed(1)}%</span>`
+                    ? `<span title="This grade includes +${bonusAmt.toFixed(2)}% from a ${rawBonusAmt.toFixed(2)}% bonus (merits/Star Cadet/manual)" class="ml-1 text-[8px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded font-bold align-middle">🎁+${bonusAmt.toFixed(1)}%</span>`
                     : '';
 
                 tr.innerHTML = `
