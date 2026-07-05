@@ -3835,11 +3835,25 @@
 
         async function uploadImageToStorage(dataUrl, path) {
             const blob = dataUrlToBlob(dataUrl);
-            const { error: uploadError } = await withTimeout(
+            let { error: uploadError } = await withTimeout(
                 supabaseClient.storage.from(SUPABASE_BUCKET).upload(path, blob, { contentType: blob.type, upsert: true }),
                 20000,
                 'Image upload'
             );
+            if (uploadError) {
+                // Some Supabase bucket policies grant INSERT/DELETE but not UPDATE,
+                // which makes upsert:true fail specifically when a file already
+                // exists at this path (e.g. re-uploading a profile picture after
+                // the first one). Work around that by explicitly deleting the old
+                // object, then inserting fresh — this only needs INSERT+DELETE.
+                await supabaseClient.storage.from(SUPABASE_BUCKET).remove([path]).catch(() => {});
+                const retry = await withTimeout(
+                    supabaseClient.storage.from(SUPABASE_BUCKET).upload(path, blob, { contentType: blob.type }),
+                    20000,
+                    'Image upload'
+                );
+                uploadError = retry.error;
+            }
             if (uploadError) throw uploadError;
             const { data } = supabaseClient.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
             if (!data || !data.publicUrl) throw new Error('Could not get a public URL for the uploaded image.');
@@ -4096,7 +4110,8 @@
                             setTimeout(() => toast.remove(), 3000);
                         } catch (err) {
                             console.error(err);
-                            alert("Failed to save profile picture. Please try a different image.");
+                            const reason = err && (err.message || err.error || err.statusText);
+                            alert(`Failed to save profile picture.${reason ? `\n\nReason: ${reason}` : ''}\n\nIf this keeps happening, try a different photo (e.g. exported as JPG) or check your internet connection.`);
                         }
                     }
                 };
