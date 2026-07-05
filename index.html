@@ -10113,7 +10113,10 @@ window.logAdminSettingsActivity = async (action, details) => {
                     const sorted3rd = yearFilteredCadets.filter(c => parseInt(c.classNum) === 3).sort((a,b) => parseFloat(b.specificGradePercent) - parseFloat(a.specificGradePercent)).slice(0, 5);
                     const sorted4th = yearFilteredCadets.filter(c => parseInt(c.classNum) === 4).sort((a,b) => parseFloat(b.specificGradePercent) - parseFloat(a.specificGradePercent)).slice(0, 5);
                     
-                    const renderList = (sortedList) => sortedList.map((c, i) => `
+                    const renderList = (sortedList) => sortedList.map((c, i) => {
+                        const bAmt = parseFloat(c.totalBonusPercent) || 0;
+                        const bTag = bAmt > 0 ? `<span title="Includes +${bAmt.toFixed(2)}% bonus" class="text-[7px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 rounded font-bold">🎁+${bAmt.toFixed(1)}%</span>` : '';
+                        return `
                         <div class="flex items-center gap-3 p-2 bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg shadow-sm">
                             <div class="w-6 h-6 flex-shrink-0 flex items-center justify-center font-bold text-xs rounded-full ${i===0 ? 'bg-yellow-400 text-yellow-900' : i===1 ? 'bg-slate-300 text-slate-800' : i===2 ? 'bg-amber-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${i+1}</div>
                             <img src="${window.getAvatarSrc(c)}" class="w-8 h-8 rounded border border-slate-300 dark:border-slate-600 object-cover flex-shrink-0">
@@ -10121,9 +10124,12 @@ window.logAdminSettingsActivity = async (action, details) => {
                                 <span class="font-bold text-xs text-brand-blue dark:text-white truncate flex items-center gap-1">${c.name} ${c.starCadet ? '<i data-lucide="star" class="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0"></i>' : ''}</span>
                                 <span class="text-[9px] text-slate-500 dark:text-slate-400 truncate">Sec ${c.section.toUpperCase()}</span>
                             </div>
-                            <div class="ml-auto font-bold text-brand-green dark:text-green-400 text-xs bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded flex-shrink-0">${c.specificGradePercent}%</div>
+                            <div class="ml-auto flex flex-col items-end gap-0.5 flex-shrink-0">
+                                <div class="font-bold text-brand-green dark:text-green-400 text-xs bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded">${c.specificGradePercent}%</div>
+                                ${bTag}
+                            </div>
                         </div>
-                    `).join('');
+                    `;}).join('');
 
                     safeSetInnerHTML('leaderboard-list-3', renderList(sorted3rd) || '<p class="text-xs text-slate-500 col-span-5">No ranked 3rd Class cadets yet.</p>');
                     safeSetInnerHTML('leaderboard-list-4', renderList(sorted4th) || '<p class="text-xs text-slate-500 col-span-5">No ranked 4th Class cadets yet.</p>');
@@ -10215,6 +10221,11 @@ window.logAdminSettingsActivity = async (action, details) => {
                 if (c.logbookCompletion < 0.5) flags += `<span title="Logbook submission below 50%" class="bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-300 px-1 rounded inline-flex items-center"><i data-lucide="alert-circle" class="w-3 h-3"></i> Logs</span>`;
                 if (c.starCadet) flags += `<span title="Star Cadet Honor" class="text-amber-500 inline-flex items-center"><i data-lucide="star" class="w-3.5 h-3.5 fill-amber-500"></i></span>`;
 
+                const bonusAmt = parseFloat(c.totalBonusPercent) || 0;
+                const bonusTag = bonusAmt > 0
+                    ? `<span title="Includes +${bonusAmt.toFixed(2)}% bonus (merits/Star Cadet/manual)" class="ml-1 text-[8px] bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded font-bold align-middle">🎁+${bonusAmt.toFixed(1)}%</span>`
+                    : '';
+
                 tr.innerHTML = `
                     <td class="p-3"><div class="flex items-center gap-2"><img src="${window.getAvatarSrc(c)}" class="w-7 h-7 rounded border border-slate-300 dark:border-slate-600 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col min-w-0"><span class="font-bold text-brand-black dark:text-white uppercase flex items-center gap-1 truncate">${c.name} ${flags}</span><span class="text-[9px] text-slate-500 dark:text-slate-400 font-mono truncate">ID: ${cIdDisplay} [SEC: ${c.section.toUpperCase()}]</span></div></div></td>
                     <td class="p-3 text-center font-mono"><span class="px-2.5 py-1 rounded font-bold border border-brand-creamBorder dark:border-slate-600 ${mColor}">${c.totalMeritsSum}</span></td>
@@ -10222,7 +10233,7 @@ window.logAdminSettingsActivity = async (action, details) => {
                     <td class="p-3 text-center">${c.officer ? '<span title="Corps of Midshipmen officer" class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700">OFFICER</span>' : '<span class="text-slate-400 text-[10px]">Cadet</span>'}</td>
                     <td class="p-3 text-center font-mono font-bold">CS: ${c.patriotismCS.toFixed(1)}</td>
                     <td class="p-3 text-center font-mono ${rColor} text-sm">${c.finalRating.toFixed(2)}</td>
-                    <td class="p-3 text-right"><strong class="text-brand-green dark:text-green-400 font-bold text-sm bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded border border-brand-green/35 dark:border-green-800">${c.specificGradePercent}%</strong></td>
+                    <td class="p-3 text-right"><strong class="text-brand-green dark:text-green-400 font-bold text-sm bg-brand-green-glow dark:bg-green-900/30 px-2 py-1 rounded border border-brand-green/35 dark:border-green-800">${c.specificGradePercent}%</strong>${bonusTag}</td>
                     <td class="p-3 text-center"><button onclick="selectCadet('${c.id}')" class="bg-brand-green hover:bg-brand-green-hover text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm transition">Assess</button></td>
                 `;
                 tbody.appendChild(tr);
