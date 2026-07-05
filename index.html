@@ -2162,11 +2162,16 @@
             const meritPenalty = merits < 0 ? (Math.abs(merits) / 100) * 3 : 0;
             const applyPenalty = (val) => Math.max(0, val - meritPenalty);
 
-            // CS from cadet's stored specificGradePercent breakdown
-            // We re-derive from the cadet's computed rating like the main engine does
-            let cs = parseFloat(c.specificGradePercent) || 0;
-            // PT: use GWA as the exam/periodical score proxy (same as main dashboard)
-            let pt = parseFloat(c.gwa) || 0;
+            // CS: pure class standing, WITHOUT bonus (bonus now lives in PT — see below)
+            let cs = parseFloat(window.convertRatingToPercentGrade(c.baseRating)) || 0;
+            // PT: GWA/exam proxy PLUS bonuses (manual, auto-merit, Star Cadet).
+            // Bonuses used to ride inside the Specific Grade % and get exported
+            // straight into FG, which made FG diverge from CS*0.6+PT*0.4 on the
+            // printed sheet — confusing for the Registrar, who has no dashboard
+            // access to see why FG didn't match its own inputs. PT already
+            // represents an exam/periodical-style score, so that's where extra
+            // credit belongs instead.
+            let pt = (parseFloat(c.gwa) || 0) + (parseFloat(c.totalBonusPercent) || 0);
             if (pt > 98) pt = 98;
 
             // FG from pummaGrades if present (PUMMA grading path)
@@ -2194,10 +2199,16 @@
                     //   T  = (CS x 0.60) + (PT x 0.40)
                     //   FG = ROUND(T, 0)
                     let tRaw = null;
-                    let computedFg = tFg;
+                    let computedFg = null;
                     if (tCs !== null && tPt !== null) {
                         tRaw = (tCs * 0.60) + (tPt * 0.40);
-                        if (computedFg === null) computedFg = Math.min(98, Math.round(tRaw));
+                        // ALWAYS recompute FG from CS/PT rather than trusting a
+                        // separately-stored value — this is what keeps FG
+                        // mathematically consistent with CS+PT on the printed
+                        // sheet, even for terms that were locked before this fix.
+                        computedFg = Math.min(98, Math.round(tRaw));
+                    } else if (tFg !== null) {
+                        computedFg = tFg; // no CS/PT on record — fall back to whatever FG was typed in manually
                     }
                     if (computedFg !== null) computedFg = applyPenalty(computedFg);
                     // Export CS and PT as their WEIGHTED portions so the university
@@ -2214,17 +2225,22 @@
                         fg: computedFg !== null ? computedFg.toFixed(2) : ''
                     };
                 });
-                // specificGradePercent already has the penalty applied by the main
-                // engine, so it's used as-is rather than penalized a second time here.
-                return { termGrades: result, merits, meritPenalty, cs, pt, fg: parseFloat(c.specificGradePercent)||0 };
+                // Top-level summary fg: same CS+PT transmutation as every term,
+                // using the un-weighted cs/pt derived above (bonus already
+                // folded into pt), so this preview number always matches what
+                // actually gets exported per-term.
+                let summaryFg = Math.round((cs * 0.60) + (pt * 0.40));
+                summaryFg = Math.max(0, Math.min(98, applyPenalty(summaryFg)));
+                return { termGrades: result, merits, meritPenalty, cs, pt, fg: summaryFg };
             }
 
             // Fallback: build synthetic grades from main dashboard score.
             // Same weighted-blend formula as above — T = (CS x 0.60) + (PT x 0.40),
-            // never a plain sum, so it can never overflow past 98.
-            // (specificGradePercent already has the penalty applied upstream)
-            const fg = parseFloat(c.specificGradePercent) || 0;
+            // never a plain sum, so it can never overflow past 98. FG is always
+            // the rounded transmutation of CS/PT (bonus already folded into PT
+            // above), not a separately-stored/raw percentage.
             const tFallback = (cs * 0.60) + (pt * 0.40);
+            const fg = Math.max(0, Math.min(98, applyPenalty(Math.round(tFallback))));
             // Export weighted portions so university formula (=CS+PT) never overflows
             const csW = parseFloat((cs * 0.60).toFixed(2));
             const ptW = parseFloat((pt * 0.40).toFixed(2));
@@ -13071,22 +13087,26 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const v4 = document.getElementById('auto-duty-val'); if(v4) v4.innerText = duty.toFixed(1) + '%';
             const v5 = document.getElementById('auto-gwa-val'); if(v5) v5.innerText = gwaPercent.toFixed(1) + '%';
 
-            // SINGLE SOURCE OF TRUTH: pin this tool's CS/PT/FG to the cadet's
-            // already-computed live dashboard numbers instead of re-deriving
-            // them from raw ratios. (Mirrors the convention already used by the
-            // Excel Converter fallback in _convComputeGrades.) cs is the live
-            // Specific Grade % — it already includes every component weight and
-            // every bonus (manual, auto-merit, Star Cadet), applied via the
-            // rating-based pipeline, AND the Merit Override Penalty. pt is the
-            // GWA/academic proxy, capped at 98 like everywhere else. fg is NOT
-            // recomputed and bonuses are NOT re-added here — doing so previously
-            // double-counted bonuses and let two cadets with different live
-            // ratings land on the identical 98% ceiling. fg now always exactly
-            // matches the Specific Grade % a cadet sees on the main dashboard at
-            // the moment this is locked.
-            let cs = parseFloat(cadet.specificGradePercent) || 0;
-            let pt = Math.min(98, parseFloat(cadet.gwa) || 0);
-            let fg = parseFloat(cadet.specificGradePercent) || 0;
+            // FIX (per Registrar feedback): bonuses (manual, auto-merit, Star
+            // Cadet) used to ride along inside the Specific Grade % and get
+            // exported as-is into FG, while CS/PT were derived separately —
+            // so FG no longer matched CS*0.60 + PT*0.40 on the printed sheet,
+            // making it look like bonuses were being tacked directly onto FG
+            // after the fact. The Registrar has no dashboard access, so any
+            // gap between FG and CS+PT reads as an unexplained/inflated grade.
+            //
+            // Bonuses now live in PT instead (PT already represents an exam/
+            // periodical-test-style score derived from GWA, which is exactly
+            // where extra credit belongs), and FG is ALWAYS the transmutation
+            // of CS and PT — never a separately-stored number — so the sheet
+            // is internally consistent and defensible: FG = ROUND(CS*0.6 + PT*0.4).
+            const csNoBonus = parseFloat(window.convertRatingToPercentGrade(cadet.baseRating)) || 0; // pure class standing, no bonus
+            let cs = csNoBonus;
+            let pt = Math.min(98, (parseFloat(cadet.gwa) || 0) + (parseFloat(cadet.totalBonusPercent) || 0)); // bonus now folded into PT
+            let tRaw = (cs * 0.60) + (pt * 0.40);
+            let fg = Math.round(tRaw);
+            if (cadet.totalMeritsSum < 0) fg -= (Math.abs(cadet.totalMeritsSum) / 100) * 3; // same Merit Override Penalty as the main dashboard
+            fg = Math.max(0, Math.min(98, fg));
 
             window.autoConvertedData = { cs, pt, fg };
 
