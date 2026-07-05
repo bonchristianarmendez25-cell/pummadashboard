@@ -784,7 +784,7 @@
                                 <span id="eval-penalty-badge" class="hidden text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-bold align-middle shadow-sm transform -translate-y-2">-0% Merit Penalty</span>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Based on Rating Score: <span id="eval-final-rating" class="font-bold">0.00</span></p>
-                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" id="eval-rating-breakdown-row">Base: <span id="eval-base-rating">0.00</span> + Bonus: <span id="eval-bonus-rating-add">0.00</span></p>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" id="eval-rating-breakdown-row">Base Rating: <span id="eval-base-rating">0.00</span> → Net from Bonus/Penalty: <span id="eval-bonus-rating-add">0.00</span></p>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-2 pt-2 admin-controls hidden">
@@ -2591,12 +2591,13 @@
                     <li class="flex justify-between"><span>Extra Individual Bonus:</span><strong id="print-bonus" class="text-brand-green">--</strong></li>
                     <li class="flex justify-between"><span>Star Cadet / Corps Officer:</span><strong id="print-officer">--</strong></li>
                     <li class="flex justify-between border-t border-dashed pt-1 mt-1"><span>Base Rating (before bonus):</span><strong id="print-base-rating">--</strong></li>
-                    <li class="flex justify-between"><span>Bonus Applied to Rating:</span><strong id="print-bonus-rating-add" class="text-brand-green">--</strong></li>
-                    <li class="flex justify-between font-bold"><span>Final Rating (used for Grade %):</span><strong id="print-final-rating-2">--</strong></li>
+                    <li class="flex justify-between"><span>Net Change from Bonus/Penalty:</span><strong id="print-bonus-rating-add" class="text-brand-green">--</strong></li>
+                    <li class="flex justify-between font-bold"><span>Final Rating (equivalent to Grade %):</span><strong id="print-final-rating-2">--</strong></li>
+                    <li class="flex justify-between text-[10px] text-slate-400"><span colspan="2">Rating is the Grade % converted back to the 1-5 scale, so the two always agree.</span></li>
                 </ul>
             </div>
             <div class="border border-slate-200 p-4 rounded"><h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b pb-1 mb-2">Duty Appraisal Matrix</h3><ul class="text-xs space-y-2"><li class="flex justify-between"><span>Technical Competence (15%):</span><strong id="print-matrix-tech">--</strong></li><li class="flex justify-between"><span>Soft Skills & Watchkeeping (25%):</span><strong id="print-matrix-soft">--</strong></li><li class="flex justify-between"><span>Patriotism Merit Index (25%):</span><strong id="print-matrix-patriotism">--</strong></li><li class="flex justify-between"><span>Leadership/Corps Officer CS (25%):</span><strong id="print-matrix-leadership">--</strong></li><li class="flex justify-between"><span>Academic CS (10%):</span><strong id="print-matrix-academic">--</strong></li></ul>
-            <p class="text-[10px] text-slate-400 mt-3 pt-2 border-t leading-relaxed">Bonuses (manual, excess-merit auto-bonus, Star Cadet) are converted into rating points and added directly to the Final Rating before it is converted to a Grade %. This keeps cadets with different ratings visibly distinct even after bonuses are applied, instead of multiple high performers all landing on the same capped percentage.</p>
+            <p class="text-[10px] text-slate-400 mt-3 pt-2 border-t leading-relaxed">Grade % = (Class Standing × 0.60) + (Periodical Test × 0.40), where Periodical Test = GWA + any bonuses (manual, excess-merit auto-bonus, Star Cadet), minus a Merit Override Penalty for negative merit balances. Final Rating is this same Grade % converted back to the 1-5 scale, so the two figures always agree — this is the same formula used on the University grading Matrix.</p>
             </div>
         </div>
         <div class="text-center bg-brand-creamAccent border-2 border-dashed border-brand-creamBorder p-6 rounded mb-8">
@@ -3529,10 +3530,10 @@
             setTxt('eval-final-percent', `${c.specificGradePercent}%`);
             setTxt('eval-final-rating', (c.finalRating || 0).toFixed(2));
 
-            const PERCENT_TO_RATING_DISPLAY = 0.49 / 2.00;
             const totalBonus = c.totalBonusPercent !== undefined ? c.totalBonusPercent : (c.bonusPercent || 0) + (c.autoBonus || 0) + (c.starCadet ? 2 : 0);
             setTxt('eval-base-rating', (c.baseRating !== undefined ? c.baseRating.toFixed(2) : (c.finalRating || 0).toFixed(2)));
-            setTxt('eval-bonus-rating-add', `+${(totalBonus * PERCENT_TO_RATING_DISPLAY).toFixed(2)}`);
+            const netRatingChange = (c.finalRating || 0) - (c.baseRating !== undefined ? c.baseRating : (c.finalRating || 0));
+            setTxt('eval-bonus-rating-add', `${netRatingChange >= 0 ? '+' : ''}${netRatingChange.toFixed(2)}`);
 
             const badge = document.getElementById('eval-bonus-badge');
             const gradeEffect = parseFloat(c.bonusGradeEffect) || 0;
@@ -4239,9 +4240,9 @@
             setTxt('print-matrix-leadership', c.leadershipCS);
             setTxt('print-matrix-academic', c.academicCS);
 
-            const PERCENT_TO_RATING_DISPLAY = 0.49 / 2.00;
             setTxt('print-base-rating', (c.baseRating !== undefined ? c.baseRating.toFixed(3) : '--'));
-            setTxt('print-bonus-rating-add', `+${((c.totalBonusPercent || 0) * PERCENT_TO_RATING_DISPLAY).toFixed(3)}`);
+            const printNetRatingChange = (c.finalRating || 0) - (c.baseRating !== undefined ? c.baseRating : (c.finalRating || 0));
+            setTxt('print-bonus-rating-add', `${printNetRatingChange >= 0 ? '+' : ''}${printNetRatingChange.toFixed(3)}`);
             setTxt('print-final-rating-2', (c.finalRating || 0).toFixed(3));
 
             setTxt('print-final-percentage', `${c.specificGradePercent}%`);
@@ -9523,6 +9524,36 @@ window.logAdminSettingsActivity = async (action, details) => {
             return (r.lg + (fraction * (r.hg - r.lg))).toFixed(2);
         };
 
+        // Inverse of the function above: converts a Grade % back into its
+        // equivalent 1.00-5.00 rating, using the exact same bands. This is
+        // what keeps "Final Rating" and "Specific Grade %" always in sync —
+        // one is mathematically derived from the other, so a rating of 5.00
+        // can now only ever appear alongside a grade that's genuinely 96-98%.
+        window.convertPercentToRatingGrade = (pct) => {
+            const ranges = [
+                { lr: 4.51, hr: 5.00, lg: 96.0, hg: 98.0 }, { lr: 4.01, hr: 4.50, lg: 93.0, hg: 95.0 },
+                { lr: 3.51, hr: 4.00, lg: 90.0, hg: 92.0 }, { lr: 3.01, hr: 3.50, lg: 85.0, hg: 89.0 },
+                { lr: 2.51, hr: 3.00, lg: 80.0, hg: 84.0 }, { lr: 2.01, hr: 2.50, lg: 75.0, hg: 79.0 },
+                { lr: 1.51, hr: 2.00, lg: 70.0, hg: 73.0 }, { lr: 1.00, hr: 1.50, lg: 60.0, hg: 69.0 }
+            ];
+            const p = Math.max(0, Math.min(98, pct));
+            // The percent bands have small gaps between them (e.g. 73→75, 79→80),
+            // so a percent can legitimately fall between two bands or below the
+            // lowest one (60). Pick whichever band it falls inside, or — if it's
+            // in a gap / below everything — the nearest band by distance.
+            let r = ranges.find(range => p >= range.lg && p <= range.hg);
+            if (!r) {
+                let bestDist = Infinity;
+                ranges.forEach(range => {
+                    const dist = p < range.lg ? (range.lg - p) : (p - range.hg);
+                    if (dist < bestDist) { bestDist = dist; r = range; }
+                });
+            }
+            const clampedP = Math.max(r.lg, Math.min(r.hg, p));
+            const fraction = (clampedP - r.lg) / (r.hg - r.lg);
+            return Math.max(1.0, Math.min(5.0, r.lr + (fraction * (r.hr - r.lr)))).toFixed(2);
+        };
+
         /* =========================================================
            CALCULATOR MODAL: GWA Unit Calculator + Scientific Calculator
            Available to both admin and cadet roles.
@@ -10023,14 +10054,9 @@ window.logAdminSettingsActivity = async (action, details) => {
                     //
                     // Fix: the dashboard's Specific Grade % now uses the EXACT SAME
                     // CS/PT/FG formula as the Matrix — one formula, everywhere, always
-                    // in agreement. finalRating (1-5 scale) is kept as-is for anything
-                    // that still reads it (pass/fail thresholds, leaderboards sorted by
-                    // rating, etc.) — only the percent GRADE is now unified.
-                    const PERCENT_TO_RATING = 0.49 / 2.00; // kept for the rating-scale badge below
+                    // in agreement.
                     const totalBonusPercent = cadet.bonusPercent + cadet.autoBonus + (cadet.starCadet ? 2.0 : 0);
                     cadet.totalBonusPercent = totalBonusPercent; // shown in the matrix breakdown
-                    const bonusRatingPoints = totalBonusPercent * PERCENT_TO_RATING;
-                    cadet.finalRating = Math.min(5.0, cadet.baseRating + bonusRatingPoints);
 
                     // CS: pure class standing, no bonus. PT: GWA + bonus (same as Matrix).
                     const csForGrade = parseFloat(window.convertRatingToPercentGrade(cadet.baseRating)) || 0;
@@ -10056,6 +10082,19 @@ window.logAdminSettingsActivity = async (action, details) => {
                     if (specificGrade > 98) specificGrade = 98;
                     if (specificGrade < 0) specificGrade = 0; // grade is a %, can't go below 0 — but no floor above 0 either
                     cadet.specificGradePercent = specificGrade.toFixed(2);
+
+                    // FINAL RATING IS NOW DERIVED FROM THE GRADE %, NOT THE OTHER WAY
+                    // AROUND. Previously finalRating was computed independently (base
+                    // rating + a bonus converted into rating points, capped at 5.00),
+                    // which is exactly how a cadet ended up displaying "Final Rating:
+                    // 5.00" right next to "Grade: 96%" — two numbers that looked like
+                    // they contradicted each other, because they came from two
+                    // different calculations. Converting the FINAL grade % back into
+                    // its equivalent rating (the exact inverse of the CS/PT->% bands
+                    // above) guarantees the two numbers always describe the same
+                    // grade — a rating of 5.00 will now only ever appear next to a
+                    // Grade % that is genuinely in the 96-98% band, and vice versa.
+                    cadet.finalRating = parseFloat(window.convertPercentToRatingGrade(specificGrade));
 
                     // Accurate "how much did the bonus actually add to THIS grade" figure
                     // for the bonus badge — computed the same way, minus the bonus, so the
