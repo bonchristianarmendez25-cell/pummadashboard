@@ -14081,6 +14081,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     const FCM_VAPID_KEY = "BAmyw8qFDXDPE4jS2ge-eTniDcQJBwVNV1fiqIKRQGcVbRvn5i_f93yf0eTkSL9umC90LL3UCWnK0gSxWCdiDQ8";
 
     let messaging = null;
+    let swRegistration = null;
 
     const escapeNotifText = (s) => String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
@@ -14117,6 +14118,19 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     const body  = payload.notification?.body  || payload.data?.body  || '';
                     showPushToast(title, body);
                     if (typeof playChime === 'function') { try { playChime(); } catch(e) {} }
+                    // Also fire a real system notification even while the app is
+                    // open in the foreground (Firebase only does this
+                    // automatically when the app is backgrounded/closed).
+                    if (swRegistration && Notification.permission === 'granted') {
+                        swRegistration.showNotification(title, {
+                            body,
+                            icon: '/MOCKBOAT%20LOGO.png',
+                            badge: '/MOCKBOAT%20LOGO.png',
+                            tag: 'pumma-notification',
+                            renotify: true,
+                            data: payload.data || {}
+                        }).catch(() => {});
+                    }
                 });
             }
             updateNotifUI(Notification.permission === 'granted');
@@ -14127,6 +14141,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     async function registerAndSaveToken() {
         if (!messaging || FCM_VAPID_KEY.startsWith('PASTE_')) return null;
         const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        swRegistration = reg;
         const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
         if (token) await saveFcmToken(token);
         return token;
