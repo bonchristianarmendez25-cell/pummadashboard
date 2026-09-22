@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.pummadashboard.twa",
+        "sha256_cert_fingerprints": ["48:29:78:28:17:B6:3A:42:38:54:F5:75:A3:7F:FF:29:CD:17:A2:84:69:E6:59:65:58:A5:86:F9:38:11:0E:B3"]
+      }
+    }]
