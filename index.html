@@ -12441,9 +12441,11 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             const bClass = getVal('bulk-target-class', 'ALL');
             const bSec = getVal('bulk-target-section', 'ALL').toUpperCase();
             const targetAcadYear = getVal('input-acad-year', '2025-2026');
+            const excludeAlumni = getVal('bulk-action-type', 'merits') === 'move_section';
             
             const filtered = window.cadets.filter(c => {
                if (c.isObserver) return false;
+               if (excludeAlumni && c.isAlumni) return false;
                const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
                const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
                const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
@@ -12486,9 +12488,11 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
             
             const bClass = getVal('bulk-target-class', 'ALL');
             const bSec = getVal('bulk-target-section', 'ALL').toUpperCase();
+            const excludeAlumni = typ === 'move_section';
             
             const filtered = window.cadets.filter(c => {
                if (c.isObserver) return false;
+               if (excludeAlumni && c.isAlumni) return false;
                const classMatch = bClass === 'ALL' ? true : parseInt(c.classNum) === parseInt(bClass);
                const secMatch = bSec === 'ALL' ? true : c.section.toUpperCase() === bSec;
                const acadMatch = c.academicYear === targetAcadYear || !c.academicYear;
@@ -12677,6 +12681,7 @@ Authorized By: ${window.currentAdminName || 'Instructor'}, Intelligence and Secu
 
             const filtered = (window.cadets || []).filter(c => {
                 if (c.isObserver) return false;
+                if (c.isAlumni) return false;
                 if (fClass !== 'ALL' && parseInt(c.classNum) !== parseInt(fClass)) return false;
                 if (fSec !== 'ALL' && (c.section || '').toUpperCase() !== fSec) return false;
                 if (search) {
