@@ -3,6 +3,7 @@
 <html lang="en" class="light">
 <head>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#263f77">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
     <title>PUMMA Cadet Merit & Appraisal Dashboard</title>
@@ -124,6 +125,19 @@
                 <p id="cadet-login-status" class="text-[10px] text-slate-400 mt-1.5 flex items-center justify-center gap-1"><i data-lucide="wifi" class="w-3 h-3"></i> Syncing data in background…</p>
             </div>
             <p class="text-[9px] text-slate-400/70 mt-6 font-semibold uppercase tracking-widest">Note: New or recovered instructor accounts default to PIN: 1234</p>
+        </div>
+    </div>
+
+    <div id="notif-enable-banner" class="hidden bg-brand-blue text-white py-2 text-xs font-bold no-print">
+        <div class="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="bell-ring" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Turn on notifications so you don't miss chat messages & announcements.</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="enableNotifications()" class="bg-white text-brand-blue px-2.5 py-1 rounded text-[10px] font-bold hover:bg-slate-100 transition">Enable</button>
+                <button onclick="dismissNotifBanner()" class="opacity-70 hover:opacity-100 transition w-6 h-6 flex items-center justify-center rounded hover:bg-white/20"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
         </div>
     </div>
 
@@ -4714,6 +4728,7 @@
             
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main'), { announcement: window.appSettings.announcement, announcements: list });
             window.logAuditActivity('Announcement Posted', `[${type}] ${title}`, 'Communications Board');
+            window.sendPushToAudience?.('all', `📢 ${type}`, title);
             
             setVal('announce-title', ''); setVal('announce-content', '');
             window.renderAnnouncements();
@@ -13914,6 +13929,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     </button>
                     <button onclick="toggleChatSound()" id="chat-sound-btn" title="Toggle sound"
                         class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                    <button onclick="enableNotifications()" id="chat-notif-btn" title="Enable push notifications"
+                        class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="bell" class="w-4 h-4 notif-bell-btn"></i></button>
                     <button onclick="togglePummaChat()"
                         class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                 </div>
@@ -14045,6 +14062,154 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     </div>
     </div>
 
+
+    <script type="module">
+    // ── PUMMA Push Notifications (Firebase Cloud Messaging) ──────────────
+    // Gives cadets/instructors a real device notification for new chat
+    // messages and announcements — including when the app/APK is closed
+    // or in the background. Everything here fails SILENTLY if messaging
+    // isn't supported or isn't set up yet, so it can never break the rest
+    // of the dashboard.
+    import { getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js";
+    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ⚠️ SETUP REQUIRED: paste your Web Push "VAPID key" here.
+    // Firebase Console → Project settings (⚙️) → Cloud Messaging tab →
+    // "Web configuration" → Web Push certificates → Generate key pair.
+    // Notifications silently stay off until this is filled in.
+    const FCM_VAPID_KEY = "PASTE_YOUR_VAPID_KEY_HERE";
+
+    let messaging = null;
+
+    const escapeNotifText = (s) => String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+    function showPushToast(title, body) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-24 right-4 sm:right-6 max-w-xs bg-white dark:bg-slate-800 border-l-4 border-brand-blue dark:border-teal-400 text-brand-black dark:text-white text-xs rounded-lg shadow-2xl p-3 z-[1000] flex items-start gap-2 cursor-pointer';
+        toast.innerHTML = `<i data-lucide="bell-ring" class="w-4 h-4 text-brand-blue dark:text-teal-400 shrink-0 mt-0.5"></i>
+            <div class="min-w-0"><p class="font-bold truncate">${escapeNotifText(title)}</p><p class="opacity-70 line-clamp-2">${escapeNotifText(body)}</p></div>`;
+        toast.onclick = () => toast.remove();
+        document.body.appendChild(toast);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        setTimeout(() => toast.remove(), 6000);
+    }
+
+    function updateNotifUI(enabled) {
+        document.querySelectorAll('.notif-bell-btn').forEach(icon => {
+            icon.setAttribute('data-lucide', enabled ? 'bell-ring' : 'bell');
+        });
+        const btn = document.getElementById('chat-notif-btn');
+        if (btn) btn.title = enabled ? 'Notifications are ON' : 'Enable push notifications';
+        const banner = document.getElementById('notif-enable-banner');
+        if (banner) banner.classList.toggle('hidden', enabled || localStorage.getItem('pumma_notif_dismissed') === '1');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    async function initMessaging() {
+        try {
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+            if (!(await isSupported().catch(() => false))) return;
+            if (!messaging) {
+                messaging = getMessaging(getApp());
+                onMessage(messaging, (payload) => {
+                    const title = payload.notification?.title || payload.data?.title || 'PUMMA Dashboard';
+                    const body  = payload.notification?.body  || payload.data?.body  || '';
+                    showPushToast(title, body);
+                    if (typeof playChime === 'function') { try { playChime(); } catch(e) {} }
+                });
+            }
+            updateNotifUI(Notification.permission === 'granted');
+            if (Notification.permission === 'granted') await registerAndSaveToken();
+        } catch (e) { console.warn('FCM init skipped:', e); }
+    }
+
+    async function registerAndSaveToken() {
+        if (!messaging || FCM_VAPID_KEY.startsWith('PASTE_')) return null;
+        const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+        if (token) await saveFcmToken(token);
+        return token;
+    }
+
+    async function saveFcmToken(token) {
+        if (!window.db || !window.appId) return;
+        const myId = window.selectedCadetId || window._chatMyId || ('anon_' + Date.now());
+        const role = window.isObserverAccount ? 'observer' : (window.currentUserRole || 'cadet');
+        const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+        try {
+            await setDoc(doc(window.db, 'artifacts', window.appId, 'public', 'data', 'fcmTokens', token), {
+                token, userId: myId, role,
+                name: c?.name || window.currentInstructorName || window.currentObserverName || 'Unknown',
+                classNum: c?.classNum ?? null,
+                section: (c?.section || '').toUpperCase() || null,
+                platform: window.getDeviceName ? window.getDeviceName() : 'Unknown',
+                updatedAt: serverTimestamp()
+            });
+        } catch (e) { console.warn('Saving FCM token failed:', e); }
+    }
+
+    window.enableNotifications = async function() {
+        try {
+            if (FCM_VAPID_KEY.startsWith('PASTE_')) {
+                alert('Push notifications are almost ready — the app owner still needs to finish the one-time setup (VAPID key). See NOTIFICATIONS-SETUP.md.');
+                return;
+            }
+            if (!messaging) await initMessaging();
+            if (!messaging) { alert('Push notifications are not supported on this browser/device.'); return; }
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Notifications were not enabled. You can turn them on any time from the bell icon in chat.');
+                updateNotifUI(false);
+                return;
+            }
+            const token = await registerAndSaveToken();
+            if (!token) { alert('Could not set up notifications. Please try again.'); return; }
+            localStorage.setItem('pumma_notif_dismissed', '1');
+            updateNotifUI(true);
+            showPushToast('Notifications enabled ⚓', "You'll now be alerted for new chat messages and announcements.");
+        } catch (e) {
+            console.error('enableNotifications failed:', e);
+            alert('Could not enable notifications: ' + (e.message || e));
+        }
+    };
+
+    window.dismissNotifBanner = function() {
+        localStorage.setItem('pumma_notif_dismissed', '1');
+        document.getElementById('notif-enable-banner')?.classList.add('hidden');
+    };
+
+    // Fires a push to a target audience via the /api/send-push serverless
+    // endpoint. audience is one of: 'all' | 'class:<n>' | 'section:<S>' | 'dm:<userId>'.
+    // Never throws — chat/announcements must keep working even if the
+    // push endpoint isn't deployed yet.
+    window.sendPushToAudience = async function(audience, title, body) {
+        try {
+            if (!window.appId) return;
+            const myId = window.selectedCadetId || window._chatMyId || null;
+            await fetch('/api/send-push', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appId: window.appId, audience, title, body, excludeUserId: myId })
+            });
+        } catch (e) { console.warn('Push send skipped (endpoint not deployed yet?):', e); }
+    };
+
+    // Show the invite banner once someone is actually logged in, and quietly
+    // (re)register messaging at that point (a token is tied to the device,
+    // but we like to keep the Firestore record fresh with who's using it).
+    const _notifInitObserver = new MutationObserver(() => {
+        const overlay = document.getElementById('auth-overlay');
+        if (overlay && overlay.classList.contains('hidden')) {
+            initMessaging();
+            if ('Notification' in window && Notification.permission !== 'granted' && localStorage.getItem('pumma_notif_dismissed') !== '1') {
+                document.getElementById('notif-enable-banner')?.classList.remove('hidden');
+            }
+        }
+    });
+    const _authOverlayForNotif = document.getElementById('auth-overlay');
+    if (_authOverlayForNotif) _notifInitObserver.observe(_authOverlayForNotif, { attributes: true, attributeFilter: ['class'] });
+    </script>
 
     <script type="module">
     // ── PUMMA Ship Chat Engine ───────────────────────────────────────
@@ -14841,12 +15006,39 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 cancelReply();
             }
             await addDoc(chatRef, doc);
+            notifyChatAudience(text, extra);
             return true;
         } catch(e) {
             console.error('Send message failed:', e);
             alert('Failed to send message. Check your connection.');
             return false;
         }
+    }
+
+    // Maps the currently open room to a push-notification audience and fires
+    // it off. Never blocks or breaks sending a message if this fails.
+    function notifyChatAudience(text, extra) {
+        try {
+            if (!window.sendPushToAudience) return;
+            const { name } = getChatSender();
+            const preview = (text && text.trim())
+                ? (text.length > 80 ? text.slice(0, 77) + '…' : text)
+                : (extra?.type ? `sent a ${extra.type}` : 'sent a message');
+            let audience = 'all';
+            if (currentChatRoom === 'class') {
+                const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+                audience = `class:${c?.classNum || ''}`;
+            } else if (currentChatRoom === 'section') {
+                const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+                audience = `section:${(c?.section || '').toUpperCase()}`;
+            } else if (currentChatRoom.startsWith('dm_')) {
+                const parts = currentChatRoom.split('_');
+                const otherId = parts.find(p => p !== 'dm' && p !== (window.selectedCadetId || window._chatMyId));
+                if (!otherId) return;
+                audience = `dm:${otherId}`;
+            }
+            window.sendPushToAudience(audience, `💬 ${name}`, preview);
+        } catch(e) { console.warn('notifyChatAudience skipped:', e); }
     }
 
     window.sendChatMessage = async () => {
