@@ -13931,6 +13931,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                         class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
                     <button onclick="enableNotifications()" id="chat-notif-btn" title="Enable push notifications"
                         class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="bell" class="w-4 h-4 notif-bell-btn"></i></button>
+                    <button onclick="connectTelegram()" id="chat-telegram-btn" title="Connect Telegram for reliable alerts"
+                        class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="send" class="w-4 h-4"></i></button>
                     <button onclick="togglePummaChat()"
                         class="opacity-70 hover:opacity-100 transition w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/20"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                 </div>
@@ -14200,6 +14202,25 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             console.error('enableNotifications failed:', e);
             alert('Could not enable notifications: ' + (e.message || e));
         }
+    };
+
+    // Set this to your bot's @username after creating it via @BotFather
+    // (see NOTIFICATIONS-SETUP.md). Example: 'PummaDashboardBot'
+    const TELEGRAM_BOT_USERNAME = 'PummaDashboardBot';
+
+    window.connectTelegram = function() {
+        if (TELEGRAM_BOT_USERNAME.startsWith('PASTE_')) {
+            alert('Telegram alerts are almost ready — the app owner still needs to finish the one-time setup. See NOTIFICATIONS-SETUP.md.');
+            return;
+        }
+        const myId = window.selectedCadetId || window._chatMyId || null;
+        if (!myId) {
+            alert('Please log in first, then try connecting Telegram again.');
+            return;
+        }
+        const url = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${encodeURIComponent(myId)}`;
+        window.open(url, '_blank');
+        showPushToast('Opening Telegram… ✈️', 'Tap "Start" in the bot chat to finish connecting.');
     };
 
     window.dismissNotifBanner = function() {
