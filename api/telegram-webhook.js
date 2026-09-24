@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
 
     // Try to enrich with the cadet's class/section so class/section-only
     // broadcasts can reach them correctly, same as the FCM token records.
-    let role = 'cadet', classNum = null, section = null, name = 'Unknown';
+    let role = 'cadet', classNum = null, section = null, name = 'Unknown', isAlumni = false, alumniBatchYear = null;
     try {
       const cadetSnap = await db.collection('artifacts').doc(APP_ID)
         .collection('public').doc('data').collection('cadets').doc(userId).get();
@@ -83,6 +83,8 @@ module.exports = async (req, res) => {
         classNum = c.classNum ?? null;
         section = (c.section || '').toUpperCase() || null;
         name = c.name || name;
+        isAlumni = c.isAlumni || false;
+        alumniBatchYear = c.alumniBatchYear || null;
       } else {
         role = 'admin'; // not found as a cadet — likely an instructor/admin account
       }
@@ -91,7 +93,7 @@ module.exports = async (req, res) => {
     await db.collection('artifacts').doc(APP_ID).collection('public').doc('data')
       .collection('telegramChats').doc(String(chatId)).set({
         chatId: String(chatId),
-        userId, role, classNum, section, name,
+        userId, role, classNum, section, name, isAlumni, alumniBatchYear,
         updatedAt: FieldValue.serverTimestamp()
       }, { merge: true });
 

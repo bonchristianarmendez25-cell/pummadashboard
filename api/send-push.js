@@ -32,6 +32,8 @@ function initAdmin() {
 function matchesAudience(entry, audienceKind, audienceValue) {
   if (audienceKind === 'all') return true;
   if (audienceKind === 'admin') return entry.role === 'admin';
+  if (audienceKind === 'alumni_general') return !!entry.isAlumni;
+  if (audienceKind === 'alumni_batch') return !!entry.isAlumni && String(entry.alumniBatchYear || '') === audienceValue;
   if (audienceKind === 'class') return String(entry.classNum ?? '') === audienceValue;
   if (audienceKind === 'section') return String(entry.section || '').toUpperCase() === audienceValue.toUpperCase();
   if (audienceKind === 'dm') return entry.userId === audienceValue;
