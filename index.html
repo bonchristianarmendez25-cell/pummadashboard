@@ -15102,21 +15102,28 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 ? (text.length > 80 ? text.slice(0, 77) + '…' : text)
                 : (extra?.type ? `sent a ${extra.type}` : 'sent a message');
             let audience = 'all';
+            let roomTag = '';
             if (currentChatRoom === 'admin') {
                 audience = 'admin';
+                roomTag = '🛡️ Admin Chat';
             } else if (currentChatRoom === 'class') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
                 audience = `class:${c?.classNum || ''}`;
+                roomTag = `🎓 Class ${c?.classNum || ''}`;
             } else if (currentChatRoom === 'section') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
                 audience = `section:${(c?.section || '').toUpperCase()}`;
+                roomTag = `🏴 Section ${(c?.section || '').toUpperCase()}`;
             } else if (currentChatRoom.startsWith('dm_')) {
                 const parts = currentChatRoom.split('_');
                 const otherId = parts.find(p => p !== 'dm' && p !== (window.selectedCadetId || window._chatMyId));
                 if (!otherId) return;
                 audience = `dm:${otherId}`;
+                roomTag = '💌 DM';
+            } else {
+                roomTag = '⚓ General';
             }
-            window.sendPushToAudience(audience, `💬 ${name}`, preview);
+            window.sendPushToAudience(audience, `${roomTag} • ${name}`, preview);
         } catch(e) { console.warn('notifyChatAudience skipped:', e); }
     }
 
