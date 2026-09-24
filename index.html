@@ -666,6 +666,7 @@
                                 <button onclick="resetCadetPassword()" class="text-[9px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold transition-all">Reset Pwd</button>
                                 <button onclick="clearCadetEmail()" class="text-[9px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 font-semibold transition-all">Clear Email</button>
                                 <button id="btn-toggle-alumni" onclick="handleToggleAlumni()" class="text-[9px] bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800 text-amber-700 dark:text-amber-300 px-2 py-1 rounded border border-amber-200 dark:border-amber-800 font-semibold transition-all">Graduate to Alumni</button>
+                                <button id="btn-set-alumni-batch" onclick="handleSetAlumniBatchYear()" class="hidden text-[9px] bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-800 text-teal-700 dark:text-teal-300 px-2 py-1 rounded border border-teal-200 dark:border-teal-800 font-semibold transition-all">Set Batch Year</button>
                                 <button onclick="handleDeleteCadet(this)" class="text-[9px] bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800 text-red-600 dark:text-red-400 px-2 py-1 rounded border border-red-200 dark:border-red-800 font-semibold transition-all">Delete</button>
                             </div>
                         </div>
@@ -3552,6 +3553,11 @@
             document.getElementById('eval-avatar-img').src = window.getAvatarSrc(c);
             const alumniBtn = document.getElementById('btn-toggle-alumni');
             if (alumniBtn) alumniBtn.textContent = c.isAlumni ? 'Reinstate to Active' : 'Graduate to Alumni';
+            const batchBtn = document.getElementById('btn-set-alumni-batch');
+            if (batchBtn) {
+                batchBtn.classList.toggle('hidden', !c.isAlumni);
+                batchBtn.textContent = c.alumniBatchYear ? `Batch: ${c.alumniBatchYear}` : 'Set Batch Year';
+            }
 
             setVal('eval-input-id', c.studentId || '');
             setVal('eval-input-email', c.email || '');
@@ -3876,6 +3882,19 @@
                     alert(`✓ ${c.name} has been reinstated.`);
                 } catch (e) { alert("Error updating alumni status."); }
             }
+        };
+
+        window.handleSetAlumniBatchYear = async () => {
+            if (!window.selectedCadetId) return;
+            const c = window.cadets.find(x => x.id === window.selectedCadetId);
+            if (!c || !c.isAlumni) return;
+            const input = prompt(`Batch/graduation year for ${c.name} (e.g. 2027):\n\nThis groups them into their own Alumni class chat, separate from the current classroom "Class" numbers.`, c.alumniBatchYear || '');
+            if (input === null) return; // cancelled
+            const year = input.trim();
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { alumniBatchYear: year || null });
+                window.logAuditActivity('Alumni Batch Year Set', `Batch year set to "${year || '(cleared)'}"`, c.name);
+            } catch (e) { alert('Error saving batch year.'); }
         };
 
 
@@ -14174,6 +14193,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 name: c?.name || window.currentInstructorName || window.currentObserverName || 'Unknown',
                 classNum: c?.classNum ?? null,
                 section: (c?.section || '').toUpperCase() || null,
+                isAlumni: c?.isAlumni || false,
+                alumniBatchYear: c?.alumniBatchYear || null,
                 platform: window.getDeviceName ? window.getDeviceName() : 'Unknown',
                 updatedAt: serverTimestamp()
             });
@@ -14324,7 +14345,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (roomKey === 'admin') return 'chat_admin';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            if (c?.isAlumni) return 'chat_alumni';
+            if (c?.isAlumni) return 'chat_alumni_general';
             const cls = c?.classNum || window.appSettings?.class || '1';
             // Scoped by the current academic year so a fresh cohort in the
             // same class number never sees a prior year's conversation.
@@ -14332,7 +14353,10 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            if (c?.isAlumni) return 'chat_alumni';
+            if (c?.isAlumni) {
+                const batch = (c.alumniBatchYear || 'unassigned').replace(/[^a-zA-Z0-9]/g, '_');
+                return `chat_alumni_batch_${batch}`;
+            }
             const sec = (c?.section || 'A').toUpperCase().replace(/\s+/g,'_');
             return `chat_section_${sec}_${currentAcadYearSlug()}`;
         }
@@ -14345,12 +14369,12 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (roomKey === 'admin') return 'Admin Chat 🛡️';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            if (c?.isAlumni) return 'Alumni Wardroom 🎓';
+            if (c?.isAlumni) return 'General Alumni 🎓';
             return `Class ${c?.classNum || '?'} Chat 🎓`;
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            if (c?.isAlumni) return 'Alumni Wardroom 🎓';
+            if (c?.isAlumni) return `Class ${c.alumniBatchYear || '(unset)'} Alumni 🏴`;
             return `Section ${(c?.section || '?').toUpperCase()} Chat 🏴`;
         }
         if (roomKey.startsWith('dm_')) {
@@ -14410,14 +14434,15 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             activeBtn.classList.add('text-white', 'border-white');
             activeBtn.classList.remove('text-white/60', 'border-transparent');
         }
-        // Alumni don't have an active class/section, so both those tabs
-        // point at one shared Alumni room instead.
+        // Alumni get two distinct rooms now: a shared General Alumni room,
+        // and their own graduating-batch-year room (separate from active
+        // cadets' classroom "Class" numbers).
         const me = window.cadets?.find(x => x.id === window.selectedCadetId);
         const classTab = document.getElementById('chat-tab-class');
         const sectionTab = document.getElementById('chat-tab-section');
         if (me?.isAlumni) {
-            if (classTab) classTab.innerHTML = '🎓 Alumni';
-            if (sectionTab) sectionTab.innerHTML = '🎓 Alumni Chat';
+            if (classTab) classTab.innerHTML = '🎓 General Alumni';
+            if (sectionTab) sectionTab.innerHTML = `🏴 Class ${me.alumniBatchYear || '(unset)'}`;
         } else {
             if (classTab) classTab.innerHTML = '🎓 My Class';
             if (sectionTab) sectionTab.innerHTML = '🏴 My Section';
@@ -15103,9 +15128,17 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 : (extra?.type ? `sent a ${extra.type}` : 'sent a message');
             let audience = 'all';
             let roomTag = '';
+            const isAlumniUser = !!window.cadets?.find(x => x.id === window.selectedCadetId)?.isAlumni;
             if (currentChatRoom === 'admin') {
                 audience = 'admin';
                 roomTag = '🛡️ Admin Chat';
+            } else if (currentChatRoom === 'class' && isAlumniUser) {
+                audience = 'alumni_general';
+                roomTag = '🎓 General Alumni';
+            } else if (currentChatRoom === 'section' && isAlumniUser) {
+                const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+                audience = `alumni_batch:${c?.alumniBatchYear || ''}`;
+                roomTag = `🏴 Class ${c?.alumniBatchYear || ''} Alumni`;
             } else if (currentChatRoom === 'class') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
                 audience = `class:${c?.classNum || ''}`;
