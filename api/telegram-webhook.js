@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
         section = (c.section || '').toUpperCase() || null;
         name = c.name || name;
       } else {
-        role = 'staff'; // not found as a cadet — likely an instructor/admin account
+        role = 'admin'; // not found as a cadet — likely an instructor/admin account
       }
     } catch (e) { /* enrichment is best-effort, ignore failures */ }
 
