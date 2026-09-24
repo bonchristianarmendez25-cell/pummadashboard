@@ -13952,6 +13952,10 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
                     🏴 My Section
                 </button>
+                <button onclick="switchChatRoom('admin')" id="chat-tab-admin"
+                    class="chat-tab-btn hidden shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    🛡️ Admin Chat
+                </button>
                 <button onclick="switchChatRoom('dm')" id="chat-tab-dm"
                     class="chat-tab-btn relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
                     💬 DMs
@@ -14312,19 +14316,25 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     }
 
     // ── Room helpers ──────────────────────────────────────────────────
+    function currentAcadYearSlug() {
+        return (window.appSettings?.academicYear || 'default').replace(/[^a-zA-Z0-9]/g, '_');
+    }
     function getRoomCollection(roomKey) {
         if (!roomKey || roomKey === 'general') return 'chat';
+        if (roomKey === 'admin') return 'chat_admin';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             if (c?.isAlumni) return 'chat_alumni';
             const cls = c?.classNum || window.appSettings?.class || '1';
-            return `chat_class_${cls}`;
+            // Scoped by the current academic year so a fresh cohort in the
+            // same class number never sees a prior year's conversation.
+            return `chat_class_${cls}_${currentAcadYearSlug()}`;
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             if (c?.isAlumni) return 'chat_alumni';
             const sec = (c?.section || 'A').toUpperCase().replace(/\s+/g,'_');
-            return `chat_section_${sec}`;
+            return `chat_section_${sec}_${currentAcadYearSlug()}`;
         }
         if (roomKey.startsWith('dm_')) return roomKey; // dm_<uid1>_<uid2>
         return 'chat';
@@ -14332,6 +14342,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
     function getRoomLabel(roomKey) {
         if (!roomKey || roomKey === 'general') return 'Ship\'s Comms ⚓';
+        if (roomKey === 'admin') return 'Admin Chat 🛡️';
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             if (c?.isAlumni) return 'Alumni Wardroom 🎓';
@@ -14372,6 +14383,22 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         chatReady = false;
         initChat();
     };
+
+    function updateChatTabsForRole() {
+        const { role } = getChatSender();
+        const classTab = document.getElementById('chat-tab-class');
+        const sectionTab = document.getElementById('chat-tab-section');
+        const adminTab = document.getElementById('chat-tab-admin');
+        const isAdmin = role === 'admin';
+        classTab?.classList.toggle('hidden', isAdmin);
+        sectionTab?.classList.toggle('hidden', isAdmin);
+        adminTab?.classList.toggle('hidden', !isAdmin);
+        // If an admin somehow lands on a class/section room (e.g. leftover
+        // from a prior session), bounce them to the admin room instead.
+        if (isAdmin && (currentChatRoom === 'class' || currentChatRoom === 'section')) {
+            currentChatRoom = 'admin';
+        }
+    }
 
     function updateChatTabUI(active) {
         document.querySelectorAll('.chat-tab-btn').forEach(btn => {
@@ -14939,6 +14966,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         chatReady = true;
         window._chatMyId = window._chatMyId || `user_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
         renderQuickEmojiBar();
+        updateChatTabsForRole();
 
         const countEl = document.getElementById('chat-online-count');
         if (countEl) countEl.textContent = 'Connecting…';
@@ -15074,7 +15102,9 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 ? (text.length > 80 ? text.slice(0, 77) + '…' : text)
                 : (extra?.type ? `sent a ${extra.type}` : 'sent a message');
             let audience = 'all';
-            if (currentChatRoom === 'class') {
+            if (currentChatRoom === 'admin') {
+                audience = 'admin';
+            } else if (currentChatRoom === 'class') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
                 audience = `class:${c?.classNum || ''}`;
             } else if (currentChatRoom === 'section') {
