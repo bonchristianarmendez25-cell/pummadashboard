@@ -13964,16 +13964,19 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     ⚓ General
                 </button>
                 <button onclick="switchChatRoom('class')" id="chat-tab-class"
-                    class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    class="chat-tab-btn relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
                     🎓 My Class
+                    <span id="chat-badge-class" class="hidden absolute -top-0.5 right-0.5 bg-red-400 text-white text-[7px] font-bold w-3 h-3 rounded-full items-center justify-center">·</span>
                 </button>
                 <button onclick="switchChatRoom('section')" id="chat-tab-section"
-                    class="chat-tab-btn shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    class="chat-tab-btn relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
                     🏴 My Section
+                    <span id="chat-badge-section" class="hidden absolute -top-0.5 right-0.5 bg-red-400 text-white text-[7px] font-bold w-3 h-3 rounded-full items-center justify-center">·</span>
                 </button>
                 <button onclick="switchChatRoom('admin')" id="chat-tab-admin"
-                    class="chat-tab-btn hidden shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
+                    class="chat-tab-btn hidden relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
                     🛡️ Admin Chat
+                    <span id="chat-badge-admin" class="hidden absolute -top-0.5 right-0.5 bg-red-400 text-white text-[7px] font-bold w-3 h-3 rounded-full items-center justify-center">·</span>
                 </button>
                 <button onclick="switchChatRoom('dm')" id="chat-tab-dm"
                     class="chat-tab-btn relative shrink-0 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:text-white border-b-2 border-transparent hover:border-white/40 transition whitespace-nowrap">
@@ -14406,6 +14409,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         closeDmPicker();
         currentChatRoom = roomKey;
         currentRoomLabel = getRoomLabel(roomKey);
+        window.markRoomRead(roomKey);
         const titleEl = document.getElementById('chat-room-title');
         if (titleEl) titleEl.textContent = currentRoomLabel;
         updateChatTabUI(roomKey);
@@ -14418,6 +14422,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
     function updateChatTabsForRole() {
         const { role } = getChatSender();
+        setupUnreadWatchers();
         const classTab = document.getElementById('chat-tab-class');
         const sectionTab = document.getElementById('chat-tab-section');
         const adminTab = document.getElementById('chat-tab-admin');
@@ -14430,6 +14435,96 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (isAdmin && (currentChatRoom === 'class' || currentChatRoom === 'section')) {
             currentChatRoom = 'admin';
         }
+    }
+
+    // ── Unread badge tracking (Class / Section / Admin / DMs) ──────────
+    // FCM/Telegram only reliably covers General chat for now, so cadets
+    // who aren't connected still need a visual cue when they open the
+    // dashboard later and something's waiting for them elsewhere.
+    let _unreadFireFns = null;
+    async function _getFireFns() {
+        if (_unreadFireFns) return _unreadFireFns;
+        _unreadFireFns = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        return _unreadFireFns;
+    }
+    const _unreadWatched = new Set();   // room collection names already watched
+    const _dmUnreadState = {};          // friendId -> bool
+
+    function _lastReadKey(myId, roomCollection) {
+        return `pumma_lastread_${myId}_${roomCollection}`;
+    }
+
+    window.markRoomRead = function(roomKey) {
+        try {
+            const myId = window.selectedCadetId || window._chatMyId;
+            if (!myId) return;
+            const roomCollection = roomKey.startsWith('dm_') ? roomKey : getRoomCollection(roomKey);
+            localStorage.setItem(_lastReadKey(myId, roomCollection), String(Date.now()));
+            const badgeId = roomKey.startsWith('dm_') ? 'chat-dm-badge' : `chat-badge-${roomKey}`;
+            document.getElementById(badgeId)?.classList.add('hidden');
+            if (roomKey.startsWith('dm_')) {
+                const myFriendMatch = Object.keys(_dmUnreadState).find(fid => getDmKey(myId, fid) === roomKey);
+                if (myFriendMatch) { _dmUnreadState[myFriendMatch] = false; renderDmList(); }
+            }
+        } catch (e) { /* non-critical */ }
+    };
+
+    async function _watchRoomUnread(roomCollection, badgeId, myId) {
+        if (!roomCollection || _unreadWatched.has(roomCollection)) return;
+        _unreadWatched.add(roomCollection);
+        try {
+            const { collection: _col, onSnapshot: _on, query: _q, orderBy: _ob, limit: _lim } = await _getFireFns();
+            const ref = _col(db, 'artifacts', appId, 'public', 'data', roomCollection);
+            const q = _q(ref, _ob('timestamp', 'desc'), _lim(1));
+            _on(q, (snap) => {
+                const badge = document.getElementById(badgeId);
+                if (!badge || snap.empty) return;
+                const msg = snap.docs[0].data({ serverTimestamps: 'estimate' });
+                if (msg.senderId === myId) { badge.classList.add('hidden'); return; }
+                const ts = msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : (msg.timestamp || 0);
+                const lastRead = parseInt(localStorage.getItem(_lastReadKey(myId, roomCollection)) || '0', 10);
+                badge.classList.toggle('hidden', !(ts > lastRead));
+            });
+        } catch (e) { console.warn('Unread watcher failed for', roomCollection, e); }
+    }
+
+    async function _watchDmUnread(roomCollection, friendId, myId) {
+        if (!roomCollection || _unreadWatched.has(roomCollection)) return;
+        _unreadWatched.add(roomCollection);
+        try {
+            const { collection: _col, onSnapshot: _on, query: _q, orderBy: _ob, limit: _lim } = await _getFireFns();
+            const ref = _col(db, 'artifacts', appId, 'public', 'data', roomCollection);
+            const q = _q(ref, _ob('timestamp', 'desc'), _lim(1));
+            _on(q, (snap) => {
+                if (snap.empty) return;
+                const msg = snap.docs[0].data({ serverTimestamps: 'estimate' });
+                if (msg.senderId === myId) {
+                    _dmUnreadState[friendId] = false;
+                } else {
+                    const ts = msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : (msg.timestamp || 0);
+                    const lastRead = parseInt(localStorage.getItem(_lastReadKey(myId, roomCollection)) || '0', 10);
+                    _dmUnreadState[friendId] = ts > lastRead;
+                }
+                document.getElementById('chat-dm-badge')?.classList.toggle('hidden', !Object.values(_dmUnreadState).some(Boolean));
+                renderDmList();
+            });
+        } catch (e) { console.warn('DM unread watcher failed for', roomCollection, e); }
+    }
+
+    function setupUnreadWatchers() {
+        try {
+            const myId = window.selectedCadetId || window._chatMyId;
+            if (!myId || !db || !appId) return;
+            const { role } = getChatSender();
+            if (role === 'admin') {
+                _watchRoomUnread('chat_admin', 'chat-badge-admin', myId);
+            } else {
+                _watchRoomUnread(getRoomCollection('class'), 'chat-badge-class', myId);
+                _watchRoomUnread(getRoomCollection('section'), 'chat-badge-section', myId);
+            }
+            const friendCadets = (window.cadets || []).filter(c => myFriends.includes(c.id));
+            friendCadets.forEach(f => _watchDmUnread(getDmKey(myId, f.id), f.id, myId));
+        } catch (e) { console.warn('setupUnreadWatchers skipped:', e); }
     }
 
     function updateChatTabUI(active) {
@@ -14648,6 +14743,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         closeDmPicker();
         currentChatRoom = dmKey;
         currentRoomLabel = `💬 ${(friendName||'').split(',')[0]}`;
+        window.markRoomRead(dmKey);
         const titleEl = document.getElementById('chat-room-title');
         if (titleEl) titleEl.textContent = currentRoomLabel;
         updateChatTabUI('dm');
@@ -14667,8 +14763,9 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             : friendCadets.map(c => `
             <button onclick="openDM('${c.id}','${escapeHTML(c.name)}')"
                 class="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700 transition text-left">
-                <div class="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-sm shrink-0">
+                <div class="relative w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-sm shrink-0">
                     ${(c.name||'?').charAt(0)}
+                    ${_dmUnreadState[c.id] ? '<span class="absolute -top-0.5 -right-0.5 bg-red-400 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-900"></span>' : ''}
                 </div>
                 <div>
                     <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((c.name||'').split(',')[0])}</div>
