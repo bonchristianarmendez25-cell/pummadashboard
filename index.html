@@ -14261,12 +14261,20 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         try {
             if (!window.appId) return;
             const myId = window.selectedCadetId || window._chatMyId || null;
-            await fetch('/api/send-push', {
+            const res = await fetch('/api/send-push', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ appId: window.appId, audience, title, body, excludeUserId: myId })
             });
-        } catch (e) { console.warn('Push send skipped (endpoint not deployed yet?):', e); }
+            const j = await res.json().catch(() => ({ parseError: true, status: res.status }));
+            // TEMPORARY DEBUG — remove this alert once Telegram delivery is confirmed working.
+            if (window.PUMMA_PUSH_DEBUG) {
+                alert('[PUSH DEBUG]\naudience sent: ' + audience + '\nexcludeUserId: ' + myId + '\nserver response: ' + JSON.stringify(j));
+            }
+        } catch (e) {
+            console.warn('Push send skipped (endpoint not deployed yet?):', e);
+            if (window.PUMMA_PUSH_DEBUG) alert('[PUSH DEBUG] fetch failed: ' + (e?.message || e));
+        }
     };
 
     // Show the invite banner once someone is actually logged in, and quietly
