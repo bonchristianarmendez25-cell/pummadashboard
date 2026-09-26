@@ -14346,7 +14346,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             if (c?.isAlumni) return 'chat_alumni_general';
-            const cls = c?.classNum || window.appSettings?.class || '1';
+            const cls = (c?.classNum ?? window.appSettings?.class) ?? '1';
             // Scoped by the current academic year so a fresh cohort in the
             // same class number never sees a prior year's conversation.
             return `chat_class_${cls}_${currentAcadYearSlug()}`;
@@ -14370,7 +14370,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
         if (roomKey === 'class') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             if (c?.isAlumni) return 'General Alumni 🎓';
-            return `Class ${c?.classNum || '?'} Chat 🎓`;
+            return `Class ${c?.classNum ?? '?'} Chat 🎓`;
         }
         if (roomKey === 'section') {
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
@@ -14508,7 +14508,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
             return `<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-2 py-1.5 border border-slate-100 dark:border-slate-700">
                 <div>
                     <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML(c.name.split(',')[0] || c.name)}</div>
-                    <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                    <div class="text-[9px] text-slate-400">Class ${c.classNum ?? '?'} · Sec ${c.section||'?'}</div>
                 </div>
                 ${isFriend
                     ? '<span class="text-[9px] text-green-500 font-bold">✓ Friends</span>'
@@ -14619,7 +14619,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                     return `<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
                         <div>
                             <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((c.name||'').split(',')[0])}</div>
-                            <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                            <div class="text-[9px] text-slate-400">Class ${c.classNum ?? '?'} · Sec ${c.section||'?'}</div>
                         </div>
                         <button onclick="openDM('${c.id}','${escapeHTML(c.name)}')" class="text-[9px] bg-brand-blue text-white font-bold px-2 py-1 rounded-lg hover:bg-blue-800 transition">💬 DM</button>
                     </div>`;
@@ -14664,7 +14664,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 </div>
                 <div>
                     <div class="text-[11px] font-bold text-slate-700 dark:text-white">${escapeHTML((c.name||'').split(',')[0])}</div>
-                    <div class="text-[9px] text-slate-400">Class ${c.classNum||'?'} · Sec ${c.section||'?'}</div>
+                    <div class="text-[9px] text-slate-400">Class ${c.classNum ?? '?'} · Sec ${c.section||'?'}</div>
                 </div>
                 <i data-lucide="message-circle" class="w-4 h-4 text-slate-400 ml-auto"></i>
             </button>`).join('');
@@ -14753,7 +14753,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
     function populateRosterFilters() {
         const roster = window.cadets || [];
-        const classes = [...new Set(roster.map(c => (c.classNum || '').toString().trim()).filter(Boolean))]
+        const classes = [...new Set(roster.map(c => (c.classNum ?? '').toString().trim()).filter(Boolean))]
             .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
         const sections = [...new Set(roster.map(c => (c.section || '').toString().trim().toUpperCase()).filter(Boolean))]
             .sort();
@@ -14808,7 +14808,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
 
         const roster = (window.cadets || []).filter(c => {
             const classOk = rosterFilterClass === 'all'
-                || (rosterFilterClass === 'ALUMNI' ? !!c.isAlumni : (!c.isAlumni && (c.classNum || '').toString().trim() === rosterFilterClass));
+                || (rosterFilterClass === 'ALUMNI' ? !!c.isAlumni : (!c.isAlumni && (c.classNum ?? '').toString().trim() === rosterFilterClass));
             const sectionOk = rosterFilterSection === 'all' || (c.section || '').toString().trim().toUpperCase() === rosterFilterSection;
             return classOk && sectionOk;
         });
@@ -15141,8 +15141,8 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
                 roomTag = `🏴 Class ${c?.alumniBatchYear || ''} Alumni`;
             } else if (currentChatRoom === 'class') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-                audience = `class:${c?.classNum || ''}`;
-                roomTag = `🎓 Class ${c?.classNum || ''}`;
+                audience = `class:${c?.classNum ?? ''}`;
+                roomTag = `🎓 Class ${c?.classNum ?? ''}`;
             } else if (currentChatRoom === 'section') {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
                 audience = `section:${(c?.section || '').toUpperCase()}`;
