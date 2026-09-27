@@ -141,6 +141,19 @@
         </div>
     </div>
 
+    <div id="quiz-alert-banner" class="hidden bg-teal-600 text-white py-2 text-xs font-bold no-print">
+        <div class="max-w-7xl mx-auto px-4 w-full flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="clipboard-check" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate" id="quiz-alert-banner-text">You have a quiz waiting to be answered.</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="openCadetQuizIntro()" class="bg-white text-teal-700 px-2.5 py-1 rounded text-[10px] font-bold hover:bg-slate-100 transition">Start When Ready</button>
+                <button onclick="snoozeQuizBanner()" title="Remind me again next login" class="opacity-70 hover:opacity-100 transition w-6 h-6 flex items-center justify-center rounded hover:bg-white/20"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+        </div>
+    </div>
+
     <div onclick="openAnnouncementsModal()" class="bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 py-2.5 text-xs font-bold border-b border-amber-200 dark:border-amber-800 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/50 transition no-print">
         <div class="max-w-7xl mx-auto px-4 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             
@@ -941,7 +954,7 @@
                 <button onclick="closeQuizManagerModal()" class="text-teal-700 hover:text-teal-900 dark:text-teal-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="flex border-b border-brand-creamBorder dark:border-slate-700 bg-white dark:bg-slate-800 px-2 overflow-x-auto">
-                <button onclick="switchQuizTab('this-week')" id="quiz-tab-this-week" class="quiz-tab-btn active-quiz-tab whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-teal-600 text-teal-700 dark:text-teal-300 flex items-center gap-1.5 transition">This Week</button>
+                <button onclick="switchQuizTab('today')" id="quiz-tab-today" class="quiz-tab-btn active-quiz-tab whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-teal-600 text-teal-700 dark:text-teal-300 flex items-center gap-1.5 transition">Today</button>
                 <button onclick="switchQuizTab('bank')" id="quiz-tab-bank" class="quiz-tab-btn whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-700 flex items-center gap-1.5 transition">Question Bank</button>
                 <button onclick="switchQuizTab('results')" id="quiz-tab-results" class="quiz-tab-btn whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-700 flex items-center gap-1.5 transition">Results & Flags</button>
             </div>
@@ -3925,26 +3938,28 @@
             } catch (e) { alert('Error saving batch year.'); }
         };
 
-        // ═══════════════════ WEEKLY ACTIVITY QUIZ SYSTEM ═══════════════════
-        // Mandatory pass/fail quiz for active (non-alumni) cadets. Auto-graded
-        // multiple choice, drawn from an admin-curated + reviewer-based bank.
+        // ═══════════════════ DAILY ACTIVITY QUIZ SYSTEM ═══════════════════
+        // Mandatory pass/fail quiz for active (non-alumni) cadets, published
+        // once per day. Fridays automatically become a 30-item Mini Exam
+        // instead of the usual smaller daily set. Auto-graded multiple
+        // choice, drawn from an admin-curated + reviewer-based bank.
         // Missing or failing flags the cadet for admin review — it does NOT
         // touch Merit scores directly.
-        function _isoWeekId(d = new Date()) {
-            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            const dayNum = date.getUTCDay() || 7;
-            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-            const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-            return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        function _quizDayId(d = new Date()) {
+            // Local calendar date (YYYY-MM-DD), not UTC — "daily" should
+            // follow the academy's actual day, not roll over mid-afternoon.
+            return d.toLocaleDateString('en-CA');
         }
+        function _isFriday(d = new Date()) { return d.getDay() === 5; }
         const QUIZ_BANK_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizQuestions');
-        const QUIZ_WEEKLY_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'weeklyQuizzes');
+        const QUIZ_DAILY_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'dailyQuizzes');
         const QUIZ_SUBMISSIONS_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizSubmissions');
         const QUIZ_FLAGS_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizFlags');
 
         // Proofread reviewer-based question pack (SOLAS / MARPOL / STCW / General).
-        // Admins can add more manually from the Question Bank tab.
+        // Admins can add more manually from the Question Bank tab — with daily
+        // publishing you'll want a much bigger bank than this starter set to
+        // avoid cadets seeing repeats too often.
         const AI_SEED_QUESTIONS = [
             { text: "What does SOLAS stand for?", choices: ["International Convention for the Safety of Life at Sea", "Standards for Operations at Sea", "Safety of Land and Sea", "International Shipping Operations and Logistics Standard"], correctIndex: 0, topic: "SOLAS" },
             { text: "The first SOLAS treaty was adopted largely in response to which maritime disaster?", choices: ["The sinking of the Titanic", "The Exxon Valdez oil spill", "The sinking of the Costa Concordia", "The Halifax Explosion"], correctIndex: 0, topic: "SOLAS" },
@@ -4007,9 +4022,10 @@
             body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
             const snap = await getDocs(QUIZ_BANK_COL());
             const questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const activeCount = questions.filter(q => q.active !== false).length;
             body.innerHTML = `
                 <div class="flex flex-wrap gap-2 items-center justify-between">
-                    <p class="text-[11px] text-slate-500">${questions.length} question(s) in bank — need at least 10 <b>active</b> to publish a week.</p>
+                    <p class="text-[11px] text-slate-500">${questions.length} question(s) in bank (${activeCount} active). Daily quizzes need 10 active; Friday Mini Exams need 30. Bigger bank = fewer repeats.</p>
                     <button onclick="seedAIQuizQuestions()" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1.5 rounded font-semibold flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Load Reviewer Question Pack</button>
                 </div>
                 <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 space-y-2">
@@ -4046,54 +4062,96 @@
             if (window.lucide) lucide.createIcons();
         };
 
-        window.publishWeeklyQuiz = async function() {
-            const weekId = _isoWeekId();
+        window.publishDailyQuiz = async function() {
+            const today = new Date();
+            const dayId = _quizDayId(today);
+            const friday = _isFriday(today);
+            const countInput = parseInt(document.getElementById('quiz-item-count')?.value || '', 10);
+            const count = countInput > 0 ? countInput : (friday ? 30 : 10);
+            const timeLimitInput = parseInt(document.getElementById('quiz-time-limit')?.value || '', 10);
+            const timeLimitMinutes = timeLimitInput > 0 ? timeLimitInput : 0; // 0 = no timer
+            const passPercentInput = parseInt(document.getElementById('quiz-pass-percent')?.value || '', 10);
+            const passPercent = passPercentInput > 0 ? passPercentInput : 70;
+            const label = friday ? 'Friday Mini Exam' : 'Daily Quiz';
             try {
-                const existing = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+                const existing = await getDoc(doc(QUIZ_DAILY_COL(), dayId));
                 if (existing.exists()) {
-                    if (!confirm('This week already has a published quiz. Regenerating picks a new random set of 10 for anyone who hasn\'t taken it yet — cadets who already submitted keep their existing score. Continue?')) return;
+                    if (!confirm(`Today already has a published ${existing.data().type === 'friday_exam' ? 'Mini Exam' : 'quiz'}. Regenerating picks a new random set for anyone who hasn't taken it yet — cadets who already submitted keep their existing score. Continue?`)) return;
                 }
                 const bankSnap = await getDocs(QUIZ_BANK_COL());
                 const activeQs = bankSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => q.active !== false);
-                if (activeQs.length < 10) { alert(`Need at least 10 active questions in the bank (currently ${activeQs.length}). Load the reviewer pack or add more from the Question Bank tab.`); return; }
-                const shuffled = [...activeQs].sort(() => Math.random() - 0.5).slice(0, 10);
-                const now = new Date();
-                const deadline = new Date(now);
-                deadline.setUTCDate(now.getUTCDate() + (7 - (now.getUTCDay() || 7)));
-                deadline.setUTCHours(23, 59, 59, 999);
-                await setDoc(doc(QUIZ_WEEKLY_COL(), weekId), {
-                    weekId,
+                if (activeQs.length < count) { alert(`Need at least ${count} active questions in the bank for a ${label} (currently ${activeQs.length} active). Load the reviewer pack or add more from the Question Bank tab.`); return; }
+
+                // Avoid repeating questions used in the last 5 published days,
+                // if the bank is large enough to still hit the target count.
+                const recentSnap = await getDocs(query(QUIZ_DAILY_COL(), orderBy('dayId', 'desc'), limit(5)));
+                const recentlyUsed = new Set();
+                recentSnap.forEach(d => (d.data().questions || []).forEach(q => recentlyUsed.add(q.id)));
+                const freshPool = activeQs.filter(q => !recentlyUsed.has(q.id));
+                const pool = freshPool.length >= count ? freshPool : activeQs;
+
+                const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+                const deadline = new Date(today);
+                deadline.setHours(23, 59, 59, 999);
+                await setDoc(doc(QUIZ_DAILY_COL(), dayId), {
+                    dayId,
+                    type: friday ? 'friday_exam' : 'daily',
+                    label,
                     questions: shuffled.map(q => ({ id: q.id, text: q.text, choices: q.choices, correctIndex: q.correctIndex, topic: q.topic || 'General' })),
-                    passPercent: window.appSettings?.quizPassPercent || 70,
+                    passPercent,
+                    timeLimitMinutes,
                     deadline: deadline.toISOString(),
                     publishedAt: serverTimestamp(),
                     publishedBy: window.currentInstructorName || 'Admin'
                 });
-                window.logAuditActivity && window.logAuditActivity('Weekly Quiz Published', `${shuffled.length} questions published for ${weekId}`, '');
-                window.renderQuizThisWeek();
+                window.logAuditActivity && window.logAuditActivity(`${label} Published`, `${shuffled.length} questions, ${timeLimitMinutes || 'no'} min limit, published for ${dayId}`, '');
+                window.renderTodayQuiz();
             } catch (e) { alert('Error publishing quiz.'); }
         };
 
-        window.renderQuizThisWeek = async function() {
+        window.renderTodayQuiz = async function() {
             const body = document.getElementById('quiz-manager-body');
             if (!body) return;
             body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
-            const weekId = _isoWeekId();
-            const snap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+            const today = new Date();
+            const dayId = _quizDayId(today);
+            const friday = _isFriday(today);
+            const snap = await getDoc(doc(QUIZ_DAILY_COL(), dayId));
             if (!snap.exists()) {
                 body.innerHTML = `
-                    <div class="text-center py-8">
-                        <p class="text-xs text-slate-500 mb-3">No quiz has been published for this week (<b>${weekId}</b>) yet.</p>
-                        <button onclick="publishWeeklyQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2 rounded-lg">Publish This Week's Quiz (10 random questions)</button>
+                    <div class="text-center py-6">
+                        <p class="text-xs text-slate-500 mb-3">No ${friday ? 'Friday Mini Exam' : 'quiz'} has been published for today (<b>${dayId}</b>${friday ? ' — Friday' : ''}) yet.</p>
+                        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 max-w-sm mx-auto text-left space-y-2 mb-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">Number of items</label>
+                                <input id="quiz-item-count" type="number" min="1" placeholder="${friday ? '30 (default)' : '10 (default)'}" class="w-full text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-2">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">Time limit (minutes, blank = no timer)</label>
+                                <input id="quiz-time-limit" type="number" min="1" placeholder="No limit" class="w-full text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-2">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 block mb-1">Pass mark (%)</label>
+                                <input id="quiz-pass-percent" type="number" min="1" max="100" placeholder="70 (default)" class="w-full text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-2">
+                            </div>
+                        </div>
+                        <button onclick="publishDailyQuiz()" class="w-full max-w-sm bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg">
+                            ${friday ? "Publish Friday Mini Exam" : "Publish Today's Quiz"}
+                        </button>
+                        ${friday ? `<p class="text-[10px] text-slate-400 mt-2">It's Friday — defaults to a bigger 30-item exam instead of the usual daily quiz.</p>` : ''}
                     </div>`;
                 return;
             }
             const data = snap.data();
             const deadline = data.deadline ? new Date(data.deadline) : null;
             body.innerHTML = `
-                <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
-                    <p class="text-[11px] text-slate-500">Week <b>${weekId}</b> · Pass mark: <b>${data.passPercent || 70}%</b> · Deadline: <b>${deadline ? deadline.toLocaleString() : 'n/a'}</b></p>
-                    <button onclick="publishWeeklyQuiz()" class="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-1.5 rounded font-semibold">🔄 Regenerate</button>
+                <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 space-y-2">
+                    <p class="text-[11px] text-slate-500">
+                        ${data.type === 'friday_exam' ? '<span class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full text-[9px] font-bold mr-1">🎯 MINI EXAM</span>' : ''}
+                        <b>${dayId}</b> · ${data.questions?.length || 0} items · Pass mark: <b>${data.passPercent || 70}%</b>
+                    </p>
+                    <p class="text-[11px] text-slate-500">⏱️ Time limit: <b>${data.timeLimitMinutes > 0 ? data.timeLimitMinutes + ' min' : 'None'}</b> · Deadline: <b>${deadline ? deadline.toLocaleString() : 'n/a'}</b></p>
+                    <button onclick="publishDailyQuiz()" class="w-full sm:w-auto text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-3 py-2 rounded font-semibold">🔄 Regenerate (new random set)</button>
                 </div>
                 <div class="space-y-1.5">
                     ${(data.questions||[]).map((q,i) => `
@@ -4108,13 +4166,14 @@
             const body = document.getElementById('quiz-manager-body');
             if (!body) return;
             body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
-            const weekId = _isoWeekId();
-            const weekSnap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
-            if (!weekSnap.exists()) { body.innerHTML = '<p class="text-xs text-slate-500 italic">No quiz published this week yet.</p>'; return; }
-            const deadline = weekSnap.data().deadline ? new Date(weekSnap.data().deadline) : null;
+            const dayId = _quizDayId();
+            const daySnap = await getDoc(doc(QUIZ_DAILY_COL(), dayId));
+            if (!daySnap.exists()) { body.innerHTML = '<p class="text-xs text-slate-500 italic">No quiz published today yet.</p>'; return; }
+            const deadline = daySnap.data().deadline ? new Date(daySnap.data().deadline) : null;
             const pastDeadline = deadline && new Date() > deadline;
+            const isExam = daySnap.data().type === 'friday_exam';
 
-            const subsSnap = await getDocs(query(QUIZ_SUBMISSIONS_COL(), where('weekId','==', weekId)));
+            const subsSnap = await getDocs(query(QUIZ_SUBMISSIONS_COL(), where('dayId','==', dayId)));
             const subsByCadet = {};
             subsSnap.forEach(d => subsByCadet[d.data().cadetId] = d.data());
 
@@ -4145,7 +4204,7 @@
             if (badge) { badge.classList.toggle('hidden', flagCount === 0); badge.textContent = flagCount; }
 
             body.innerHTML = `
-                <p class="text-[11px] text-slate-500 mb-2">Week <b>${weekId}</b> · <b>${flagCount}</b> cadet(s) flagged for review (failed or missed the deadline).</p>
+                <p class="text-[11px] text-slate-500 mb-2">${isExam ? '🎯 Friday Mini Exam' : 'Daily Quiz'} · <b>${dayId}</b> · <b>${flagCount}</b> cadet(s) flagged for review (failed or missed the deadline).</p>
                 <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead><tr class="text-[9px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
@@ -4163,7 +4222,7 @@
             });
             const btn = document.getElementById('quiz-tab-'+tab);
             if (btn) { btn.classList.add('active-quiz-tab','border-teal-600','text-teal-700','dark:text-teal-300'); btn.classList.remove('border-transparent','text-slate-500','dark:text-slate-400'); }
-            if (tab === 'this-week') window.renderQuizThisWeek();
+            if (tab === 'today') window.renderTodayQuiz();
             else if (tab === 'bank') window.renderQuizBank();
             else if (tab === 'results') window.renderQuizResults();
         };
@@ -4171,7 +4230,7 @@
         window.openQuizManagerModal = function() {
             const m = document.getElementById('quiz-manager-modal');
             if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-            window.switchQuizTab('this-week');
+            window.switchQuizTab('today');
         };
         window.closeQuizManagerModal = function() {
             const m = document.getElementById('quiz-manager-modal');
@@ -4179,59 +4238,146 @@
         };
 
         // ── Cadet-facing quiz taking ──
-        window.checkCadetWeeklyQuiz = async function() {
+        // Flow: banner alert (non-blocking) → tap "Start When Ready" → intro/
+        // ready screen → tap "Begin" → timer starts (if configured) → questions.
+        window.checkCadetDailyQuiz = async function() {
             try {
                 const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-                if (!c || c.isAlumni) return; // only mandatory for active cadets
-                const weekId = _isoWeekId();
-                const dismissKey = `pumma_quiz_dismissed_${weekId}_${c.id}`;
-                if (sessionStorage.getItem(dismissKey)) return;
-                const weekSnap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
-                if (!weekSnap.exists()) return; // nothing published this week
-                const subSnap = await getDoc(doc(QUIZ_SUBMISSIONS_COL(), `${weekId}_${c.id}`));
-                if (subSnap.exists()) return; // already taken
-                window._activeQuizWeekId = weekId;
-                window._activeQuizData = weekSnap.data();
-                _renderCadetQuizModal();
-            } catch (e) { console.warn('checkCadetWeeklyQuiz skipped:', e); }
+                if (!c || c.isAlumni) { document.getElementById('quiz-alert-banner')?.classList.add('hidden'); return; }
+                const dayId = _quizDayId();
+                const snoozeKey = `pumma_quiz_snoozed_${dayId}_${c.id}`;
+                const daySnap = await getDoc(doc(QUIZ_DAILY_COL(), dayId));
+                if (!daySnap.exists()) { document.getElementById('quiz-alert-banner')?.classList.add('hidden'); return; }
+                const subSnap = await getDoc(doc(QUIZ_SUBMISSIONS_COL(), `${dayId}_${c.id}`));
+                if (subSnap.exists()) { document.getElementById('quiz-alert-banner')?.classList.add('hidden'); return; }
+                window._activeQuizDayId = dayId;
+                window._activeQuizData = daySnap.data();
+                if (sessionStorage.getItem(snoozeKey)) return; // banner snoozed this session, but data is ready if they navigate to it manually
+                const isExam = window._activeQuizData.type === 'friday_exam';
+                const textEl = document.getElementById('quiz-alert-banner-text');
+                if (textEl) textEl.textContent = isExam
+                    ? `🎯 Friday Mini Exam (${window._activeQuizData.questions?.length || 30} items) is ready — mandatory.`
+                    : `You have today's quiz (${window._activeQuizData.questions?.length || 10} items) waiting — mandatory.`;
+                document.getElementById('quiz-alert-banner')?.classList.remove('hidden');
+            } catch (e) { console.warn('checkCadetDailyQuiz skipped:', e); }
         };
 
+        window.snoozeQuizBanner = function() {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c && window._activeQuizDayId) sessionStorage.setItem(`pumma_quiz_snoozed_${window._activeQuizDayId}_${c.id}`, '1');
+            document.getElementById('quiz-alert-banner')?.classList.add('hidden');
+        };
+
+        // Shows a calm "get ready" screen first — no timer running yet — unless
+        // the cadet already started this attempt earlier (then resume, don't
+        // let reopening reset/extend a running timer).
+        window.openCadetQuizIntro = function() {
+            const data = window._activeQuizData;
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (!data || !c) return;
+            const dayId = window._activeQuizDayId;
+            const startedKey = `pumma_quiz_started_${dayId}_${c.id}`;
+            if (localStorage.getItem(startedKey)) { _renderCadetQuizModal(); return; } // already began — resume, don't re-show intro
+
+            const isExam = data.type === 'friday_exam';
+            const deadline = data.deadline ? new Date(data.deadline) : null;
+            const body = document.getElementById('cadet-quiz-body');
+            body.innerHTML = `
+                <div class="text-center py-4 space-y-3">
+                    <p class="text-3xl">${isExam ? '🎯' : '📝'}</p>
+                    <p class="text-sm font-bold text-brand-black dark:text-white">${isExam ? 'Friday Mini Exam' : "Today's Activity Quiz"}</p>
+                    <div class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 text-left text-[11px] text-slate-600 dark:text-slate-300 space-y-1 max-w-xs mx-auto">
+                        <p>📋 <b>${data.questions?.length || 0}</b> multiple-choice items</p>
+                        <p>✅ Pass mark: <b>${data.passPercent || 70}%</b></p>
+                        <p>⏱️ Time limit: <b>${data.timeLimitMinutes > 0 ? data.timeLimitMinutes + ' minutes once started' : 'None'}</b></p>
+                        ${deadline ? `<p>📅 Due by: <b>${deadline.toLocaleString()}</b></p>` : ''}
+                    </div>
+                    <p class="text-[10px] text-slate-400 max-w-xs mx-auto">${data.timeLimitMinutes > 0 ? 'The countdown only starts once you tap Begin — take a moment to get ready first.' : 'No rush — there\'s no timer on this one.'} Missing or failing flags your account for instructor review.</p>
+                    <button onclick="beginCadetQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg">I'm Ready — Begin</button>
+                </div>`;
+            const modal = document.getElementById('cadet-quiz-modal');
+            const titleEl = modal.querySelector('h3');
+            if (titleEl) titleEl.innerHTML = `<i data-lucide="clipboard-check" class="w-5 h-5"></i> ${isExam ? 'Friday Mini Exam' : 'Daily Activity Quiz'}`;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('quiz-alert-banner')?.classList.add('hidden');
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.beginCadetQuiz = function() {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            const dayId = window._activeQuizDayId;
+            if (!c || !dayId) return;
+            const startedKey = `pumma_quiz_started_${dayId}_${c.id}`;
+            if (!localStorage.getItem(startedKey)) localStorage.setItem(startedKey, String(Date.now()));
+            _renderCadetQuizModal();
+        };
+
+        let _quizTimerInterval = null;
         function _renderCadetQuizModal() {
             const data = window._activeQuizData;
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
             const body = document.getElementById('cadet-quiz-body');
-            if (!body) return;
+            if (!body || !data || !c) return;
+            const isExam = data.type === 'friday_exam';
             const deadline = data.deadline ? new Date(data.deadline) : null;
             body.innerHTML = `
-                <p class="text-[11px] text-slate-500">This weekly quiz is mandatory. Pass mark: <b>${data.passPercent||70}%</b>${deadline ? ` · Due by <b>${deadline.toLocaleString()}</b>` : ''}. Missing or failing flags your account for instructor review.</p>
+                ${data.timeLimitMinutes > 0 ? `<div class="sticky -top-4 -mx-4 px-4 py-2 bg-teal-600 text-white text-center font-bold text-sm z-10" id="quiz-timer-bar">⏱️ <span id="quiz-timer-display">--:--</span> remaining</div>` : ''}
+                <p class="text-[11px] text-slate-500">${isExam ? '🎯 <b>Friday Mini Exam</b>' : 'This daily quiz is mandatory.'} Pass mark: <b>${data.passPercent||70}%</b>${deadline ? ` · Due by <b>${deadline.toLocaleString()}</b>` : ''}. Missing or failing flags your account for instructor review.</p>
                 ${data.questions.map((q,i) => `
                 <div class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3">
                     <p class="text-xs font-semibold text-brand-black dark:text-white mb-2">${i+1}. ${escapeHTMLab(q.text)}</p>
                     ${q.choices.map((ch,ci) => `
-                    <label class="flex items-center gap-2 text-[11px] py-1 cursor-pointer">
-                        <input type="radio" name="cq-${i}" value="${ci}" class="accent-teal-600">
+                    <label class="flex items-center gap-2 text-[11px] py-1.5 cursor-pointer">
+                        <input type="radio" name="cq-${i}" value="${ci}" class="accent-teal-600 w-4 h-4 shrink-0">
                         <span>${escapeHTMLab(ch)}</span>
                     </label>`).join('')}
                 </div>`).join('')}
-                <button onclick="submitCadetQuiz()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-2.5 rounded-lg">Submit Quiz</button>`;
+                <button onclick="submitCadetQuiz(false)" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-3 rounded-lg">Submit ${isExam ? 'Exam' : 'Quiz'}</button>`;
             const modal = document.getElementById('cadet-quiz-modal');
             modal.classList.remove('hidden'); modal.classList.add('flex');
             if (window.lucide) lucide.createIcons();
+
+            if (_quizTimerInterval) { clearInterval(_quizTimerInterval); _quizTimerInterval = null; }
+            if (data.timeLimitMinutes > 0) {
+                const startedKey = `pumma_quiz_started_${window._activeQuizDayId}_${c.id}`;
+                const startedAt = parseInt(localStorage.getItem(startedKey) || String(Date.now()), 10);
+                const endAt = startedAt + data.timeLimitMinutes * 60 * 1000;
+                const tick = () => {
+                    const remainingMs = endAt - Date.now();
+                    const display = document.getElementById('quiz-timer-display');
+                    if (remainingMs <= 0) {
+                        clearInterval(_quizTimerInterval); _quizTimerInterval = null;
+                        if (display) display.textContent = "0:00";
+                        submitCadetQuiz(true); // time's up — auto-submit whatever's answered
+                        return;
+                    }
+                    const mins = Math.floor(remainingMs / 60000);
+                    const secs = Math.floor((remainingMs % 60000) / 1000);
+                    if (display) display.textContent = `${mins}:${String(secs).padStart(2,'0')}`;
+                    const bar = document.getElementById('quiz-timer-bar');
+                    if (bar && remainingMs < 60000) bar.classList.add('bg-red-600'); // last minute warning
+                };
+                tick();
+                _quizTimerInterval = setInterval(tick, 1000);
+            }
         }
 
         window.dismissCadetQuizModal = function() {
-            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            if (c && window._activeQuizWeekId) sessionStorage.setItem(`pumma_quiz_dismissed_${window._activeQuizWeekId}_${c.id}`, '1');
+            // Only lets them close the *intro* screen (before Begin) without
+            // losing progress — once a timed attempt has begun, closing the
+            // tab won't stop the clock, so there's nothing destructive here.
             const modal = document.getElementById('cadet-quiz-modal');
             modal.classList.add('hidden'); modal.classList.remove('flex');
         };
 
-        window.submitCadetQuiz = async function() {
+        window.submitCadetQuiz = async function(auto) {
+            if (_quizTimerInterval) { clearInterval(_quizTimerInterval); _quizTimerInterval = null; }
             const data = window._activeQuizData;
             const answers = [];
             for (let i = 0; i < data.questions.length; i++) {
                 const sel = document.querySelector(`input[name="cq-${i}"]:checked`);
-                if (!sel) { alert(`Please answer question ${i+1} before submitting.`); return; }
-                answers.push(parseInt(sel.value, 10));
+                if (!sel && !auto) { alert(`Please answer question ${i+1} before submitting.`); return; }
+                answers.push(sel ? parseInt(sel.value, 10) : -1); // -1 = unanswered (counts wrong)
             }
             let score = 0;
             data.questions.forEach((q, i) => { if (answers[i] === q.correctIndex) score++; });
@@ -4239,31 +4385,35 @@
             const pct = (score / total) * 100;
             const passed = pct >= (data.passPercent || 70);
             const c = window.cadets?.find(x => x.id === window.selectedCadetId);
-            const weekId = window._activeQuizWeekId;
-            const subId = `${weekId}_${c.id}`;
+            const dayId = window._activeQuizDayId;
+            const subId = `${dayId}_${c.id}`;
+            const label = data.type === 'friday_exam' ? 'Friday Mini Exam' : 'Daily Quiz';
             try {
                 await setDoc(doc(QUIZ_SUBMISSIONS_COL(), subId), {
-                    weekId, cadetId: c.id, cadetName: c.name, answers, score, total, passed,
+                    dayId, cadetId: c.id, cadetName: c.name, type: data.type || 'daily', answers, score, total, passed,
+                    autoSubmittedByTimer: !!auto,
                     submittedAt: serverTimestamp()
                 });
                 if (!passed) {
                     await setDoc(doc(QUIZ_FLAGS_COL(), subId), {
-                        weekId, cadetId: c.id, cadetName: c.name, reason: 'failed', score, total,
+                        dayId, cadetId: c.id, cadetName: c.name, reason: auto ? 'failed (time expired)' : 'failed', score, total,
                         flaggedAt: serverTimestamp(), resolved: false
                     });
-                    window.logAuditActivity && window.logAuditActivity('Weekly Quiz Failed', `Scored ${score}/${total} (below ${data.passPercent||70}% pass mark) — flagged for instructor review`, c.name);
+                    window.logAuditActivity && window.logAuditActivity(`${label} Failed`, `Scored ${score}/${total}${auto ? ' — time expired, auto-submitted' : ''} (below ${data.passPercent||70}% pass mark) — flagged for instructor review`, c.name);
                 } else {
-                    window.logAuditActivity && window.logAuditActivity('Weekly Quiz Passed', `Scored ${score}/${total}`, c.name);
+                    window.logAuditActivity && window.logAuditActivity(`${label} Passed`, `Scored ${score}/${total}`, c.name);
                 }
+                localStorage.removeItem(`pumma_quiz_started_${dayId}_${c.id}`);
             } catch (e) { alert('Error submitting quiz. Please try again.'); return; }
             document.getElementById('cadet-quiz-body').innerHTML = `
                 <div class="text-center py-6">
-                    <p class="text-3xl mb-2">${passed ? '✅' : '❌'}</p>
-                    <p class="text-sm font-bold ${passed ? 'text-emerald-600' : 'text-red-500'}">${passed ? 'Passed!' : 'Not quite — flagged for review.'}</p>
-                    <p class="text-xs text-slate-500 mt-1">You scored ${score} out of ${total} (${Math.round(pct)}%).</p>
+                    <p class="text-3xl mb-2">${auto ? '⏰' : (passed ? '✅' : '❌')}</p>
+                    <p class="text-sm font-bold ${passed ? 'text-emerald-600' : 'text-red-500'}">${auto ? "Time's up — auto-submitted." : (passed ? 'Passed!' : 'Not quite — flagged for review.')}</p>
+                    <p class="text-xs text-slate-500 mt-1">You scored ${score} out of ${total} (${Math.round(pct)}%)${passed ? '' : ' — flagged for instructor review'}.</p>
                     <button onclick="document.getElementById('cadet-quiz-modal').classList.add('hidden'); document.getElementById('cadet-quiz-modal').classList.remove('flex');" class="mt-4 bg-brand-blue text-white text-xs font-bold px-4 py-2 rounded-lg">Close</button>
                 </div>`;
         };
+
 
 
         // --- Shared Storage Upload Helper ---
@@ -10747,7 +10897,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(window.currentUserRole === 'admin') window.renderObservers();
         };
 
-        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); setTimeout(() => window.checkCadetWeeklyQuiz && window.checkCadetWeeklyQuiz(), 1200); };
+        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); setTimeout(() => window.checkCadetDailyQuiz && window.checkCadetDailyQuiz(), 1200); };
         
         window.saveEvaluation = async (goToNext = false) => {
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
@@ -14791,7 +14941,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     function updateChatTabsForRole() {
         const { role } = getChatSender();
         setupUnreadWatchers();
-        window.checkCadetWeeklyQuiz && window.checkCadetWeeklyQuiz();
+        window.checkCadetDailyQuiz && window.checkCadetDailyQuiz();
         const classTab = document.getElementById('chat-tab-class');
         const sectionTab = document.getElementById('chat-tab-section');
         const adminTab = document.getElementById('chat-tab-admin');
