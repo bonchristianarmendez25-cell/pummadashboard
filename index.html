@@ -456,6 +456,7 @@
                         <h3 class="font-bold text-brand-blue dark:text-white flex items-center gap-2 text-sm uppercase tracking-wide"><i data-lucide="sliders" class="w-5 h-5 text-brand-green"></i> General Config & Rules Setup</h3>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="openAdminInboxModal()" class="text-[11px] bg-sky-50 dark:bg-sky-900/30 hover:bg-sky-100 dark:hover:bg-sky-800 text-sky-800 dark:text-sky-300 px-2.5 py-1.5 rounded border border-sky-200 dark:border-sky-800 font-semibold flex items-center gap-1 transition relative"><i data-lucide="inbox" class="w-3.5 h-3.5"></i> Inbox <span id="inbox-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1.5 rounded-full">0</span></button>
+                            <button onclick="openQuizManagerModal()" class="text-[11px] bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-800 text-teal-800 dark:text-teal-300 px-2.5 py-1.5 rounded border border-teal-200 dark:border-teal-800 font-semibold flex items-center gap-1 transition relative"><i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i> Weekly Quiz <span id="quiz-flag-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1.5 rounded-full">0</span></button>
                             <button onclick="openAnalyticsModal()" class="text-[11px] bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800 text-purple-800 dark:text-purple-300 px-2.5 py-1.5 rounded border border-purple-200 dark:border-purple-800 font-semibold flex items-center gap-1 transition"><i data-lucide="pie-chart" class="w-3.5 h-3.5"></i> Analytics</button>
                             <button onclick="openFormulasModal()" class="text-[11px] bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-brand-blue dark:text-indigo-300 px-2.5 py-1.5 rounded border border-indigo-200 dark:border-indigo-800 font-semibold flex items-center gap-1 transition"><i data-lucide="calculator" class="w-3.5 h-3.5"></i> Matrix</button>
                             <button onclick="openGradedMonthsModal()" class="text-[11px] bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-800 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded border border-amber-200 dark:border-amber-800 font-semibold flex items-center gap-1 transition"><i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> Active Months</button>
@@ -929,6 +930,33 @@
             </div>
             <!-- List -->
             <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 space-y-3" id="admin-inbox-list"></div>
+        </div>
+    </div>
+
+    <!-- ═══ WEEKLY QUIZ MANAGER (Admin) ═══ -->
+    <div id="quiz-manager-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between p-4 border-b border-brand-creamBorder dark:border-slate-700 bg-teal-50 dark:bg-teal-900/20">
+                <h3 class="font-bold text-teal-900 dark:text-teal-300 text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Weekly Activity Quiz</h3>
+                <button onclick="closeQuizManagerModal()" class="text-teal-700 hover:text-teal-900 dark:text-teal-400 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex border-b border-brand-creamBorder dark:border-slate-700 bg-white dark:bg-slate-800 px-2 overflow-x-auto">
+                <button onclick="switchQuizTab('this-week')" id="quiz-tab-this-week" class="quiz-tab-btn active-quiz-tab whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-teal-600 text-teal-700 dark:text-teal-300 flex items-center gap-1.5 transition">This Week</button>
+                <button onclick="switchQuizTab('bank')" id="quiz-tab-bank" class="quiz-tab-btn whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-700 flex items-center gap-1.5 transition">Question Bank</button>
+                <button onclick="switchQuizTab('results')" id="quiz-tab-results" class="quiz-tab-btn whitespace-nowrap px-3 py-2 text-[11px] font-bold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal-700 flex items-center gap-1.5 transition">Results & Flags</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-brand-creamBg dark:bg-slate-950 space-y-3" id="quiz-manager-body"></div>
+        </div>
+    </div>
+
+    <!-- ═══ CADET-FACING WEEKLY QUIZ ═══ -->
+    <div id="cadet-quiz-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60] p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between p-4 border-b border-brand-creamBorder dark:border-slate-700 bg-teal-600 text-white">
+                <h3 class="font-bold text-sm flex items-center gap-2 uppercase tracking-wide"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Weekly Activity Quiz</h3>
+                <button onclick="dismissCadetQuizModal()" title="Remind me later" class="hover:opacity-80 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="cadet-quiz-body"></div>
         </div>
     </div>
 
@@ -3302,7 +3330,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs, addDoc, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
@@ -3895,6 +3923,346 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cadets', c.id), { alumniBatchYear: year || null });
                 window.logAuditActivity('Alumni Batch Year Set', `Batch year set to "${year || '(cleared)'}"`, c.name);
             } catch (e) { alert('Error saving batch year.'); }
+        };
+
+        // ═══════════════════ WEEKLY ACTIVITY QUIZ SYSTEM ═══════════════════
+        // Mandatory pass/fail quiz for active (non-alumni) cadets. Auto-graded
+        // multiple choice, drawn from an admin-curated + reviewer-based bank.
+        // Missing or failing flags the cadet for admin review — it does NOT
+        // touch Merit scores directly.
+        function _isoWeekId(d = new Date()) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+            return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+        const QUIZ_BANK_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizQuestions');
+        const QUIZ_WEEKLY_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'weeklyQuizzes');
+        const QUIZ_SUBMISSIONS_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizSubmissions');
+        const QUIZ_FLAGS_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizFlags');
+
+        // Proofread reviewer-based question pack (SOLAS / MARPOL / STCW / General).
+        // Admins can add more manually from the Question Bank tab.
+        const AI_SEED_QUESTIONS = [
+            { text: "What does SOLAS stand for?", choices: ["International Convention for the Safety of Life at Sea", "Standards for Operations at Sea", "Safety of Land and Sea", "International Shipping Operations and Logistics Standard"], correctIndex: 0, topic: "SOLAS" },
+            { text: "The first SOLAS treaty was adopted largely in response to which maritime disaster?", choices: ["The sinking of the Titanic", "The Exxon Valdez oil spill", "The sinking of the Costa Concordia", "The Halifax Explosion"], correctIndex: 0, topic: "SOLAS" },
+            { text: "What does MARPOL stand for?", choices: ["Maritime Patrol Operations", "International Convention for the Prevention of Pollution from Ships", "Marine Port Logistics", "Maritime Registry of Pollution"], correctIndex: 1, topic: "MARPOL" },
+            { text: "How many Annexes does the MARPOL Convention currently have?", choices: ["4", "5", "6", "8"], correctIndex: 2, topic: "MARPOL" },
+            { text: "Which MARPOL Annex specifically covers the prevention of pollution by garbage from ships?", choices: ["Annex I", "Annex III", "Annex V", "Annex VI"], correctIndex: 2, topic: "MARPOL" },
+            { text: "Which MARPOL Annex covers the prevention of air pollution from ships?", choices: ["Annex II", "Annex IV", "Annex V", "Annex VI"], correctIndex: 3, topic: "MARPOL" },
+            { text: "What does STCW stand for?", choices: ["Standards of Training, Certification and Watchkeeping for Seafarers", "Ship Transport and Cargo Weighing", "Seafarers' Trade Convention on Wages", "Standard Training Course for Watchmen"], correctIndex: 0, topic: "STCW" },
+            { text: "The major update to STCW, known as the Manila Amendments, took effect in what year?", choices: ["1995", "2002", "2010", "2015"], correctIndex: 2, topic: "STCW" },
+            { text: "Under STCW rest hour requirements, what is the minimum number of rest hours required in any 24-hour period?", choices: ["6 hours", "8 hours", "10 hours", "12 hours"], correctIndex: 2, topic: "STCW" },
+            { text: "What does GMDSS stand for?", choices: ["Global Maritime Distress and Safety System", "General Marine Data Storage System", "Global Marine Dispatch and Signal Service", "Ground-to-Maritime Data Safety Standard"], correctIndex: 0, topic: "General" },
+            { text: "Which VHF channel is internationally designated for distress, safety, and calling?", choices: ["Channel 6", "Channel 13", "Channel 16", "Channel 70"], correctIndex: 2, topic: "General" },
+            { text: "What is the internationally recognized voice radio distress call?", choices: ["SOS", "MAYDAY", "PAN-PAN", "SECURITE"], correctIndex: 1, topic: "General" },
+            { text: "Who holds overall command responsibility on board a vessel?", choices: ["The Chief Engineer", "The Master", "The Chief Mate", "The Port Captain"], correctIndex: 1, topic: "General" },
+            { text: "\"PAN-PAN\", spoken three times, is the internationally recognized radio signal used to indicate what?", choices: ["An abandon-ship situation", "A routine test transmission", "An urgent message about safety, without immediate danger to life", "Confirmation that a distress call was received"], correctIndex: 2, topic: "General" },
+            { text: "What is the primary purpose of a vessel's Safety Management System (SMS) under the ISM Code?", choices: ["To manage the ship's payroll", "To provide a structured system for safe operation and pollution prevention", "To track cargo manifests only", "To schedule crew shore leave"], correctIndex: 1, topic: "General" }
+        ];
+
+        window.seedAIQuizQuestions = async function() {
+            try {
+                const existingSnap = await getDocs(QUIZ_BANK_COL());
+                const existingTexts = new Set(existingSnap.docs.map(d => (d.data().text || '').trim()));
+                let added = 0;
+                for (const q of AI_SEED_QUESTIONS) {
+                    if (existingTexts.has(q.text.trim())) continue;
+                    await addDoc(QUIZ_BANK_COL(), { ...q, source: 'ai', active: true, createdAt: serverTimestamp() });
+                    added++;
+                }
+                alert(`Added ${added} reviewer-based question(s) to the bank.` + (added === 0 ? ' (All were already loaded.)' : ''));
+                window.renderQuizBank();
+            } catch (e) { alert('Error loading reviewer questions.'); }
+        };
+
+        window.addQuizQuestion = async function() {
+            const text = document.getElementById('quiz-new-text')?.value.trim();
+            const choices = [0,1,2,3].map(i => document.getElementById('quiz-new-choice-'+i)?.value.trim() || '');
+            const correctIndex = parseInt(document.querySelector('input[name="quiz-new-correct"]:checked')?.value ?? '-1', 10);
+            const topic = document.getElementById('quiz-new-topic')?.value || 'General';
+            if (!text || choices.some(c => !c) || correctIndex < 0) { alert('Please fill in the question, all 4 choices, and mark which one is correct.'); return; }
+            try {
+                await addDoc(QUIZ_BANK_COL(), { text, choices, correctIndex, topic, source: 'admin', active: true, createdAt: serverTimestamp() });
+                window.renderQuizBank();
+            } catch (e) { alert('Error adding question.'); }
+        };
+
+        window.deleteQuizQuestion = async function(id) {
+            if (!confirm('Delete this question from the bank?')) return;
+            try { await deleteDoc(doc(QUIZ_BANK_COL(), id)); window.renderQuizBank(); }
+            catch (e) { alert('Error deleting question.'); }
+        };
+
+        window.toggleQuizQuestionActive = async function(id, active) {
+            try { await updateDoc(doc(QUIZ_BANK_COL(), id), { active }); }
+            catch (e) { alert('Error updating question.'); }
+        };
+
+        window.renderQuizBank = async function() {
+            const body = document.getElementById('quiz-manager-body');
+            if (!body) return;
+            body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
+            const snap = await getDocs(QUIZ_BANK_COL());
+            const questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            body.innerHTML = `
+                <div class="flex flex-wrap gap-2 items-center justify-between">
+                    <p class="text-[11px] text-slate-500">${questions.length} question(s) in bank — need at least 10 <b>active</b> to publish a week.</p>
+                    <button onclick="seedAIQuizQuestions()" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1.5 rounded font-semibold flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Load Reviewer Question Pack</button>
+                </div>
+                <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 space-y-2">
+                    <p class="text-[11px] font-bold text-slate-600 dark:text-slate-300">+ Add a Question</p>
+                    <input id="quiz-new-text" placeholder="Question text" class="w-full text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1.5">
+                    ${[0,1,2,3].map(i => `
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="quiz-new-correct" value="${i}" class="accent-teal-600" title="Mark as correct answer">
+                        <input id="quiz-new-choice-${i}" placeholder="Choice ${i+1}" class="flex-1 text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1.5">
+                    </div>`).join('')}
+                    <div class="flex items-center gap-2">
+                        <select id="quiz-new-topic" class="text-xs border border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded px-2 py-1.5">
+                            <option>SOLAS</option><option>MARPOL</option><option>STCW</option><option>General</option>
+                        </select>
+                        <button onclick="addQuizQuestion()" class="text-[10px] bg-brand-blue hover:bg-blue-800 text-white px-3 py-1.5 rounded font-semibold">Add Question</button>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    ${questions.map(q => `
+                    <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-2.5 flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[11px] font-semibold text-brand-black dark:text-white">${escapeHTMLab(q.text)}
+                                <span class="text-[8px] bg-slate-100 dark:bg-slate-700 text-slate-500 px-1.5 py-0.5 rounded-full ml-1">${q.topic||'General'}</span>
+                                ${q.source==='ai' ? '<span class="text-[8px] bg-purple-100 dark:bg-purple-900/40 text-purple-600 px-1.5 py-0.5 rounded-full ml-1">Reviewer-based</span>' : ''}
+                            </p>
+                            <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">✓ ${escapeHTMLab(q.choices?.[q.correctIndex] || '')}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <input type="checkbox" ${q.active!==false?'checked':''} onchange="toggleQuizQuestionActive('${q.id}', this.checked)" title="Active in rotation" class="accent-teal-600">
+                            <button onclick="deleteQuizQuestion('${q.id}')" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>`).join('') || '<p class="text-xs text-slate-400 italic">No questions yet — load the reviewer pack or add your own above.</p>'}
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.publishWeeklyQuiz = async function() {
+            const weekId = _isoWeekId();
+            try {
+                const existing = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+                if (existing.exists()) {
+                    if (!confirm('This week already has a published quiz. Regenerating picks a new random set of 10 for anyone who hasn\'t taken it yet — cadets who already submitted keep their existing score. Continue?')) return;
+                }
+                const bankSnap = await getDocs(QUIZ_BANK_COL());
+                const activeQs = bankSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => q.active !== false);
+                if (activeQs.length < 10) { alert(`Need at least 10 active questions in the bank (currently ${activeQs.length}). Load the reviewer pack or add more from the Question Bank tab.`); return; }
+                const shuffled = [...activeQs].sort(() => Math.random() - 0.5).slice(0, 10);
+                const now = new Date();
+                const deadline = new Date(now);
+                deadline.setUTCDate(now.getUTCDate() + (7 - (now.getUTCDay() || 7)));
+                deadline.setUTCHours(23, 59, 59, 999);
+                await setDoc(doc(QUIZ_WEEKLY_COL(), weekId), {
+                    weekId,
+                    questions: shuffled.map(q => ({ id: q.id, text: q.text, choices: q.choices, correctIndex: q.correctIndex, topic: q.topic || 'General' })),
+                    passPercent: window.appSettings?.quizPassPercent || 70,
+                    deadline: deadline.toISOString(),
+                    publishedAt: serverTimestamp(),
+                    publishedBy: window.currentInstructorName || 'Admin'
+                });
+                window.logAuditActivity && window.logAuditActivity('Weekly Quiz Published', `${shuffled.length} questions published for ${weekId}`, '');
+                window.renderQuizThisWeek();
+            } catch (e) { alert('Error publishing quiz.'); }
+        };
+
+        window.renderQuizThisWeek = async function() {
+            const body = document.getElementById('quiz-manager-body');
+            if (!body) return;
+            body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
+            const weekId = _isoWeekId();
+            const snap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+            if (!snap.exists()) {
+                body.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-xs text-slate-500 mb-3">No quiz has been published for this week (<b>${weekId}</b>) yet.</p>
+                        <button onclick="publishWeeklyQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2 rounded-lg">Publish This Week's Quiz (10 random questions)</button>
+                    </div>`;
+                return;
+            }
+            const data = snap.data();
+            const deadline = data.deadline ? new Date(data.deadline) : null;
+            body.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-[11px] text-slate-500">Week <b>${weekId}</b> · Pass mark: <b>${data.passPercent || 70}%</b> · Deadline: <b>${deadline ? deadline.toLocaleString() : 'n/a'}</b></p>
+                    <button onclick="publishWeeklyQuiz()" class="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-1.5 rounded font-semibold">🔄 Regenerate</button>
+                </div>
+                <div class="space-y-1.5">
+                    ${(data.questions||[]).map((q,i) => `
+                    <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-2.5">
+                        <p class="text-[11px] font-semibold text-brand-black dark:text-white">${i+1}. ${escapeHTMLab(q.text)}</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400">✓ ${escapeHTMLab(q.choices?.[q.correctIndex] || '')}</p>
+                    </div>`).join('')}
+                </div>`;
+        };
+
+        window.renderQuizResults = async function() {
+            const body = document.getElementById('quiz-manager-body');
+            if (!body) return;
+            body.innerHTML = '<p class="text-xs text-slate-500">Loading…</p>';
+            const weekId = _isoWeekId();
+            const weekSnap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+            if (!weekSnap.exists()) { body.innerHTML = '<p class="text-xs text-slate-500 italic">No quiz published this week yet.</p>'; return; }
+            const deadline = weekSnap.data().deadline ? new Date(weekSnap.data().deadline) : null;
+            const pastDeadline = deadline && new Date() > deadline;
+
+            const subsSnap = await getDocs(query(QUIZ_SUBMISSIONS_COL(), where('weekId','==', weekId)));
+            const subsByCadet = {};
+            subsSnap.forEach(d => subsByCadet[d.data().cadetId] = d.data());
+
+            const activeCadets = (window.cadets || []).filter(c => !c.isAlumni);
+            let flagCount = 0;
+            const rows = activeCadets.map(c => {
+                const sub = subsByCadet[c.id];
+                let statusHTML;
+                if (sub) {
+                    statusHTML = sub.passed
+                        ? `<span class="text-emerald-600 font-bold">✅ Passed (${sub.score}/${sub.total})</span>`
+                        : `<span class="text-red-500 font-bold">❌ Failed (${sub.score}/${sub.total})</span>`;
+                    if (!sub.passed) flagCount++;
+                } else if (pastDeadline) {
+                    statusHTML = `<span class="text-red-500 font-bold">⚠️ Missed</span>`;
+                    flagCount++;
+                } else {
+                    statusHTML = `<span class="text-slate-400">⏳ Pending</span>`;
+                }
+                return `<tr class="border-b border-slate-100 dark:border-slate-700">
+                    <td class="py-1.5 px-2 text-[11px] font-semibold">${escapeHTMLab(c.name)}</td>
+                    <td class="py-1.5 px-2 text-[10px] text-slate-500">Class ${c.classNum ?? '?'} · Sec ${c.section||'?'}</td>
+                    <td class="py-1.5 px-2 text-[10px]">${statusHTML}</td>
+                </tr>`;
+            }).join('');
+
+            const badge = document.getElementById('quiz-flag-badge');
+            if (badge) { badge.classList.toggle('hidden', flagCount === 0); badge.textContent = flagCount; }
+
+            body.innerHTML = `
+                <p class="text-[11px] text-slate-500 mb-2">Week <b>${weekId}</b> · <b>${flagCount}</b> cadet(s) flagged for review (failed or missed the deadline).</p>
+                <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead><tr class="text-[9px] uppercase text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                        <th class="py-1.5 px-2">Cadet</th><th class="py-1.5 px-2">Class/Section</th><th class="py-1.5 px-2">Status</th>
+                    </tr></thead>
+                    <tbody>${rows || '<tr><td colspan="3" class="text-xs text-slate-400 italic py-3">No active cadets found.</td></tr>'}</tbody>
+                </table>
+                </div>`;
+        };
+
+        window.switchQuizTab = function(tab) {
+            document.querySelectorAll('.quiz-tab-btn').forEach(b => {
+                b.classList.remove('active-quiz-tab','border-teal-600','text-teal-700','dark:text-teal-300');
+                b.classList.add('border-transparent','text-slate-500','dark:text-slate-400');
+            });
+            const btn = document.getElementById('quiz-tab-'+tab);
+            if (btn) { btn.classList.add('active-quiz-tab','border-teal-600','text-teal-700','dark:text-teal-300'); btn.classList.remove('border-transparent','text-slate-500','dark:text-slate-400'); }
+            if (tab === 'this-week') window.renderQuizThisWeek();
+            else if (tab === 'bank') window.renderQuizBank();
+            else if (tab === 'results') window.renderQuizResults();
+        };
+
+        window.openQuizManagerModal = function() {
+            const m = document.getElementById('quiz-manager-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+            window.switchQuizTab('this-week');
+        };
+        window.closeQuizManagerModal = function() {
+            const m = document.getElementById('quiz-manager-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        };
+
+        // ── Cadet-facing quiz taking ──
+        window.checkCadetWeeklyQuiz = async function() {
+            try {
+                const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+                if (!c || c.isAlumni) return; // only mandatory for active cadets
+                const weekId = _isoWeekId();
+                const dismissKey = `pumma_quiz_dismissed_${weekId}_${c.id}`;
+                if (sessionStorage.getItem(dismissKey)) return;
+                const weekSnap = await getDoc(doc(QUIZ_WEEKLY_COL(), weekId));
+                if (!weekSnap.exists()) return; // nothing published this week
+                const subSnap = await getDoc(doc(QUIZ_SUBMISSIONS_COL(), `${weekId}_${c.id}`));
+                if (subSnap.exists()) return; // already taken
+                window._activeQuizWeekId = weekId;
+                window._activeQuizData = weekSnap.data();
+                _renderCadetQuizModal();
+            } catch (e) { console.warn('checkCadetWeeklyQuiz skipped:', e); }
+        };
+
+        function _renderCadetQuizModal() {
+            const data = window._activeQuizData;
+            const body = document.getElementById('cadet-quiz-body');
+            if (!body) return;
+            const deadline = data.deadline ? new Date(data.deadline) : null;
+            body.innerHTML = `
+                <p class="text-[11px] text-slate-500">This weekly quiz is mandatory. Pass mark: <b>${data.passPercent||70}%</b>${deadline ? ` · Due by <b>${deadline.toLocaleString()}</b>` : ''}. Missing or failing flags your account for instructor review.</p>
+                ${data.questions.map((q,i) => `
+                <div class="bg-brand-creamBg dark:bg-slate-900 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3">
+                    <p class="text-xs font-semibold text-brand-black dark:text-white mb-2">${i+1}. ${escapeHTMLab(q.text)}</p>
+                    ${q.choices.map((ch,ci) => `
+                    <label class="flex items-center gap-2 text-[11px] py-1 cursor-pointer">
+                        <input type="radio" name="cq-${i}" value="${ci}" class="accent-teal-600">
+                        <span>${escapeHTMLab(ch)}</span>
+                    </label>`).join('')}
+                </div>`).join('')}
+                <button onclick="submitCadetQuiz()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-2.5 rounded-lg">Submit Quiz</button>`;
+            const modal = document.getElementById('cadet-quiz-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        window.dismissCadetQuizModal = function() {
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (c && window._activeQuizWeekId) sessionStorage.setItem(`pumma_quiz_dismissed_${window._activeQuizWeekId}_${c.id}`, '1');
+            const modal = document.getElementById('cadet-quiz-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        };
+
+        window.submitCadetQuiz = async function() {
+            const data = window._activeQuizData;
+            const answers = [];
+            for (let i = 0; i < data.questions.length; i++) {
+                const sel = document.querySelector(`input[name="cq-${i}"]:checked`);
+                if (!sel) { alert(`Please answer question ${i+1} before submitting.`); return; }
+                answers.push(parseInt(sel.value, 10));
+            }
+            let score = 0;
+            data.questions.forEach((q, i) => { if (answers[i] === q.correctIndex) score++; });
+            const total = data.questions.length;
+            const pct = (score / total) * 100;
+            const passed = pct >= (data.passPercent || 70);
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            const weekId = window._activeQuizWeekId;
+            const subId = `${weekId}_${c.id}`;
+            try {
+                await setDoc(doc(QUIZ_SUBMISSIONS_COL(), subId), {
+                    weekId, cadetId: c.id, cadetName: c.name, answers, score, total, passed,
+                    submittedAt: serverTimestamp()
+                });
+                if (!passed) {
+                    await setDoc(doc(QUIZ_FLAGS_COL(), subId), {
+                        weekId, cadetId: c.id, cadetName: c.name, reason: 'failed', score, total,
+                        flaggedAt: serverTimestamp(), resolved: false
+                    });
+                    window.logAuditActivity && window.logAuditActivity('Weekly Quiz Failed', `Scored ${score}/${total} (below ${data.passPercent||70}% pass mark) — flagged for instructor review`, c.name);
+                } else {
+                    window.logAuditActivity && window.logAuditActivity('Weekly Quiz Passed', `Scored ${score}/${total}`, c.name);
+                }
+            } catch (e) { alert('Error submitting quiz. Please try again.'); return; }
+            document.getElementById('cadet-quiz-body').innerHTML = `
+                <div class="text-center py-6">
+                    <p class="text-3xl mb-2">${passed ? '✅' : '❌'}</p>
+                    <p class="text-sm font-bold ${passed ? 'text-emerald-600' : 'text-red-500'}">${passed ? 'Passed!' : 'Not quite — flagged for review.'}</p>
+                    <p class="text-xs text-slate-500 mt-1">You scored ${score} out of ${total} (${Math.round(pct)}%).</p>
+                    <button onclick="document.getElementById('cadet-quiz-modal').classList.add('hidden'); document.getElementById('cadet-quiz-modal').classList.remove('flex');" class="mt-4 bg-brand-blue text-white text-xs font-bold px-4 py-2 rounded-lg">Close</button>
+                </div>`;
         };
 
 
@@ -10379,7 +10747,7 @@ window.logAdminSettingsActivity = async (action, details) => {
             if(window.currentUserRole === 'admin') window.renderObservers();
         };
 
-        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); };
+        window.selectCadet = (id) => { window.selectedCadetId = id; window.recalculateMetrics(); setTimeout(() => window.checkCadetWeeklyQuiz && window.checkCadetWeeklyQuiz(), 1200); };
         
         window.saveEvaluation = async (goToNext = false) => {
             const c = window.cadets.find(x => x.id === window.selectedCadetId);
@@ -14423,6 +14791,7 @@ Please log in to the PUMMA Dashboard to view the full details of this decision.`
     function updateChatTabsForRole() {
         const { role } = getChatSender();
         setupUnreadWatchers();
+        window.checkCadetWeeklyQuiz && window.checkCadetWeeklyQuiz();
         const classTab = document.getElementById('chat-tab-class');
         const sectionTab = document.getElementById('chat-tab-section');
         const adminTab = document.getElementById('chat-tab-admin');
