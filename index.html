@@ -1440,6 +1440,8 @@
                     <div class="text-xs text-amber-900 dark:text-amber-200"><strong>How you are graded:</strong> The official university grade sheet expresses your Final Grade as <strong>Class Standing (CS) x 60%</strong> + <strong>Periodical Test (PT) x 40%</strong> — CS for daily consistency, PT for competency execution. The <strong>live "Specific Grade %"</strong> on this dashboard is computed from the same five regimental components, but combined with the different weights shown in Step 6 of the walkthrough below (Academic 10% / Leadership 25% / Patriotism 25% / Soft Skills 25% / Technical 15%) and converted through the Rating → Percent table — it is not a simple re-expression of the 60/40 split, so don't expect a hand-entered CS/PT pair to reproduce the dashboard number exactly. <strong class="text-red-700 dark:text-red-400">A negative merit balance then directly subtracts from this total — see Merit Override Penalty below.</strong></div>
                 </div>
 
+                <div id="matrix-quiz-stats"></div>
+
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
                     <i data-lucide="shield" class="w-5 h-5 text-blue-700 dark:text-blue-400 shrink-0 mt-0.5"></i>
                     <div class="text-xs text-blue-900 dark:text-blue-200"><strong>What "Officer" means on this dashboard:</strong> The <strong>Officer</strong> flag (toggled per cadet, shown as <span class="bg-blue-100 dark:bg-blue-900/50 text-brand-blue dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-bold border border-blue-200 dark:border-blue-700 align-middle">OFFICER</span> badge in the table) refers specifically to membership in the <strong>Corps of Midshipmen</strong> — the regimental command body documented in the PUMMA Regimental Rules (the "Triple R" handbook linked from the top banner). A cadet flagged as Officer is serving in a leadership post such as RCC, RDCC, RA, or an N-line billet (N1–N4), and is held to the Corps' "Covenant of Honor" standard of conduct. This flag <strong>directly raises Leadership CS</strong> (see Mockboat Duties &amp; Leadership row below) from 3 to 5, because Corps officers are graded on their command performance, not just task completion.</div>
@@ -2234,6 +2236,7 @@
                 activeBtn.classList.remove('border-transparent','text-slate-400');
                 activeBtn.classList.add('border-[#003366]','text-[#003366]','dark:border-blue-400','dark:text-blue-400');
             }
+            if (tab === 'rubrics' && window.renderMatrixQuizStats) window.renderMatrixQuizStats();
             if(window.lucide) window.lucide.createIcons();
         };
 
@@ -3343,7 +3346,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs, addDoc, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, writeBatch, deleteDoc, getDocs, addDoc, where, orderBy, limit, serverTimestamp, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const SECTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Irregular'];
@@ -3951,6 +3954,13 @@
             return d.toLocaleDateString('en-CA');
         }
         function _isFriday(d = new Date()) { return d.getDay() === 5; }
+        function _weekMondayId(d = new Date()) {
+            const day = d.getDay(); // 0=Sun … 6=Sat
+            const diff = day === 0 ? -6 : 1 - day;
+            const monday = new Date(d);
+            monday.setDate(d.getDate() + diff);
+            return _quizDayId(monday);
+        }
         const QUIZ_BANK_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizQuestions');
         const QUIZ_DAILY_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'dailyQuizzes');
         const QUIZ_SUBMISSIONS_COL = () => collection(db, 'artifacts', appId, 'public', 'data', 'quizSubmissions');
@@ -4023,9 +4033,12 @@
             const snap = await getDocs(QUIZ_BANK_COL());
             const questions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const activeCount = questions.filter(q => q.active !== false).length;
+            const _lastUsed = q => (q.usageHistory && q.usageHistory.length) ? [...q.usageHistory].sort().slice(-1)[0] : '';
+            questions.sort((a, b) => _lastUsed(a).localeCompare(_lastUsed(b))); // never used first, then oldest use
+            const neverUsedCount = questions.filter(q => !(q.usageHistory && q.usageHistory.length)).length;
             body.innerHTML = `
                 <div class="flex flex-wrap gap-2 items-center justify-between">
-                    <p class="text-[11px] text-slate-500">${questions.length} question(s) in bank (${activeCount} active). Daily quizzes need 10 active; Friday Mini Exams need 30. Bigger bank = fewer repeats.</p>
+                    <p class="text-[11px] text-slate-500">${questions.length} question(s) in bank (${activeCount} active). <b>${neverUsedCount}</b> never used yet. Daily quizzes need 10 active; Friday Mini Exams need 30. Sorted least-recently-used first.</p>
                     <button onclick="seedAIQuizQuestions()" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white px-2.5 py-1.5 rounded font-semibold flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Load Reviewer Question Pack</button>
                 </div>
                 <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 space-y-2">
@@ -4052,6 +4065,9 @@
                                 ${q.source==='ai' ? '<span class="text-[8px] bg-purple-100 dark:bg-purple-900/40 text-purple-600 px-1.5 py-0.5 rounded-full ml-1">Reviewer-based</span>' : ''}
                             </p>
                             <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">✓ ${escapeHTMLab(q.choices?.[q.correctIndex] || '')}</p>
+                            ${(q.usageHistory && q.usageHistory.length)
+                                ? `<p class="text-[9px] text-amber-600 dark:text-amber-400 mt-0.5" title="Used on: ${[...q.usageHistory].sort().join(', ')}">📅 Used ${q.usageHistory.length}× · last on <b>${_lastUsed(q)}</b></p>`
+                                : `<p class="text-[9px] text-slate-400 mt-0.5">🆕 Never used</p>`}
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <input type="checkbox" ${q.active!==false?'checked':''} onchange="toggleQuizQuestionActive('${q.id}', this.checked)" title="Active in rotation" class="accent-teal-600">
@@ -4065,6 +4081,7 @@
         window.publishDailyQuiz = async function() {
             const today = new Date();
             const dayId = _quizDayId(today);
+            const mondayId = _weekMondayId(today);
             const friday = _isFriday(today);
             const countInput = parseInt(document.getElementById('quiz-item-count')?.value || '', 10);
             const count = countInput > 0 ? countInput : (friday ? 30 : 10);
@@ -4082,31 +4099,55 @@
                 const activeQs = bankSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(q => q.active !== false);
                 if (activeQs.length < count) { alert(`Need at least ${count} active questions in the bank for a ${label} (currently ${activeQs.length} active). Load the reviewer pack or add more from the Question Bank tab.`); return; }
 
-                // Avoid repeating questions used in the last 5 published days,
-                // if the bank is large enough to still hit the target count.
-                const recentSnap = await getDocs(query(QUIZ_DAILY_COL(), orderBy('dayId', 'desc'), limit(5)));
-                const recentlyUsed = new Set();
-                recentSnap.forEach(d => (d.data().questions || []).forEach(q => recentlyUsed.add(q.id)));
-                const freshPool = activeQs.filter(q => !recentlyUsed.has(q.id));
-                const pool = freshPool.length >= count ? freshPool : activeQs;
+                // Which questions have already been used earlier THIS week (Mon → yesterday)?
+                const weekSnap = await getDocs(query(QUIZ_DAILY_COL(), where('dayId', '>=', mondayId), where('dayId', '<', dayId)));
+                const weekUsedIds = new Set();
+                weekSnap.forEach(d => (d.data().questions || []).forEach(q => weekUsedIds.add(q.id)));
 
-                const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+                const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+                let selected, recapCount = 0;
+                if (friday) {
+                    // Friday = recap exam: prioritise this week's daily questions,
+                    // then top up with fresh ones if the week didn't cover enough.
+                    const recap = shuffle(activeQs.filter(q => weekUsedIds.has(q.id)));
+                    const filler = shuffle(activeQs.filter(q => !weekUsedIds.has(q.id)));
+                    selected = recap.concat(filler).slice(0, count);
+                    recapCount = Math.min(recap.length, count);
+                } else {
+                    // Mon–Thu: no repeats within the same week, if the bank allows.
+                    const fresh = activeQs.filter(q => !weekUsedIds.has(q.id));
+                    selected = shuffle(fresh.length >= count ? fresh : activeQs).slice(0, count);
+                }
+                selected = shuffle(selected); // mix recap + fresh so order isn't predictable
+
+                // If regenerating, un-mark the previous set as "used today" first.
+                if (existing.exists()) {
+                    await Promise.allSettled((existing.data().questions || []).map(q =>
+                        updateDoc(doc(QUIZ_BANK_COL(), q.id), { usageHistory: arrayRemove(dayId) })));
+                }
+
                 const deadline = new Date(today);
                 deadline.setHours(23, 59, 59, 999);
                 await setDoc(doc(QUIZ_DAILY_COL(), dayId), {
                     dayId,
                     type: friday ? 'friday_exam' : 'daily',
                     label,
-                    questions: shuffled.map(q => ({ id: q.id, text: q.text, choices: q.choices, correctIndex: q.correctIndex, topic: q.topic || 'General' })),
+                    recapCount,
+                    questions: selected.map(q => ({ id: q.id, text: q.text, choices: q.choices, correctIndex: q.correctIndex, topic: q.topic || 'General' })),
                     passPercent,
                     timeLimitMinutes,
                     deadline: deadline.toISOString(),
                     publishedAt: serverTimestamp(),
                     publishedBy: window.currentInstructorName || 'Admin'
                 });
-                window.logAuditActivity && window.logAuditActivity(`${label} Published`, `${shuffled.length} questions, ${timeLimitMinutes || 'no'} min limit, published for ${dayId}`, '');
+
+                // Mark each selected question as used today (shown in the Question Bank).
+                await Promise.allSettled(selected.map(q =>
+                    updateDoc(doc(QUIZ_BANK_COL(), q.id), { usageHistory: arrayUnion(dayId) })));
+
+                window.logAuditActivity && window.logAuditActivity(`${label} Published`, `${selected.length} questions${friday ? ` (${recapCount} recapped from this week)` : ''}, ${timeLimitMinutes || 'no'} min limit, published for ${dayId}`, '');
                 window.renderTodayQuiz();
-            } catch (e) { alert('Error publishing quiz.'); }
+            } catch (e) { console.error(e); alert('Error publishing quiz.'); }
         };
 
         window.renderTodayQuiz = async function() {
@@ -4148,7 +4189,7 @@
                 <div class="bg-white dark:bg-slate-800 border border-brand-creamBorder dark:border-slate-700 rounded-lg p-3 space-y-2">
                     <p class="text-[11px] text-slate-500">
                         ${data.type === 'friday_exam' ? '<span class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full text-[9px] font-bold mr-1">🎯 MINI EXAM</span>' : ''}
-                        <b>${dayId}</b> · ${data.questions?.length || 0} items · Pass mark: <b>${data.passPercent || 70}%</b>
+                        <b>${dayId}</b> · ${data.questions?.length || 0} items · Pass mark: <b>${data.passPercent || 70}%</b>${data.type === 'friday_exam' ? ` · 🔁 <b>${data.recapCount || 0}</b> recapped from this week's daily quizzes` : ''}
                     </p>
                     <p class="text-[11px] text-slate-500">⏱️ Time limit: <b>${data.timeLimitMinutes > 0 ? data.timeLimitMinutes + ' min' : 'None'}</b> · Deadline: <b>${deadline ? deadline.toLocaleString() : 'n/a'}</b></p>
                     <button onclick="publishDailyQuiz()" class="w-full sm:w-auto text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-3 py-2 rounded font-semibold">🔄 Regenerate (new random set)</button>
@@ -4213,6 +4254,50 @@
                     <tbody>${rows || '<tr><td colspan="3" class="text-xs text-slate-400 italic py-3">No active cadets found.</td></tr>'}</tbody>
                 </table>
                 </div>`;
+        };
+
+        // ── Matrix integration: per-cadet quiz performance (reference only) ──
+        // Deliberately NOT wired into Grade % / Academic CS — it's shown beside
+        // the grading rubric so instructors see it, without altering marks.
+        window.renderMatrixQuizStats = async function() {
+            const box = document.getElementById('matrix-quiz-stats');
+            if (!box) return;
+            const c = window.cadets?.find(x => x.id === window.selectedCadetId);
+            if (!c) { box.innerHTML = ''; return; }
+            if (c.isAlumni) { box.innerHTML = ''; return; }
+            box.innerHTML = '<p class="text-[10px] text-slate-400">Loading quiz performance…</p>';
+            try {
+                const subsSnap = await getDocs(query(QUIZ_SUBMISSIONS_COL(), where('cadetId', '==', c.id)));
+                const subs = subsSnap.docs.map(d => d.data()).sort((a, b) => (b.dayId || '').localeCompare(a.dayId || ''));
+                const flagsSnap = await getDocs(query(QUIZ_FLAGS_COL(), where('cadetId', '==', c.id)));
+                const openFlags = flagsSnap.docs.filter(d => d.data().resolved !== true).length;
+
+                const attempts = subs.length;
+                const passed = subs.filter(x => x.passed).length;
+                const passRate = attempts ? Math.round((passed / attempts) * 100) : null;
+                const avgPct = attempts ? Math.round(subs.reduce((sum, x) => sum + (x.total ? (x.score / x.total) * 100 : 0), 0) / attempts) : null;
+                const exams = subs.filter(x => x.type === 'friday_exam');
+                const examAvg = exams.length ? Math.round(exams.reduce((sum, x) => sum + (x.total ? (x.score / x.total) * 100 : 0), 0) / exams.length) : null;
+                const chips = subs.slice(0, 10).map(x => `<span title="${x.dayId} · ${x.score}/${x.total}${x.type === 'friday_exam' ? ' · Mini Exam' : ''}" class="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded ${x.passed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}">${x.type === 'friday_exam' ? '🎯' : ''}${(x.dayId || '').slice(5)} ${x.passed ? '✓' : '✗'}</span>`).join(' ');
+                const tone = v => v === null ? 'text-slate-400' : (v >= 70 ? 'text-emerald-600' : 'text-red-500');
+
+                box.innerHTML = `
+                    <div class="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4">
+                        <h4 class="text-[10px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i> Daily Quiz &amp; Mini Exam Performance <span class="font-normal normal-case text-slate-400">— reference only, not part of Grade %</span></h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                            <div class="bg-white/70 dark:bg-slate-900/40 rounded-lg py-2"><p class="text-lg font-black text-teal-700 dark:text-teal-300">${attempts}</p><p class="text-[9px] text-slate-500">Attempts</p></div>
+                            <div class="bg-white/70 dark:bg-slate-900/40 rounded-lg py-2"><p class="text-lg font-black ${tone(passRate)}">${passRate === null ? '—' : passRate + '%'}</p><p class="text-[9px] text-slate-500">Pass Rate</p></div>
+                            <div class="bg-white/70 dark:bg-slate-900/40 rounded-lg py-2"><p class="text-lg font-black ${tone(avgPct)}">${avgPct === null ? '—' : avgPct + '%'}</p><p class="text-[9px] text-slate-500">Avg Score</p></div>
+                            <div class="bg-white/70 dark:bg-slate-900/40 rounded-lg py-2"><p class="text-lg font-black ${openFlags > 0 ? 'text-red-500' : 'text-emerald-600'}">${openFlags}</p><p class="text-[9px] text-slate-500">Open Flags</p></div>
+                        </div>
+                        ${examAvg !== null ? `<p class="text-[10px] text-slate-500 mt-2">🎯 Friday Mini Exam average: <b class="${tone(examAvg)}">${examAvg}%</b> across ${exams.length} exam(s)</p>` : ''}
+                        ${chips ? `<div class="mt-3 flex flex-wrap gap-1">${chips}</div>` : '<p class="text-[10px] text-slate-400 mt-2 italic">No quiz attempts recorded yet.</p>'}
+                    </div>`;
+                if (window.lucide) lucide.createIcons();
+            } catch (e) {
+                console.warn('renderMatrixQuizStats failed:', e);
+                box.innerHTML = '';
+            }
         };
 
         window.switchQuizTab = function(tab) {
